@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <!-- Outer gauge circle -->
+    <circle cx="50" cy="50" r="40" fill="none" stroke="#0f766e" stroke-width="4"/>
+
+    <!-- Inner gauge fill -->
+    <path d="M50,50 L50,20 A30,30 0 0,1 76,65 L50,50"
+          fill="#0d9488" stroke="none"/>
+
+    <!-- Center point -->
+    <circle cx="50" cy="50" r="5" fill="#0f766e"/>
+
+    <!-- Gauge markers -->
+    <line x1="50" y1="15" x2="50" y2="25" stroke="#94a3b8" stroke-width="2"/>
+    <line x1="85" y1="50" x2="75" y2="50" stroke="#94a3b8" stroke-width="2"/>
+    <line x1="15" y1="50" x2="25" y2="50" stroke="#94a3b8" stroke-width="2"/>
+    <line x1="76" y1="24" x2="69" y2="31" stroke="#94a3b8" stroke-width="2"/>
+    <line x1="24" y1="24" x2="31" y2="31" stroke="#94a3b8" stroke-width="2"/>
+
+    <!-- Digital readout background -->
+    <rect x="35" y="65" width="30" height="15" rx="2" fill="#f1f5f9" stroke="#0f766e" stroke-width="1"/>
+
+    <!-- Efficiency percentage marks -->
+    <line x1="40" y1="72" x2="40" y2="73" stroke="#0f766e" stroke-width="4"/>
+    <line x1="45" y1="72" x2="45" y2="73" stroke="#0f766e" stroke-width="4"/>
+    <line x1="50" y1="72" x2="50" y2="73" stroke="#0f766e" stroke-width="4"/>
+    <line x1="55" y1="72" x2="55" y2="73" stroke="#0f766e" stroke-width="4"/>
+</svg>

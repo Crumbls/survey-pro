@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <!-- Main gear -->
+    <path d="M50,20 L55,20 L57,28 A25,25 0 0,1 65,32 L72,27 L75,30 L70,37 A25,25 0 0,1 73,45 L82,47 L82,52 L73,54 A25,25 0 0,1 70,62 L75,69 L72,72 L65,67 A25,25 0 0,1 57,71 L55,80 L50,80 L48,71 A25,25 0 0,1 40,67 L33,72 L30,69 L35,62 A25,25 0 0,1 32,54 L23,52 L23,47 L32,45 A25,25 0 0,1 35,37 L30,30 L33,27 L40,32 A25,25 0 0,1 48,28 L50,20"
+          fill="#f1f5f9" stroke="#0f766e" stroke-width="2"/>
+
+    <!-- Inner gear circle -->
+    <circle cx="50" cy="50" r="15" fill="#0d9488"/>
+
+    <!-- Process arrows -->
+    <path d="M40,40 C30,45 30,55 40,60" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+    <path d="M60,40 C70,45 70,55 60,60" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Optimization points -->
+    <circle cx="40" cy="40" r="3" fill="#0f766e"/>
+    <circle cx="60" cy="40" r="3" fill="#0f766e"/>
+    <circle cx="40" cy="60" r="3" fill="#0f766e"/>
+    <circle cx="60" cy="60" r="3" fill="#0f766e"/>
+</svg>
