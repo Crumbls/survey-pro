@@ -6,6 +6,7 @@ use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Survey extends Model
@@ -44,6 +45,10 @@ class Survey extends Model
     public function responses()
     {
         return $this->hasMany(Response::class);
+    }
+
+    public function reports() : HasMany {
+        return $this->hasMany(Report::class);
     }
 
 }

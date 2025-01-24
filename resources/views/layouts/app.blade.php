@@ -30,13 +30,42 @@ mobileMenuOpen: false,
         }
  }">
     <!-- Progress Bar -->
-    <div class="fixed top-0 left-0 right-0 h-1 bg-teal-500 origin-left z-[51]"
+    <div class="fixed top-0 left-0 right-0 h-1 bg-primary-500 origin-left z-[51]"
          :style="`transform: scaleX(${scrollProgress / 100})`">
     </div>
 
     <x-top-bar />
 
-    {{ $slot }}
+    <div x-data="{
+        init() {
+            let debounceTimer;
+            const checkScreenSize = () => {
+                if (window.innerWidth >= 768) { // Tailwind's md breakpoint
+                    const navHeight = $refs.navbar.offsetHeight;
+                    $el.style.paddingTop = `${navHeight}px`;
+                } else {
+                    $el.style.paddingTop = '0px';
+                }
+            };
+
+            // Initial check
+            checkScreenSize();
+
+            // Debounced resize handler
+            window.addEventListener('resize', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    checkScreenSize();
+                }, 250); // 250ms debounce delay
+            });
+        }
+    }"
+         class="min-h-screen"
+    >
+        <x-notifications />
+
+        {{ $slot }}
+    </div>
 </div>
 
 @stack('scripts')

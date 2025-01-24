@@ -6,13 +6,16 @@ use App\Models\Survey;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-class ReportCollectorController extends CollectorController
+/**
+ */
+class ReportCollectorController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+
         abort(500);
         $record = $request->record;
 

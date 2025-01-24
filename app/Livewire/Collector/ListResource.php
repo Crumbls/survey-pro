@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Collector;
 
+use App\Models\Collector;
 use App\Models\Collector as Model;
 use App\Models\Survey;
 use App\Models\User;
+use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Tables\Actions\Action;
@@ -22,39 +24,54 @@ use Filament\Tables\Actions\CreateAction;
 
 
 class ListResource extends Component implements HasForms, HasTable {
-    use InteractsWithTable;
-    use InteractsWithForms;
+    use HasBreadcrumbs,
+        InteractsWithTable,
+        InteractsWithForms;
+
+    protected ?string $surveyId = null;
 
     protected function getTableQuery()
     {
-        $record = request()->record;
-        if (!$record) {
-            dd(__LINE__);
-        } else {
+        $surveyId = request()->surveyId;
 
-            abort_if(!Str::of($record)->isUuid(), 404);
+        $this->surveyId = $surveyId;
+dd(__LINE__);
+        if ($surveyId) {
+            abort_if(!Str::of($surveyId)->isUuid(), 404);
 
             $user = request()->user();
 
-            $record = Survey::where('uuid', $record)
+            $survey = Survey::where('surveys.uuid', $surveyId)
                 ->whereIn('tenant_id', $user->tenants()->select('tenants.id'))
-                ->where('surveys.uuid', $record)
                 ->take(1)
                 ->firstOrFail();
 
-            return $record->collectors()->getQuery();
-
-
+            return $survey->collectors()->getQuery();
         }
 
-            dd(__LINE__);
+        $user = request()->user();
 
+        if ($user->tenants->count() == 1) {
+            $tenant = $user->tenants->first();
 
-        dd($record);
+            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
 
+            if ($tenant->surveys->count() == 1) {
+                $survey = $tenant->surveys->first();
+                $this->addBreadcrumb('Survey: '.$survey->title, route('surveys.edit', $survey));
+            } else {
+//                $this->addBreadcrumb('All Surveys', route('tenants.surveys.index', $tenant));
+            }
 
-        return Model::query()
-            ->whereIn('tenant_id', request()->user()->tenants()->select('tenants.id'));
+            $this->addBreadcrumb('All Collectors');
+
+        } else {
+            $this->addBreadcrumb('All Centers', route('centers.index'));
+            $this->addBreadcrumb('All Surveys', route('surveys.index'));
+            $this->addBreadcrumb('All Collectors');
+        }
+
+        return Collector::whereIn('survey_id', Survey::whereIn('tenant_id', $user->tenants()->select('tenants.id'))->select('surveys.id'));
     }
 
     public function table(Table $table): Table {
@@ -74,11 +91,13 @@ class ListResource extends Component implements HasForms, HasTable {
             // Add a custom button in the header
             CreateAction::make('create')
                 ->label('Create New')
-                ->url(route('surveys.create'))
+                ->url(function() : string {
+                    return $this->surveyId ? route('surveys.collectors.create', $this->surveyId) : '###';
+                })
                 ->button()
                 ->color('custom') // Use custom color
                 ->extraAttributes([
-                    'class' => 'bg-teal-600 hover:bg-teal-700' // Add hover state
+                    'class' => 'bg-primary-600 hover:bg-primary-700' // Add hover state
                 ])
                 ->visible(fn (): bool => true)
         ])
@@ -87,22 +106,22 @@ class ListResource extends Component implements HasForms, HasTable {
         ])
         ->actions([
             ActionGroup::make([
-                Action::make('edit')
-                    ->label('Edit Survey')
+                Action::make('view')
+                    ->label('View')
                     ->icon('heroicon-m-pencil-square')
                     ->url(function ($record) {
-                        return $record->status == 'open' && $record->type == 'url' ? url('/r/'.$record->unique_code) : '';
+                        return $record->status == 'open' && $record->type == 'url' ? route('collector.show', $record->unique_code) : '';
                     })
                     ->color('custom')
                     ->extraAttributes([
-                        'class' => 'text-teal-600 hover:text-teal-700' // Add hover state
+                        'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
                     ]),
                 Action::make('open')
                     ->label('Open')
                     ->icon('heroicon-m-pencil-square')
                     ->color('custom')
                     ->extraAttributes([
-                        'class' => 'text-teal-600 hover:text-teal-700' // Add hover state
+                        'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
                     ])
                     ->action(function(Model $record) {
                         $record->update([
@@ -115,7 +134,7 @@ class ListResource extends Component implements HasForms, HasTable {
                     ->url(fn ($record) => route('surveys.edit', $record))
                     ->color('custom')
                     ->extraAttributes([
-                        'class' => 'text-teal-600 hover:text-teal-700' // Add hover state
+                        'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
                     ])
             ])
                 ->label('Actions')
@@ -123,7 +142,7 @@ class ListResource extends Component implements HasForms, HasTable {
                 ->size('sm')
                 ->color('custom')
                 ->extraAttributes([
-                    'class' => 'text-teal-600 hover:text-teal-700' // Add hover state
+                    'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
                 ])
         ])
         ->bulkActions([
@@ -132,6 +151,8 @@ class ListResource extends Component implements HasForms, HasTable {
 }
 
     public function render(): View {
-        return view('livewire.survey.list-resource');
+        return view('livewire.collector.list-resource', [
+            'breadcrumbs' => $this->getBreadcrumbs()
+        ]);
     }
 }

@@ -13,6 +13,7 @@ class CollectorController extends Controller
      */
     public function index(Request $request)
     {
+
         dd(__LINE__);
         return view('report.index');
     }
@@ -22,26 +23,35 @@ class CollectorController extends Controller
      */
     public function create()
     {
+
         $user = request()->user();
 
         $surveyId = request()->survey;
 
+        if (!$surveyId) {
+            $surveyId = request()->surveyId;
+        }
+
         $surveys = Survey::whereRaw('1=1')
             // Add in active only.
             ->whereIn('tenant_id', $user->tenants()->select('tenants.id'))
-        ;
-
-        if ($surveyId) {
-            $surveys->where('uuid', $surveyId)
-                ->take(1);
-        }
-
-        $surveys = $surveys->get();
+            ->when($surveyId, function ($query, $surveyId) {
+                return $query->where('uuid', $surveyId)
+                    ->take(1);
+            })->get();
 
         abort_if($surveys->isEmpty(), 404);
 
+        $defaultReference = null;
+
+        do {
+            $defaultReference = (string)\Str::uuid();
+        } while (Collector::where('unique_code', $defaultReference)->take(1)->first());
+
         return view('collector.create', [
-            'surveys' => $surveys
+            'surveys' => $surveys,
+            'defaultReference' => $defaultReference,
+            'defaultGoal' => 100
         ]);
     }
 
@@ -55,7 +65,7 @@ class CollectorController extends Controller
         $tenants = $user->tenants;
 
         $rules = [
-            'reference' => ['required', 'string', 'max:250', 'regex:/^[a-zA-Z0-9]+$/', 'unique:collectors,unique_code'],
+            'reference' => ['required', 'string', 'max:250', 'regex:/^[a-zA-Z0-9\-]+$/', 'unique:collectors,unique_code'],
             'goal' => ['required', 'integer', 'min:1'],
             'survey_id' => ['required', 'numeric']
         ];
@@ -76,7 +86,7 @@ class CollectorController extends Controller
         ]);
 
         return redirect()
-            ->route('surveys.show', $survey)
+            ->route('survey.collectors.index', $survey)
             ->with('success', 'Survey target created successfully.');
         //
     }
@@ -84,9 +94,18 @@ class CollectorController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $record)
+    public function show(string $uniqueCode)
     {
-        //
+        $record = Collector::where('unique_code', $uniqueCode)->firstOrFail();
+
+        if ($record->status == 'closed' || !$record->survey) {
+            dd('show closed page.');
+        }
+
+//        dd($record->survey->questions);
+        return view('collector.show', [
+            'surveyJson' => $record->survey->questions
+        ]);
     }
 
     /**

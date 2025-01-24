@@ -1,5 +1,7 @@
 <x-layout>
-    <div class="container mx-auto px-4 py-8 md:pt-28">
+    <div class="container mx-auto px-4 py-8">
+        <x-breadcrumbs :breadcrumbs="$breadcrumbs" />
+
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-2xl font-bold text-slate-900">Create a Survey Collector</h1>
@@ -21,7 +23,7 @@
                             <select
                                 name="survey_id"
                                 id="survey_id"
-                                class="w-full rounded-md border-slate-200 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                                class="w-full rounded-md border-slate-200 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                                 required
                             >
                                 <option value="">Select an organization...</option>
@@ -48,19 +50,18 @@
                             <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-slate-200 bg-slate-50 text-slate-500 text-sm">
                                 /r/
                             </span>
-                            @php($defaultReference = 'a')
                             <input
                                 type="text"
                                 name="reference"
                                 id="reference"
                                 value="{{ old('reference', $defaultReference) }}"
-                                class="flex-1 min-w-0 block rounded-none rounded-r-md border-slate-200 focus:border-teal-500 focus:ring-teal-500"
-                                pattern="[a-zA-Z0-9]+"
+                                class="flex-1 min-w-0 block rounded-none rounded-r-md border-slate-200 focus:border-primary-500 focus:ring-primary-500"
+                                pattern="[a-zA-Z0-9\-]+"
                                 maxlength="250"
                                 required
                             >
                         </div>
-                        <p class="mt-1 text-sm text-slate-500">Only letters and numbers allowed, no spaces or special characters</p>
+                        <p class="mt-1 text-sm text-slate-500">Only letters and numbers allowed, no spaces or special characters, except for -.</p>
                         @error('reference')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -75,8 +76,8 @@
                             type="number"
                             name="goal"
                             id="goal"
-                            value="{{ old('goal') }}"
-                            class="w-full rounded-md border-slate-200 shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                            value="{{ old('goal', $defaultGoal) }}"
+                            class="w-full rounded-md border-slate-200 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                             min="1"
                             required
                             placeholder="Enter target number of responses"
@@ -96,7 +97,7 @@
                         </a>
                         <button
                             type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-teal-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                            class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                         >
                             Create Target
                         </button>

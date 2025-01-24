@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSurveyRequest;
 use App\Models\Survey;
+use App\Models\Tenant;
 use App\Services\TenantService;
+use App\Traits\HasBreadcrumbs;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class SurveyController extends Controller
 {
+    use HasBreadcrumbs;
+
     public function __construct(protected TenantService $tenantService) {
 
     }
@@ -17,16 +22,29 @@ class SurveyController extends Controller
      */
     public function create()
     {
+        abort_if(!Gate::allows('create', Survey::class), 403);
+        $tenant = null;
+
+        if ($tenantId = request()->tenantId) {
+            $tenant = Tenant::where('uuid', $tenantId)->firstOrFail();
+            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
+            $this->addBreadcrumb('Create Survey', route('tenants.surveys.create', $tenant));
+        } else {
+            $this->addBreadcrumb('All Surveys', route('surveys.index'));
+            $this->addBreadcrumb('Create Survey', route('surveys.create'));
+        }
+
         $user = auth()->user();
-        $tenants = $user->tenants;
+        $tenants = $tenant ? collect([$tenant]) : $user->tenants;
 
         // If user only has one tenant, we'll use that by default
         $defaultTenant = $tenants->count() === 1 ? $tenants->first() : null;
 
-        /**
-         * TODO: Add in the proper policy
-         */
-        return view('survey.create', compact('tenants', 'defaultTenant'));
+        return view('survey.create', [
+            'tenants' => $tenants,
+            'defaultTenant' => $defaultTenant,
+            'breadcrumbs' => $this->getBreadcrumbs()
+        ]);
     }
 
     /**
@@ -65,9 +83,14 @@ class SurveyController extends Controller
             ->take(1)
             ->firstOrFail();
 
-        dd($record);
-        dd($record);
-        echo 'show the survey landing page.';
+        $this->addBreadcrumb('Center: '.$record->tenant->name, route('tenants.show', $record->tenant));
+        $this->addBreadcrumb('Survey: '.$record->title);
+
+        return view('survey.show', [
+            'record' => $record,
+            'breadcrumbs' => $this->getBreadcrumbs()
+        ]);
+
         //
     }
 
@@ -106,9 +129,19 @@ class SurveyController extends Controller
             ->whereIn('tenant_id', $user->tenants()->select('tenants.id'))
             ->firstOrFail();
 
-        $record->update([
-            'questions' => $data['definition']
-        ]);
+        $dat = json_decode($data['definition'], true);
+
+        if (array_key_exists('title', $dat) && $dat['title'] && $dat['title'] != $record->title) {
+            $record->title = $dat['title'];
+        }
+
+        if (array_key_exists('description', $dat) && $dat['description'] && $dat['description'] != $record->description) {
+            $record->description = $dat['description'];
+        }
+
+        $record->questions = $data['definition'];
+
+        $record->save();
 
         return response()->json([
             'message' => 'Survey updated successfully',

@@ -1,0 +1,22 @@
+{
+    "name": "your-vendor/laravel-grapesjs",
+    "description": "GrapesJS integration for Laravel",
+    "type": "library",
+    "require": {
+        "php": "^8.1",
+        "laravel/framework": "^10.0",
+        "spatie/laravel-medialibrary": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "YourVendor\\LaravelGrapesJs\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "YourVendor\\LaravelGrapesJs\\GrapesJsServiceProvider"
+            ]
+        }
+    }
+}

@@ -1,12 +1,12 @@
 <x-layout>
-    <div class="min-h-svh pt-16">
+    <div class="min-h-svh">
         <!-- Main Section -->
         <section class="relative flex items-center justify-center overflow-hidden bg-gradient-to-b from-slate-50 to-white py-24">
             <div class="container px-4 mx-auto">
                 <div class="max-w-lg mx-auto">
                     <!-- Header -->
                     <div class="text-center mb-8">
-                    <span class="inline-block px-4 py-1.5 mb-6 text-sm font-semibold bg-teal-50 text-teal-600 rounded-full">
+                    <span class="inline-block px-4 py-1.5 mb-6 text-sm font-semibold bg-primary-50 text-primary-600 rounded-full">
                         Welcome Back
                     </span>
                         <h1 class="text-3xl font-bold mb-2 text-slate-900">
@@ -32,7 +32,7 @@
                                     name="email"
                                     id="email"
                                     value="{{ old('email') }}"
-                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                     required
                                     autofocus
                                 />
@@ -47,7 +47,7 @@
                                     <label for="password" class="block text-sm font-medium text-slate-900">
                                         Password
                                     </label>
-                                    <a href="{{ route('password.request') }}" class="text-sm text-teal-600 hover:text-teal-700">
+                                    <a href="{{ route('password.request') }}" class="text-sm text-primary-600 hover:text-primary-700">
                                         Forgot password?
                                     </a>
                                 </div>
@@ -55,7 +55,7 @@
                                     type="password"
                                     name="password"
                                     id="password"
-                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                     required
                                 />
                                 @error('password')
@@ -69,7 +69,7 @@
                                     type="checkbox"
                                     name="remember"
                                     id="remember"
-                                    class="h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
+                                    class="h-4 w-4 text-primary-600 border-slate-300 rounded focus:ring-primary-500"
                                 />
                                 <label for="remember" class="ml-2 block text-sm text-slate-600">
                                     Remember me
@@ -79,12 +79,13 @@
                             <!-- Submit Button -->
                             <button
                                 type="submit"
-                                class="w-full bg-teal-600 text-white px-4 py-2.5 rounded-md hover:bg-teal-700 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                                class="w-full bg-primary-600 text-white px-4 py-2.5 rounded-md hover:bg-primary-700 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                             >
                                 Sign in
                             </button>
                         </form>
 
+                        @if(false)
                         <!-- Divider -->
                         <div class="relative my-6">
                             <div class="absolute inset-0 flex items-center">
@@ -115,11 +116,11 @@
                                 GitHub
                             </button>
                         </div>
-
+@endif
                         <!-- Sign Up Link -->
                         <p class="mt-6 text-center text-sm text-slate-600">
                             Don't have an account?
-                            <a href="{{ route('register') }}" class="font-medium text-teal-600 hover:text-teal-700">
+                            <a href="{{ route('register') }}" class="font-medium text-primary-600 hover:text-primary-700">
                                 Sign up for free
                             </a>
                         </p>

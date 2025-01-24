@@ -29,9 +29,12 @@ class Collector extends Model
     {
         parent::boot();
 
-        static::creating(function ($collector) {
-            if ($collector->type === 'url' && !$collector->unique_code) {
-                $collector->unique_code = $collector->generateUniqueCode();
+        static::creating(function (Model $record) {
+            if ($record->type === 'url' && !$record->unique_code) {
+                $record->unique_code = $record->generateUniqueCode();
+            }
+            if (!$record->name) {
+                $record->name = 'r/'.$record->unique_code;
             }
         });
     }

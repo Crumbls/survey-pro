@@ -5,7 +5,7 @@
             <div class="max-w-lg mx-auto">
                 <!-- Header -->
                 <div class="text-center mb-8">
-                    <span class="inline-block px-4 py-1.5 mb-6 text-sm font-semibold bg-teal-50 text-teal-600 rounded-full">
+                    <span class="inline-block px-4 py-1.5 mb-6 text-sm font-semibold bg-primary-50 text-primary-600 rounded-full">
                         Verify Email
                     </span>
                     <h1 class="text-3xl font-bold mb-2 text-slate-900">
@@ -34,7 +34,7 @@
                                 @csrf
                                 <button
                                     type="submit"
-                                    class="w-full sm:w-auto bg-teal-600 text-white px-6 py-2.5 rounded-md hover:bg-teal-700 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                                    class="w-full sm:w-auto bg-primary-600 text-white px-6 py-2.5 rounded-md hover:bg-primary-700 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                                 >
                                     Resend Verification Email
                                 </button>

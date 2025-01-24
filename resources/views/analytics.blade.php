@@ -1,6 +1,6 @@
 <!-- resources/views/analytics.blade.php -->
 <x-layout>
-    <div class="container mx-auto px-4 py-8 md:pt-28">
+    <div class="container mx-auto px-4 py-8">
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-2xl font-bold text-slate-900">Analytics</h1>
@@ -13,7 +13,7 @@
                 <!-- Analytics Icon -->
                 <div class="mb-6 flex justify-center">
                     <img src="{{ asset('images/icons/reports.svg') }}"
-                         class="h-16 w-16 text-teal-500"
+                         class="h-16 w-16 text-primary-500"
                          alt="Reports">
                 </div>
 
@@ -27,7 +27,7 @@
                     <h3 class="font-medium text-slate-900 mb-3">Upcoming Analytics Features:</h3>
                     <ul class="space-y-3">
                         <li class="flex items-start">
-                            <svg class="h-5 w-5 mr-3 mt-1 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-5 w-5 mr-3 mt-1 text-primary-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <div>
@@ -36,7 +36,7 @@
                             </div>
                         </li>
                         <li class="flex items-start">
-                            <svg class="h-5 w-5 mr-3 mt-1 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-5 w-5 mr-3 mt-1 text-primary-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <div>
@@ -45,7 +45,7 @@
                             </div>
                         </li>
                         <li class="flex items-start">
-                            <svg class="h-5 w-5 mr-3 mt-1 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-5 w-5 mr-3 mt-1 text-primary-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <div>
@@ -54,7 +54,7 @@
                             </div>
                         </li>
                         <li class="flex items-start">
-                            <svg class="h-5 w-5 mr-3 mt-1 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-5 w-5 mr-3 mt-1 text-primary-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <div>
@@ -63,7 +63,7 @@
                             </div>
                         </li>
                         <li class="flex items-start">
-                            <svg class="h-5 w-5 mr-3 mt-1 text-teal-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-5 w-5 mr-3 mt-1 text-primary-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <div>

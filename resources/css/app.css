@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+    --header-color: theme('colors.primary.500');
+    --sjs-primary-backcolor: theme('colors.primary.500');
+    --primary-backcolor: transparent;
+    --primary: theme('colors.primary.500');
+}
+
+@layer components {
+    .sd-header__text .sd-title,
+    .sd-header,
+    .spg-question__content,
+    .spg-button-group__item--selected,
+    .spg-question__content {
+        color: var(--header-color) !important;
+    }
+
+    .sd-title.sd-container-modern__title {
+        box-shadow: 0px 2px 0px var(--header-color) !important
+    }
+    .svc-survey-element-toolbar__item use {
+        fill: var(--primary, var(--primary-backcolor, var(--primary, #ff9814))) !important
+    }
+}
+

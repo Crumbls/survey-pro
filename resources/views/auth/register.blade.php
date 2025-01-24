@@ -1,11 +1,11 @@
 <x-layout>
-    <div class="min-h-svh pt-16">
+    <div class="min-h-svh">
         <section class="relative flex items-center justify-center overflow-hidden bg-gradient-to-b from-slate-50 to-white py-24">
             <div class="container px-4 mx-auto">
                 <div class="max-w-lg mx-auto">
                     <!-- Header -->
                     <div class="text-center mb-8">
-                    <span class="inline-block px-4 py-1.5 mb-6 text-sm font-semibold bg-teal-50 text-teal-600 rounded-full">
+                    <span class="inline-block px-4 py-1.5 mb-6 text-sm font-semibold bg-primary-50 text-primary-600 rounded-full">
                         Get Started
                     </span>
                         <h1 class="text-3xl font-bold mb-2 text-slate-900">
@@ -31,7 +31,7 @@
                                     name="name"
                                     id="name"
                                     value="{{ old('name') }}"
-                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                     required
                                     autofocus
                                 />
@@ -50,7 +50,7 @@
                                     name="email"
                                     id="email"
                                     value="{{ old('email') }}"
-                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                     required
                                 />
                                 @error('email')
@@ -67,7 +67,7 @@
                                     type="password"
                                     name="password"
                                     id="password"
-                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                     required
                                 />
                                 @error('password')
@@ -84,7 +84,7 @@
                                     type="password"
                                     name="password_confirmation"
                                     id="password_confirmation"
-                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    class="w-full px-4 py-2 border border-slate-200 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                     required
                                 />
                             </div>
@@ -95,26 +95,26 @@
                                     type="checkbox"
                                     name="terms"
                                     id="terms"
-                                    class="mt-1 h-4 w-4 text-teal-600 border-slate-300 rounded focus:ring-teal-500"
+                                    class="mt-1 h-4 w-4 text-primary-600 border-slate-300 rounded focus:ring-primary-500"
                                     required
                                 />
                                 <label for="terms" class="ml-2 block text-sm text-slate-600">
                                     I agree to the
-                                    <a href="#" class="text-teal-600 hover:text-teal-700">Terms of Service</a>
+                                    <a href="#" class="text-primary-600 hover:text-primary-700">Terms of Service</a>
                                     and
-                                    <a href="#" class="text-teal-600 hover:text-teal-700">Privacy Policy</a>
+                                    <a href="#" class="text-primary-600 hover:text-primary-700">Privacy Policy</a>
                                 </label>
                             </div>
 
                             <!-- Submit Button -->
                             <button
                                 type="submit"
-                                class="w-full bg-teal-600 text-white px-4 py-2.5 rounded-md hover:bg-teal-700 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                                class="w-full bg-primary-600 text-white px-4 py-2.5 rounded-md hover:bg-primary-700 transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                             >
                                 Create Account
                             </button>
                         </form>
-
+@if(false)
                         <!-- Social Registration -->
                         <div class="relative my-6">
                             <div class="absolute inset-0 flex items-center">
@@ -144,10 +144,11 @@
                                 GitHub
                             </button>
                         </div>
+                        @endif
                         <!-- Login Link -->
                         <p class="mt-6 text-center text-sm text-slate-600">
                             Already have an account?
-                            <a href="{{ route('login') }}" class="font-medium text-teal-600 hover:text-teal-700">
+                            <a href="{{ route('login') }}" class="font-medium text-primary-600 hover:text-primary-700">
                                 Sign in
                             </a>
                         </p>

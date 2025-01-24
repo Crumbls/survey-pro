@@ -6,6 +6,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void {
+        return;
         if (Schema::hasTable('permissions')) {
     return;
 } Schema::create('permissions', function (Blueprint $table) {
@@ -21,6 +22,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
+
+        return;
         Schema::dropIfExists('permissions');
     }
 };
