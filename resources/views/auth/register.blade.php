@@ -100,9 +100,9 @@
                                 />
                                 <label for="terms" class="ml-2 block text-sm text-slate-600">
                                     I agree to the
-                                    <a href="#" class="text-primary-600 hover:text-primary-700">Terms of Service</a>
+                                    <a href="{{ route('terms-of-service') }}" class="text-primary-600 hover:text-primary-700">Terms of Service</a>
                                     and
-                                    <a href="#" class="text-primary-600 hover:text-primary-700">Privacy Policy</a>
+                                    <a href="{{ route('privacy-policy') }}" class="text-primary-600 hover:text-primary-700">Privacy Policy</a>
                                 </label>
                             </div>
 

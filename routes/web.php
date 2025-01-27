@@ -108,6 +108,15 @@ Route::post('/{collector}/responses/create', [\App\Http\Controllers\ResponseCont
 Route::patch('/responses/{record}', [\App\Http\Controllers\ResponseController::class, 'update'])
     ->name('responses.update');
 
+Route::get('terms-of-service', function() {
+    return view('terms-of-service');
+})->name('terms-of-service');
+
+
+Route::get('privacy-policy', function() {
+    return view('privacy-policy');
+})->name('privacy-policy');
+
 require __DIR__.'/user.php';
 require __DIR__.'/auth.php';
 
