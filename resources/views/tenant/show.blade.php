@@ -5,8 +5,12 @@
 
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-2xl font-bold text-slate-900">Center Dashboard: {{ $record->name }}</h1>
-            <p class="text-slate-600">Monitor and optimize your manufacturing output</p>
+            <h1 class="text-2xl font-bold text-slate-900">
+                {{ __('tenants.singular') }}: {{ $record->name }}
+            </h1>
+            <p class="text-slate-600">
+                {{ __('tenants.description') }}
+            </p>
         </div>
 
         <!-- Stats Grid -->
@@ -23,7 +27,7 @@
                     <div class="text-3xl font-bold text-slate-900">
                         <a href="{{ route('tenants.surveys.index', $record) }}">{{ number_format($record->surveys->count())     }}</a>
                     </div>
-                    <div class="flex items-center text-sm text-primary-500">
+                    <div class="flex items-center text-sm text-primary-500 hidden">
                         @if($record->surveys->count())
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
@@ -37,7 +41,7 @@
             </div>
 
             <!-- Active Workers -->
-            <div class="bg-white rounded-lg p-6 border border-slate-200">
+            <div class="bg-white rounded-lg p-6 border border-slate-200 hidden">
                 <div class="flex justify-between items-start mb-4">
                     <span class="text-slate-600 text-sm">Active Users</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">

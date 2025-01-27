@@ -67,13 +67,21 @@ class TenantController extends Controller
         $record = $user->tenants()->where('tenants.uuid', $record)->firstOrFail();
 
         if ($user->tenants->count() == 1) {
-            $this->addBreadcrumb('Centers: '.$record->name);
+            $this->addBreadcrumb(trans('tenants.plural').': '.$record->name);
         } else {
-            $this->addBreadcrumb('All Centers', route('tenants.index'));
-            $this->addBreadcrumb('Centers: '.$record->name);
+            $this->addBreadcrumb(trans('tenants.all'), route('tenants.index'));
+            $this->addBreadcrumb(trans('tenants.plural').': '.$record->name);
 
         }
 
+        return view()->first([
+            'tenants.'.$record->uuid,
+            'tenant.show'
+        ], [
+            'record' => $record,
+            'breadcrumbs' => $this->getBreadcrumbs()
+        ]);
+        dd($record);
 
         return view('tenant.show', [
             'record' => $record,

@@ -1,10 +1,11 @@
 <div class="container mx-auto px-4 py-8">
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900">Centers</h1>
+        <h1 class="text-2xl font-bold text-slate-900">
+            {{ __('tenants.create') }}
+        </h1>
         <p class="text-slate-600">
-            Organizational units that allow you to group users, manage assessments, and maintain data separation between different departments, locations, or distinct user groups.
-
+            {{ __('tenants.description') }}
         </p>
     </div>
 
@@ -26,7 +27,7 @@
                         type="submit"
                         class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     >
-                        Create Center
+                        {{ __('tenants.create') }}
                     </button>
                 </div>
             </form>

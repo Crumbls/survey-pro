@@ -18,6 +18,16 @@ class TopBar
         'analytics' => ['analytics*', 'metrics*', 'insights*']
     ];
 
+    protected static function getRelative(string $input) : string {
+        return once(function() use ($input) {
+            $base = url('/');
+            if (str_starts_with($input, $base)) {
+                $input = trim(substr($input, strlen($base)), '/');
+            }
+            return $input;
+        });
+    }
+
     public static function render(): Menu
     {
         $menu = Menu::new()
@@ -32,36 +42,90 @@ class TopBar
             static::addAuthenticatedLinks($menu);
         }
 
+        $activeUrl = request()->url();
+
         return $menu
             ->setActiveClass('text-primary-600 underline underline-offset-8')
             ->addItemClass('text-sm font-medium text-slate-600 hover:text-primary-600 hover:underline hover:underline-offset-8')
-            ->setActiveFromRequest()
-            /*
-            ->setActive(function ($item) {
-                if (!$item->hasUrl()) {
+//            ->setActiveFromUrl($activeUrl)
+            ->setActive(function(Link $link) use ($activeUrl) {
+                if (!$link->hasUrl()) {
                     return false;
                 }
 
-                $segment = trim($item->url(), '/');
-                $baseSegment = explode('/', $segment)[0];
+                $url = $link->url();
 
-                // Check exact match
-                if (request()->is($segment)) {
+                if ($url == $activeUrl) {
                     return true;
                 }
 
-                // Check child patterns
-                if (isset(static::$childPatterns[$baseSegment])) {
-                    foreach (static::$childPatterns[$baseSegment] as $pattern) {
-                        if (request()->is($pattern)) {
-                            return true;
-                        }
-                    }
+                /**
+                 * Convert activeUrl to relative url.
+                 */
+                $activeUrl = static::getRelative($activeUrl);
+                $url = static::getRelative($url);
+
+                $section = null;
+
+                $uuid = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+
+                /**
+                 * Simplify it.
+                 */
+                if (preg_match('#^(surveys|reports|analytics)\/#', $activeUrl, $temp)) {
+                    return strpos($url, $temp[1]) !== false;
+                    //if (preg_match('#'.$temp[1].'#'))
+                    dd($temp);
+                }
+                if (preg_match('#^tenants\/' . $uuid . '\/(\w+s)\/?#', $activeUrl, $temp)) {//
+                    return strpos($url, $temp[1]) !== false;
+                    return false;
+                    dd($temp, $url);
                 }
 
                 return false;
+                dd($activeUrl, $url);
+
+//                $base = url('/');
+                if (preg_match('#^(\w+s)\/?#', $activeUrl, $temp)) {
+                    if ($temp[1] == 'tenants') {
+                        if (preg_match('#^tenants\/' . $uuid . '/(\w+s)\/?$#', $activeUrl, $temp)) {
+                            $section = $temp[1];
+                        } else {
+                            dd($activeUrl);
+                        }
+                    } else {
+                        dd($temp);
+                    }
+                } else {
+                    dd($activeUrl, $url);
+                    dd(__LINE__);
+                }
+
+                if ($section) {
+                    if (str_starts_with($url, $section)) {
+                        return true;
+                        dd(__LINE__);
+                    }
+//                    dd($section);
+                }
+                dd($activeUrl, $section, $url);
+                dd(__LINE__);
+                dd($base);
+
+
+                /**
+                 * Extract urls based under /tenants
+                 */
+                if (preg_match('#\/tenants\/' . $uuid . '\/(\w+s)\/?#', $activeUrl, $matches)) {
+                    dd($activeUrl, url($matches[1]));
+                    return str_starts_with($activeUrl, url($matches[1]));
+                    echo url($matches[1]);
+                    dd($matches, $url);
+                }
+                return false;
             })
-            */
+
             ;
     }
 
@@ -79,30 +143,30 @@ class TopBar
         $tenant = $tenantCount === 1 ? $user->tenants->first() : null;
 
         if ($tenantCount == 1) {
-            // Dashboard - Available to all authenticated users
-            $menu->add(Link::toRoute('tenants.show', 'Dashboard', ['tenant' => $tenant]));
-        } else {
-            // Dashboard - Available to all authenticated users
-            $menu->add(Link::toRoute('dashboard', 'Dashboard'));
+            $menu->route('tenants.show', trans('dashboards.singular'), ['tenant' => $tenant]);
         }
 
         // Surveys - Check policy
-        if ($tenantCount > 1 && Auth::user()->can('viewAny', \App\Models\Tenant::class)) {
-            $menu->add(Link::toRoute('tenants.index', 'Centers'));
-        } elseif (Gate::allows('viewAny', Tenant::class)) {
-            $menu->add(Link::toRoute('tenants.index', 'Centers'));
+        if ($tenantCount > 1) {
+            $menu->add(Link::toRoute('tenants.index', trans('tenants.plural')));
         }
 
-
-        // Surveys - Check policy
-        if (Auth::user()->can('viewAny', \App\Models\Survey::class)) {
-            $menu->add(Link::toRoute('surveys.index', 'Surveys'));
+        if ($tenantCount && $user->can('viewAny', \App\Models\Survey::class)) {
+            if ($tenantCount == 1) {
+                $menu->add(Link::toRoute('tenants.surveys.index', trans('surveys.plural'), ['tenantId' => $tenant]));
+            } else {
+                $menu->add(Link::toRoute('surveys.index', trans('surveys.plural')));
+            }
         }
 
         // Reports - Check policy and role
-        if (Auth::user()->can('viewAny', \App\Models\Report::class)) {
-            $menu->add(Link::toRoute('reports.index', 'Reports'));
-
+        if (!$tenantCount) {
+        } elseif ($user->can('viewAny', \App\Models\Report::class)) {
+            if ($tenantCount == 1) {
+                $menu->add(Link::toRoute('tenants.reports.index', trans('reports.plural'), ['tenantId' => $tenant]));
+            } else {
+                $menu->add(Link::toRoute('reports.index', trans('reports.plural')));
+            }
         }
 
         // Analytics - Only for users with specific permission

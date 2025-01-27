@@ -3,7 +3,9 @@
 namespace App\Livewire\Response;
 
 use App\Livewire\Contracts\HasTenant;
+use App\Models\Collector;
 use App\Models\Response as Model;
+use App\Models\Survey;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -27,25 +29,45 @@ class ListResource extends Component implements HasForms, HasTable
 
     protected $isSingle = 1;
 
+    public string $collectorId;
+    public Collector $collector;
+    public string $surveyId;
+    public Survey $survey;
+
     public function mount()
     {
-        $tenantId = request()->tenantId;
-        $this->setTenant($tenantId);
-        $tenant = $this->getTenant();
         $user = request()->user();
 
-        if (!$tenant && $user->tenants()->count() == 1) {
-            $tenant = $user->tenants()->first();
-            return redirect()->route('tenants.Response.index', $tenant);
+        if (!isset($this->collector) && isset($this->collectorId)) {
+            dd($this->collectorId);
+            $this->survey = $this->collector->survey;
         }
+
+        if (!isset($this->survey) && isset($this->surveyId)) {
+            $this->survey = Survey::where('uuid', $this->surveyId)
+                ->whereIn('tenant_id', $user->tenants()->select('tenants.id'))
+                ->when(isset($this->collector), function($query) {
+                    dd($this->collector);
+                })
+                ->firstOrFail();
+        }
+
     }
 
     protected function getTableQuery()
     {
         abort_if(!Gate::allows('viewAny', Model::class), 403);
 
-        $tenant = $this->getTenant();
+//        $tenant = $this->getTenant();
         $user = request()->user();
+
+        if (isset($this->collector)) {
+            return $this->collector->responses()->getQuery();
+        } else if (isset($this->survey)) {
+            return $this->survey->responses()->getQuery();
+        } else {
+            return Collector::query();
+        }
 
         if ($tenant) {
             $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
@@ -74,20 +96,25 @@ class ListResource extends Component implements HasForms, HasTable
         return $table
             ->query($this->getTableQuery())
             ->columns([
-                TextColumn::make('id'),
-            TextColumn::make('survey_id')
-                ->label('Survey Id'),
-            TextColumn::make('collector_id')
-                ->label('Collector Id'),
+//                TextColumn::make('id'),
+            TextColumn::make('survey.title')
+                ->label('Survey'),
+            TextColumn::make('collector.name')
+                ->label('Collector'),
             TextColumn::make('data'),
             TextColumn::make('created_at')
                 ->label('Created At')
-                ->dateTime(),
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            /*
             TextColumn::make('updated_at')
                 ->label('Updated At')
                 ->dateTime()
+            */
             ])
             ->headerActions([
+                /*
                 CreateAction::make('create')
                     ->label('Create New')
                     ->url(function() {
@@ -100,13 +127,14 @@ class ListResource extends Component implements HasForms, HasTable
                         'class' => 'bg-primary-600 hover:bg-primary-700'
                     ])
                     ->visible(fn() => Gate::allows('create', Model::class))
+                */
             ])
             ->actions([
                 ActionGroup::make([
                     Action::make('edit')
                         ->label('Edit')
                         ->icon('heroicon-m-pencil-square')
-                        ->url(fn ($record) => route('Response.edit', $record))
+                        ->url(fn ($record) => '#')
                         ->color('custom')
                         ->extraAttributes([
                             'class' => 'text-primary-600 hover:text-primary-700'
@@ -124,8 +152,9 @@ class ListResource extends Component implements HasForms, HasTable
 
     public function render(): View
     {
-        return view('livewire.Response.list-resource', [
-            'breadcrumbs' => $this->getBreadcrumbs()
+        return view('livewire.response.list-resource', [
+            'breadcrumbs' => $this->getBreadcrumbs(),
+            'survey' => $this->survey
         ]);
     }
 }

@@ -64,7 +64,8 @@ class ListResource extends Component implements HasForms, HasTable {
             })
             ->when(!$tenant, function ($query) use ($user) {
                 $query->whereIn('tenant_id', $user->tenants()->select('tenants.id'));
-            });
+            })
+            ->withCount('responses');
     }
 
     public function table(Table $table): Table {
@@ -75,6 +76,15 @@ class ListResource extends Component implements HasForms, HasTable {
         ->query($this->getTableQuery())
         ->columns(array_filter([
             TextColumn::make('title'),
+            TextColumn::make('responses')
+                ->getStateUsing(function (Model $record) {
+                    return number_format($record->responses_count);
+                }),
+            TextColumn::make('questions')
+                ->getStateUsing(function (Model $record) {
+
+                    return number_format($record->getQuestionCount());
+                }),
             $tenantCount ? TextColumn::make('tenant.name')->label('Center') : null
         ]))
         ->recordUrl(function (Model $record) {
@@ -107,15 +117,18 @@ class ListResource extends Component implements HasForms, HasTable {
                     ->color('custom')
                     ->extraAttributes([
                         'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
-                    ]),
+                    ])
+                    ->disabled(fn ($record) => $record->responses_count)
+                ,
                 Action::make('collectors')
                     ->label('Collectors')
                     ->icon('heroicon-m-pencil-square')
-                    ->url(fn ($record) => route('survey.collectors.index', $record))
+                    ->url(fn ($record) => route('surveys.collectors.index', $record))
                     ->color('custom')
                     ->extraAttributes([
                         'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
-                    ]),
+                    ])
+                    ->disabled(fn ($record) => !$record->getQuestionCount()),
                 Action::make('reports')
                     ->label('Reports')
                     ->icon('heroicon-m-pencil-square')
@@ -123,8 +136,8 @@ class ListResource extends Component implements HasForms, HasTable {
                     ->color('custom')
                     ->extraAttributes([
                         'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
-                    ]),
-
+                    ])
+                    ->disabled(fn ($record) => !$record->getQuestionCount()),
             ])
                 ->label('Actions')
                 ->icon('heroicon-m-ellipsis-vertical')

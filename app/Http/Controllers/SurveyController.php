@@ -27,7 +27,7 @@ class SurveyController extends Controller
 
         if ($tenantId = request()->tenantId) {
             $tenant = Tenant::where('uuid', $tenantId)->firstOrFail();
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
+            $this->addBreadcrumb(trans('tenants.singular').': '.$tenant->name, route('tenants.show', $tenant));
             $this->addBreadcrumb('Create Survey', route('tenants.surveys.create', $tenant));
         } else {
             $this->addBreadcrumb('All Surveys', route('surveys.index'));
@@ -83,7 +83,7 @@ class SurveyController extends Controller
             ->take(1)
             ->firstOrFail();
 
-        $this->addBreadcrumb('Center: '.$record->tenant->name, route('tenants.show', $record->tenant));
+        $this->addBreadcrumb(trans('tenants.singular').': '.$record->tenant->name, route('tenants.show', $record->tenant));
         $this->addBreadcrumb('Survey: '.$record->title);
 
         return view('survey.show', [

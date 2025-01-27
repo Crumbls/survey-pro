@@ -1,22 +1,21 @@
+// package.json
 {
-    "name": "your-vendor/laravel-grapesjs",
-    "description": "GrapesJS integration for Laravel",
-    "type": "library",
-    "require": {
-        "php": "^8.1",
-        "laravel/framework": "^10.0",
-        "spatie/laravel-medialibrary": "^10.0"
+    "name": "@crumbls/builder",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
     },
-    "autoload": {
-        "psr-4": {
-            "YourVendor\\LaravelGrapesJs\\": "src/"
-        }
+    "dependencies": {
+        "alpinejs": "^3.13.0",
+        "tailwindcss": "^3.3.0"
     },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "YourVendor\\LaravelGrapesJs\\GrapesJsServiceProvider"
-            ]
-        }
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^4.5.0",
+        "vite": "^5.0.0",
+        "autoprefixer": "^10.4.16",
+        "postcss": "^8.4.31"
     }
 }

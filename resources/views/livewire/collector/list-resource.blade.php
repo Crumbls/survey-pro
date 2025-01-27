@@ -2,8 +2,12 @@
     <x-breadcrumbs :breadcrumbs="$breadcrumbs" />
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900">Survey Collectors</h1>
-        <p class="text-slate-600">Collect data for insights and analysis</p>
+        <h1 class="text-2xl font-bold text-slate-900">
+            {{ __('collectors.plural') }}
+        </h1>
+        <p class="text-slate-600">
+            {{ __('collectors.description') }}
+        </p>
 
     </div>
 

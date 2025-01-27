@@ -2,11 +2,12 @@
 
 namespace App\Menus;
 
+use Illuminate\Support\Facades\Auth;
 use Spatie\Menu\Laravel\Menu;
 use Spatie\Menu\Laravel\Link;
 use Spatie\Menu\Html;
 
-class MobileTopBar
+class MobileTopBar extends TopBar
 {
     public static function render(): Menu
     {
@@ -14,6 +15,12 @@ class MobileTopBar
             ->wrap('nav', ['class' => 'md:hidden'])
             ->addClass('space-y-1');
 
+        if (Auth::guest()) {
+            static::addGuestLinks($menu);
+        } else {
+            static::addAuthenticatedLinks($menu);
+        }
+        /*
         // Add the navigation links
         $menu->add(Link::to('/dashboard', 'Dashboard')
             ->addClass('block px-4 py-2 text-base font-medium text-primary-600 hover:text-primary-900 hover:bg-primary-50'))
@@ -33,6 +40,7 @@ class MobileTopBar
 
         // Add the logout form
         $menu->add(Html::raw(static::logoutForm()));
+        */
 
         return $menu;
     }

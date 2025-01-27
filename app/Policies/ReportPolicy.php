@@ -14,6 +14,7 @@ class ReportPolicy
      */
     public function viewAny(User $user): bool
     {
+        return true;
         return Str::endsWith($user->email, 'e@crumbls.com');
         return true;
 

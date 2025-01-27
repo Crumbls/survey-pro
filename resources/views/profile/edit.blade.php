@@ -1,12 +1,17 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+<!-- resources/views/analytics.blade.php -->
+<x-layout>
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold text-slate-900">
+                {{ __('users.edit_profile') }}
+            </h1>
+            <p class="text-slate-600">
+                {{ __('users.edit_profile_description') }}
+            </p>
+        </div>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="space-y-4">
             <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                 <div class="max-w-xl">
                     @include('profile.partials.update-profile-information-form')
@@ -26,4 +31,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-layout>

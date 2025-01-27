@@ -4,6 +4,7 @@ namespace App\Livewire\Report;
 
 use App\Livewire\Contracts\HasTenant;
 use App\Models\Collector;
+use App\Models\Report;
 use App\Models\Report as Model;
 use App\Models\Survey;
 use App\Models\User;
@@ -46,9 +47,7 @@ class ListResource extends Component implements HasForms, HasTable {
         if (!$tenant) {
             if ($user->tenants()->count() == 1) {
                 $tenant = $user->tenants()->first();
-                if (!Gate::allows('viewAny', \App\Models\Report::class)) {
-                    return redirect()->route('tenants.reports.show', $tenant);
-                }
+                return redirect()->route('tenants.reports.index', $tenant);
             }
         }
 
@@ -67,39 +66,31 @@ class ListResource extends Component implements HasForms, HasTable {
         return Model::query()
             ->when($tenant, function ($query) use ($tenant) {
                 $this->isSingle = true;
-                $query->where('tenant_id', $tenant->getKey());
+                $query->whereIn('reports.survey_id', Survey::where('tenant_id', $tenant->getKey())->select('surveys.id'));
+
             })
             ->when(!$tenant, function ($query) use ($user) {
-                if (!Gate::allows('viewAny', Model::class)) {
-                    $this->isSingle = true;
-
-                    $query->whereIn('reports.id', $user->tenants()->select('tenants.id'));
-                } else {
-                    $this->isSingle = false;
-
-                }
-
+                $query->whereIn('reports.survey_id', Survey::whereIn('surveys.tenant_id', $user->tenants()->select('id'))->select('surveys.id'));
             })
             ;
-
-
-
     }
 
     public function table(Table $table): Table {
         $user = request()->user();
         $tenantCount = $user->tenants->count();
-//        dd($this->getTenant());
-//        dd($this->isSingle);
-//        $isSingle = ;
     return $table
         ->query($this->getTableQuery())
         ->columns(array_filter([
             TextColumn::make('title'),
-//            TextColumn::make('type'),
-  //          TextColumn::make('status'),
-            $tenantCount ? TextColumn::make('survey.tenant.name')->label('Center') : null
-
+            TextColumn::make('created_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('survey.title')
+                ->sortable(),
+            TextColumn::make('survey.tenant.name')
+                ->label('Center')
+                ->sortable(),
         ]))
         ->recordUrl(function (Model $record) {
             return route('reports.show', $record);

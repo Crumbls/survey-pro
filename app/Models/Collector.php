@@ -9,7 +9,8 @@ use Illuminate\Support\Str;
 
 class Collector extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory,
+        SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -17,7 +18,8 @@ class Collector extends Model
         'status',
         'configuration',
         'unique_code',
-        'expires_at'
+        'expires_at',
+        'survey_id'
     ];
 
     protected $casts = [
@@ -83,13 +85,15 @@ class Collector extends Model
         return null;
     }
 
-    public function scopeActive($query)
+    public function scopeOpen($query)
     {
-        return $query->where('status', 'active')
-            ->where(function ($query) {
-                $query->whereNull('expires_at')
-                    ->orWhere('expires_at', '>', now());
-            });
+        return $query->where('status', 'open')
+            ;
+    }
+    public function scopeClosed($query)
+    {
+        return $query->where('status', 'closed')
+;
     }
 }
 

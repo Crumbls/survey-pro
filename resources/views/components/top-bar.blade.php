@@ -1,3 +1,10 @@
+<?php
+$panel = \Filament\Facades\Filament::getCurrentPanel();
+$canAccessAdmin = auth()->user()?->canAccessPanel($panel);
+if ($canAccessAdmin) {
+}
+
+    ?>
 
 <!-- Navbar with mobile menu -->
 <div x-ref="navbar" class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b z-50">
@@ -57,10 +64,17 @@
                                      @click.away="open = false"
                                      class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200">
                                     <div class="py-1">
+                                        @if($canAccessAdmin)
+                                            <a href="{{ url($panel->getPath()) }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                                Admin Area
+                                            </a>
+
+                                        @endif
                                         <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
                                             Profile
                                         </a>
-                                        @if(false)
+
+                                    @if(false)
                                         <a href="{{ route('company.settings') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
                                             Company Settings
                                         </a>

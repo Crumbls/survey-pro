@@ -57,7 +57,7 @@ class ReportController extends Controller
 
         $tenant = $record->survey->tenant;
 
-        $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
+        $this->addBreadcrumb(trans('tenants.singular').': '.$tenant->name, route('tenants.show', $tenant));
         $this->addBreadcrumb('Survey: '.$record->survey->title, route('surveys.show', $record->survey));
         $this->addBreadcrumb('Report: '.$record->title);
 

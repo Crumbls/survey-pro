@@ -2,9 +2,11 @@
     <x-breadcrumbs :breadcrumbs="$breadcrumbs" />
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900">Centers</h1>
+        <h1 class="text-2xl font-bold text-slate-900">
+            {{ __('tenants.plural') }}
+        </h1>
         <p class="text-slate-600">
-            Organizational units that allow you to group users, manage assessments, and maintain data separation between different departments, locations, or distinct user groups.
+            {{ __('tenants.description') }}
         </p>
     </div>
 

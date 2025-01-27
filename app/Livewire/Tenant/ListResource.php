@@ -56,22 +56,8 @@ class ListResource extends Component implements HasForms, HasTable
 
         $user = request()->user();
 
-        return Model::query()
-            ->when($tenant, function ($query) use ($tenant) {
-                if (!Gate::allows('viewAny', Model::class)) {
-                    $tenant->where('id', $tenant->getKey());
-                }
-            })
-            ->when(!$tenant, function ($query) use ($user) {
-                /**
-                 * TODO: Remove this once an admin belongs to all centers.
-                 */
-                if (true || !Gate::allows('viewAny', Model::class)) {
-                    $query->whereIn('id', $user->tenants->select('id'));
-                }
-
-            })
-            ;
+        return $user->tenants()
+            ->getQuery();
     }
 
     public function table(Table $table): Table
@@ -87,7 +73,10 @@ class ListResource extends Component implements HasForms, HasTable
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+
+                    ->toggleable(isToggledHiddenByDefault: true)
+                ,
                 TextColumn::make('users_count')
                     ->counts('users')
                     ->label('Users')
@@ -126,7 +115,7 @@ class ListResource extends Component implements HasForms, HasTable
                             'class' => 'text-primary-600 hover:text-primary-700'
                         ])
                         ->visible(fn (Model $record): bool => auth()->user()->can('update', $record)),
-
+/*
                     Action::make('users')
                         ->label('Manage Users')
                         ->icon('heroicon-m-users')
@@ -136,7 +125,7 @@ class ListResource extends Component implements HasForms, HasTable
                             'class' => 'text-primary-600 hover:text-primary-700'
                         ])
                         ->visible(fn (Model $record): bool => auth()->user()->can('update', $record)),
-
+*/
                     Action::make('delete')
                         ->label('Delete')
                         ->icon('heroicon-m-trash')

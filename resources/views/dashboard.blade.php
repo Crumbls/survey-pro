@@ -21,7 +21,7 @@
                 </div>
                 <div class="space-y-2">
                     <div class="text-3xl font-bold text-slate-900">2,543</div>
-                    <div class="flex items-center text-sm text-primary-500">
+                    <div class="flex items-center text-sm text-primary-500 hidden">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
                         </svg>
@@ -51,7 +51,10 @@
                         {{ number_format($count) }}
                         </a>
                     </div>
-                    <div class="text-sm text-slate-600">Across {{ number_format(auth()->user()->tenants()->count()) }} Centers</div>
+                    <div class="text-sm text-slate-600">Across
+                        {{ number_format(auth()->user()->tenants()->count()) }}
+                    {{ __('tenants.plural') }}
+                    </div>
                 </div>
             </div>
 

@@ -11,9 +11,8 @@ class TenantPolicy {
      */
     public function viewAny(User $user): bool
     {
-        return true;
-
-        //
+//        dd($user->tenants);
+        return $user->tenants->count() > 1;
     }
 
     /**

@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Survey;
+use App\Models\Collector;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class SurveyPolicy
+class CollectorPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -20,7 +20,7 @@ class SurveyPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Survey $survey): bool
+    public function view(User $user, Collector $record): bool
     {
         //
     }
@@ -37,16 +37,16 @@ class SurveyPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Survey $survey): bool
+    public function update(User $user, Collector $record): bool
     {
-        dd($survey);
+        dd($record);
         //
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Survey $survey): bool
+    public function delete(User $user, Collector $record): bool
     {
         //
     }
@@ -54,7 +54,7 @@ class SurveyPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, Survey $survey): bool
+    public function restore(User $user, Collector $record): bool
     {
         //
     }
@@ -62,7 +62,7 @@ class SurveyPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, Survey $survey): bool
+    public function forceDelete(User $user, Collector $record): bool
     {
         //
     }

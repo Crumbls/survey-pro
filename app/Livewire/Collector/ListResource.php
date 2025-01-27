@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Collector;
 
-use App\Models\Collector;
 use App\Models\Collector as Model;
 use App\Models\Survey;
 use App\Models\User;
@@ -28,25 +27,51 @@ class ListResource extends Component implements HasForms, HasTable {
         InteractsWithTable,
         InteractsWithForms;
 
-    protected ?string $surveyId = null;
+    public ?string $surveyId = null;
+    public Survey $survey;
+
+    public function mount() {
+        $user = request()->user();
+
+        if ($this->surveyId) {
+            $survey = $this->getRecord();
+
+            $this->addBreadcrumb(trans('tenants.singular').': '.$survey->tenant?->name, route('tenants.show', $survey->tenant));
+
+            $this->addBreadcrumb('Survey: '.$survey->title, route('surveys.show', $survey));
+        }
+
+    }
+
+    public function getRecord() : ?Survey {
+        if (isset($this->survey) && $this->survey) {
+            return $this->survey;
+        }
+        if (!isset($this->surveyId)) {
+            return null;
+        }
+
+        abort_if(!Str::of($this->surveyId)->isUuid(), 404);
+
+        $survey = Survey::where('surveys.uuid', $this->surveyId)
+            ->whereIn('tenant_id', request()->user()->tenants()->select('tenants.id'))
+            ->take(1)
+            ->firstOrFail();
+
+        $this->survey = $survey;
+
+        return $this->survey;
+
+    }
 
     protected function getTableQuery()
     {
-        $surveyId = request()->surveyId;
+        if (isset($this->survey)) {
+            return $this->survey->collectors()->withCount('responses')->getQuery();
+        } else if ($this->surveyId) {
+        } else {
+            dd(__LINE__);
 
-        $this->surveyId = $surveyId;
-dd(__LINE__);
-        if ($surveyId) {
-            abort_if(!Str::of($surveyId)->isUuid(), 404);
-
-            $user = request()->user();
-
-            $survey = Survey::where('surveys.uuid', $surveyId)
-                ->whereIn('tenant_id', $user->tenants()->select('tenants.id'))
-                ->take(1)
-                ->firstOrFail();
-
-            return $survey->collectors()->getQuery();
         }
 
         $user = request()->user();
@@ -54,11 +79,11 @@ dd(__LINE__);
         if ($user->tenants->count() == 1) {
             $tenant = $user->tenants->first();
 
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
+            $this->addBreadcrumb(trans('tenants.singular').': '.$tenant->name, route('tenants.show', $tenant));
 
             if ($tenant->surveys->count() == 1) {
                 $survey = $tenant->surveys->first();
-                $this->addBreadcrumb('Survey: '.$survey->title, route('surveys.edit', $survey));
+                $this->addBreadcrumb('Survey: '.$survey->title, route('surveys.show', $survey));
             } else {
 //                $this->addBreadcrumb('All Surveys', route('tenants.surveys.index', $tenant));
             }
@@ -66,12 +91,12 @@ dd(__LINE__);
             $this->addBreadcrumb('All Collectors');
 
         } else {
-            $this->addBreadcrumb('All Centers', route('centers.index'));
+            $this->addBreadcrumb(trans('tenants.all'), route('centers.index'));
             $this->addBreadcrumb('All Surveys', route('surveys.index'));
             $this->addBreadcrumb('All Collectors');
         }
 
-        return Collector::whereIn('survey_id', Survey::whereIn('tenant_id', $user->tenants()->select('tenants.id'))->select('surveys.id'));
+        return Model::whereIn('survey_id', Survey::whereIn('tenant_id', $user->tenants()->select('tenants.id'))->select('surveys.id'));
     }
 
     public function table(Table $table): Table {
@@ -83,6 +108,10 @@ dd(__LINE__);
             TextColumn::make('name'),
             TextColumn::make('type'),
             TextColumn::make('status'),
+            TextColumn::make('responses_count')
+                ->counts('responses')
+                ->label('Responses')
+
         ])
         ->recordUrl(function (Model $record) {
                 return $record->status == 'open' && $record->type == 'url' ? url('/r/'.$record->unique_code) : '';
@@ -92,7 +121,7 @@ dd(__LINE__);
             CreateAction::make('create')
                 ->label('Create New')
                 ->url(function() : string {
-                    return $this->surveyId ? route('surveys.collectors.create', $this->surveyId) : '###';
+                    return $this->surveyId ? route('surveys.collectors.create', $this->surveyId) : route('collectors.create');
                 })
                 ->button()
                 ->color('custom') // Use custom color
@@ -123,6 +152,9 @@ dd(__LINE__);
                     ->extraAttributes([
                         'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
                     ])
+                    ->hidden(function (Model $record) {
+                        return $record->status == 'open';
+                    })
                     ->action(function(Model $record) {
                         $record->update([
                             'status' => 'open'
@@ -131,11 +163,19 @@ dd(__LINE__);
                 Action::make('close')
                     ->label('Close')
                     ->icon('heroicon-m-pencil-square')
-                    ->url(fn ($record) => route('surveys.edit', $record))
                     ->color('custom')
                     ->extraAttributes([
-                        'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
+                        'class' => 'text-secondary-600 hover:text-secondary-700' // Add hover state
                     ])
+                    ->action(function(Model $record) {
+                        $record->update([
+                            'status' => 'closed'
+                        ]);
+                    })
+                    ->hidden(function (Model $record) {
+                        return $record->status == 'closed';
+                    })
+
             ])
                 ->label('Actions')
                 ->icon('heroicon-m-ellipsis-vertical')

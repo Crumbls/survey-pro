@@ -20,9 +20,7 @@ class DashboardController extends Controller
 
         if ($user->tenants->count() == 1) {
             $tenant = $user->tenants->first();
-            if (Gate::allows('view', $tenant)) {
-                return redirect()->route('tenants.show', $tenant);
-            }
+            return redirect()->route('tenants.show', $tenant);
         }
 
         return view('dashboard', [

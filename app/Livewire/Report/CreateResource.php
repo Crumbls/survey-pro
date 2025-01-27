@@ -70,9 +70,9 @@ use HasBreadcrumbs,
         }
 
         if ($tenant) {
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
+            $this->addBreadcrumb(trans('tenants.singular').': '.$tenant->name, route('tenants.show', $tenant));
         } else {
-            $this->addBreadcrumb('All Centers');
+            $this->addBreadcrumb(trans('tenants.all'));
         }
 
         $this->addBreadcrumb('Create Survey');
