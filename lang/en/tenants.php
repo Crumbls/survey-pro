@@ -3,6 +3,7 @@
 return [
     'all' => 'All Centers',
     'singular' => 'Center',
+    'singular_edit' => 'Edit Center',
     'plural' => 'Centers',
     'create' => 'Create a Center',
     'all_tenants' => 'All Centers',

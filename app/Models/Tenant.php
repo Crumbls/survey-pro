@@ -8,16 +8,29 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Livewire\Features\SupportFileUploads\WithFileUploads;
+use Masterix21\Addressable\Models\Concerns\HasAddresses;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Tenant extends Model
+class Tenant extends Model implements HasMedia
 {
-    use HasFactory,
+    use HasAddresses,
+        HasFactory,
         HasUuid,
-        SoftDeletes;
+        InteractsWithMedia,
+        SoftDeletes,
+        WithFileUploads;
 
     protected $uuidFrom = 'name';
 
-    protected $fillable = ['name'];
+    protected $fillable = [
+        'name',
+        'primary_color',
+        'secondary_color',
+        'accent_color',
+    ];
 
     public function users() : BelongsToMany
     {
@@ -29,6 +42,18 @@ class Tenant extends Model
     public function surveys() : HasMany
     {
         return $this->hasMany(Survey::class);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('logo')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp'])
+            ->registerMediaConversions(function (Media $media) {
+                $this->addMediaConversion('thumbnail')
+                    ->width(200)
+                    ->height(200);
+            });
     }
 
 }

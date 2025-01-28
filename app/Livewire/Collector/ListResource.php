@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Collector;
 
+use App\Models\Collector;
 use App\Models\Collector as Model;
 use App\Models\Survey;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -28,6 +30,8 @@ class ListResource extends Component implements HasForms, HasTable {
         InteractsWithForms;
 
     public ?string $surveyId = null;
+    public ?string $tenantId = null;
+
     public Survey $survey;
 
     public function mount() {
@@ -61,6 +65,29 @@ class ListResource extends Component implements HasForms, HasTable {
         $this->survey = $survey;
 
         return $this->survey;
+    }
+
+    public function getTenant() : ?Tenant {
+        if (isset($this->tenant) && $this->tenant) {
+            return $this->tenant;
+        }
+        if (!isset($this->tenantId)) {
+            return null;
+        }
+
+        abort_if(!Str::of($this->tenantId)->isUuid(), 404);
+
+        $user = request()->user();
+
+        $record = $user
+            ->tenants()
+            ->where('tenants.uuid', $this->tenantId)
+            ->take(1)
+            ->firstOrFail();
+
+        $this->tenant  = $record;
+
+        return $this->tenant;
 
     }
 
@@ -69,6 +96,16 @@ class ListResource extends Component implements HasForms, HasTable {
         if (isset($this->survey)) {
             return $this->survey->collectors()->withCount('responses')->getQuery();
         } else if ($this->surveyId) {
+        } else if ($this->tenantId) {
+            $tenant = $this->getTenant();
+//            dd(Collector::all()->random()->toArray());
+            return Collector::whereRaw('1=1')
+                ->whereIn('survey_id',
+                    $tenant
+                        ->surveys()
+                        ->select('surveys.id')
+                )
+                ->withCount('responses');
         } else {
             dd(__LINE__);
 

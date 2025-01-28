@@ -94,8 +94,12 @@ Route::group([
         ->parameters([
             'tenant' => 'record'
         ]);
+
     Route::get('tenants/{tenantId}/reports', \App\Livewire\Report\ListResource::class)
         ->name('tenants.reports.index');
+
+    Route::get('tenants/{tenantId}/collectors', \App\Livewire\Collector\ListResource::class)
+        ->name('tenants.collectors.index');
 
     Route::get('tenants/{tenantId}/surveys', \App\Livewire\Survey\ListResource::class)->name('tenants.surveys.index');
     Route::get('tenants/{tenantId}/surveys/create', \App\Livewire\Survey\CreateResource::class)

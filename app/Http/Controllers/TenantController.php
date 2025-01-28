@@ -92,8 +92,30 @@ class TenantController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $uuid)
+    public function edit(Request $request, string $record)
+
     {
+        $user = $request->user();
+
+        $record = $user->tenants()->where('tenants.uuid', $record)->firstOrFail();
+
+        if ($user->tenants->count() == 1) {
+            $this->addBreadcrumb(trans('tenants.plural').': '.$record->name, route('tenants.show', $record));
+        } else {
+            $this->addBreadcrumb(trans('tenants.all'), route('tenants.index'));
+            $this->addBreadcrumb(trans('tenants.plural').': '.$record->name);
+
+        }
+
+        return view()->first([
+            'tenant.edit'
+        ], [
+            'record' => $record,
+            'breadcrumbs' => $this->getBreadcrumbs()
+        ]);
+
+        dd($record);
+        dd($uuid);
         $user = request()->user();
         $record = Survey::whereRaw('1=1')
             ->where('uuid', $uuid)

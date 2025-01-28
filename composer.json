@@ -7,11 +7,13 @@
     "require": {
         "php": "^8.1",
         "filament/filament": "^3.2.133",
+        "filament/spatie-laravel-media-library-plugin": "^3.2",
         "guzzlehttp/guzzle": "^7.9.2",
         "laravel/framework": "^10.48.25",
         "laravel/sanctum": "^3.3.3",
         "laravel/tinker": "^2.10",
         "laravolt/avatar": "^5.1",
+        "masterix21/laravel-addressable": "^1.3",
         "ramsey/uuid": "^4.7.6",
         "spatie/laravel-medialibrary": "^10.15",
         "spatie/laravel-menu": "^4.2",
