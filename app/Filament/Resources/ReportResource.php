@@ -13,11 +13,16 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class ReportResource extends Resource
+class ReportResource extends AbstractResource
 {
     protected static ?string $model = Report::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function getNavigationSort(): int
+    {
+        return SurveyResource::getNavigationSort() + 10;
+    }
 
     public static function form(Form $form): Form
     {
@@ -44,6 +49,7 @@ class ReportResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('survey.title')
+                    ->label(__('surveys.singular'))
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -64,7 +70,10 @@ class ReportResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                ])
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

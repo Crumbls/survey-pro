@@ -178,7 +178,7 @@ class CreateFromSurveyResource extends Component implements HasForms {
          * TODO: Add in notification?
          */
 
-        $this->redirectRoute('reports.show', $record);
+        $this->redirectRoute('reports.edit', $record);
     }
 
     public function render(): View

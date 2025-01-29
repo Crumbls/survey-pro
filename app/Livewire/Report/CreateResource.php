@@ -214,7 +214,7 @@ use HasBreadcrumbs,
          * TODO: Add in notification?
          */
 
-        $this->redirectRoute('reports.show', $record);
+        $this->redirectRoute('reports.edit', $record);
     }
 
     public function render(): View

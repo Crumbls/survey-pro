@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Builder;
 
-class Section extends PageBuilderComponent
+class Column extends PageBuilderComponent
 {
     public $width = 'full';
     public $backgroundColor = 'white';
@@ -24,7 +24,7 @@ class Section extends PageBuilderComponent
     }
 
     public function render()
-    {
-        return view('livewire.builder.section');
+    {        return view('livewire.builder.column');
+
     }
 }

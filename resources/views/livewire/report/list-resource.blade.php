@@ -3,9 +3,14 @@
 
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900">Survey Reports</h1>
-        <p class="text-slate-600">Build custom reports that drive decisions.</p>
+        <h1 class="text-2xl font-bold text-slate-900">
+            {{ __('reports.plural') }}
+        </h1>
+        <p class="text-slate-600">
+            {{ __('reports.description') }}
+        </p>
     </div>
+
 
     {{ $this->table }}
 </div>

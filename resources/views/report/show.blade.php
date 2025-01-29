@@ -10,6 +10,14 @@
                     <p class="text-slate-600">Advanced production metrics and insights</p>
                 </div>
 
+                @if(Auth::id() == 1)
+                    @php((array)$record->data)
+                    @foreach($record->data as $idx => $chunk)
+                        <p>
+                            {{ var_export($chunk) }}
+                        </p>
+                    @endforeach
+                    @else
                 <!-- Coming Soon Card -->
                 <div class="max-w-2xl mx-auto">
                     <div class="bg-white rounded-lg p-8 border border-slate-200 text-center">
@@ -78,6 +86,7 @@
                         </div>
                     </div>
                 </div>
+                    @endif
             </div>
         </x-layout>
 

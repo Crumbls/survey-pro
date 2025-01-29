@@ -46,6 +46,22 @@
                 </div>
             </div>
 
+            <!-- Questions -->
+            <div class="bg-white rounded-lg p-6 border border-slate-200">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-slate-600 text-sm">
+                        Questions
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+                    </svg>
+                </div>
+                <div class="space-y-2">
+                    <div class="text-3xl font-bold text-slate-900">
+                        {{ $record->getQuestionCount() }}
+                    </div>
+                </div>
+            </div>
             <!-- Active Workers -->
             <div class="bg-white rounded-lg p-6 border border-slate-200">
                 @php($x = $record->collectors()->count())
@@ -70,11 +86,12 @@
                 </div>
             </div>
 
-            <!-- Questions -->
+            <!-- Active Workers -->
             <div class="bg-white rounded-lg p-6 border border-slate-200">
+                @php($x = $record->reports()->count())
                 <div class="flex justify-between items-start mb-4">
                     <span class="text-slate-600 text-sm">
-                        Questions
+                        {{ __('reports.plural') }}
                     </span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
@@ -82,10 +99,17 @@
                 </div>
                 <div class="space-y-2">
                     <div class="text-3xl font-bold text-slate-900">
-                        {{ $record->getQuestionCount() }}
+                        @if(true || $x)
+                            <a href="{{ route( 'surveys.reports.index', ['surveyId' => $record]) }}">
+                                {{ number_format($x) }}
+                            </a>
+                        @else
+                            0
+                        @endif
                     </div>
                 </div>
             </div>
+
 
         </div>
     </div>

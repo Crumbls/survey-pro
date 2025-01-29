@@ -132,7 +132,7 @@ class ListResource extends Component implements HasForms, HasTable {
                 Action::make('reports')
                     ->label('Reports')
                     ->icon('heroicon-m-pencil-square')
-                    ->url(fn ($record) => route('survey.reports.index', $record))
+                    ->url(fn ($record) => route('surveys.reports.index', $record))
                     ->color('custom')
                     ->extraAttributes([
                         'class' => 'text-primary-600 hover:text-primary-700' // Add hover state

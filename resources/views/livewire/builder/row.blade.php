@@ -18,9 +18,9 @@
     </div>
 
     @if(isset($slot))
-        {{ $slot }}
+    {{ $slot }}
     @else
-        no slot
+    no slot
 
-    @endif
+        @endif
 </div>

@@ -4,6 +4,7 @@ namespace App\Livewire\Report;
 
 use App\Livewire\Contracts\HasTenant;
 use App\Models\Collector;
+
 use App\Models\Report;
 use App\Models\Report as Model;
 use App\Models\Survey;
@@ -13,6 +14,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -34,15 +36,22 @@ class ListResource extends Component implements HasForms, HasTable {
 
     public $isSingle = false;
 
+    public $surveyId;
 
     public function mount() {
-        $tenantId = request()->tenantId;
+        $user = request()->user();
 
-        $this->setTenant($tenantId);
+        if ($this->surveyId) {
+            $survey = Survey::where('uuid', $this->surveyId)
+                ->whereIn('tenant_id', $user->tenants()->pluck('tenants.id'))
+                ->firstOrFail();
+            $this->survey = $survey;
+            $this->setTenant($survey->tenant);
+        } else if ($this->tenantId) {
+            $this->setTenant($this->tenantId);
+        }
 
         $tenant = $this->getTenant();
-
-        $user = request()->user();
 
         if (!$tenant) {
             if ($user->tenants()->count() == 1) {
@@ -56,9 +65,16 @@ class ListResource extends Component implements HasForms, HasTable {
         } else {
             $this->addBreadcrumb('All Centers', route('surveys.index'));
         }
+
+        if (isset($this->survey) && $this->survey) {
+            $this->addBreadcrumb('Survey: '.$this->survey->title, route('surveys.show', $this->survey));
+        }
     }
     protected function getTableQuery()
     {
+        if (isset($this->survey) && $this->survey) {
+            return $this->survey->reports()->getQuery();
+        }
         $tenant = $this->getTenant();
 
         $user = request()->user();
@@ -93,7 +109,7 @@ class ListResource extends Component implements HasForms, HasTable {
                 ->sortable(),
         ]))
         ->recordUrl(function (Model $record) {
-            return route('reports.show', $record);
+            return route('reports.edit', $record);
         })
         ->headerActions([
             // Add a custom button in the header
@@ -134,9 +150,13 @@ class ListResource extends Component implements HasForms, HasTable {
                     ->icon('heroicon-m-pencil-square')
                     ->url(fn ($record) => route('reports.edit', $record))
                     ->color('custom')
+                    ->hidden(function (Model $record) {
+                        return !Gate::allows('update', $record);
+                    })
                     ->extraAttributes([
                         'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
-                    ])
+                    ]),
+                DeleteAction::make('delete')
             ])
                 ->label('Actions')
                 ->icon('heroicon-m-ellipsis-vertical')

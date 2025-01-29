@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\Report;
+use App\Models\Survey;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Str;
@@ -41,9 +42,14 @@ class ReportPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Report $report): bool
+    public function update(User $user, Report $record): bool
     {
-        //
+        return once(function() use ($user, $record) {
+            return Survey::whereIn('surveys.tenant_id', $user->tenants()->select('tenants.id'))
+                ->where('surveys.id', $record->getKey())
+                ->take(1)
+                ->count();
+        });
     }
 
     /**

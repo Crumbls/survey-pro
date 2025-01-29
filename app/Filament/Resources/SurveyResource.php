@@ -13,11 +13,16 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class SurveyResource extends Resource
+class SurveyResource extends AbstractResource
 {
     protected static ?string $model = Survey::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function getNavigationSort(): int
+    {
+        return TenantResource::getNavigationSort() + 10;
+    }
 
     public static function form(Form $form): Form
     {
@@ -28,6 +33,7 @@ class SurveyResource extends Resource
                     ->required(),
                 Forms\Components\Select::make('tenant_id')
                     ->relationship('tenant', 'name')
+                    ->label(__('tenants.singular'))
                     ->required(),
                 Forms\Components\Select::make('user_id')
                     ->relationship('user', 'name')
@@ -47,11 +53,14 @@ class SurveyResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('uuid')
                     ->label('UUID')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('tenant.name')
+                    ->label(__('tenants.singular'))
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
+                    ->label(__('users.singular'))
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('title')
@@ -73,7 +82,11 @@ class SurveyResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                ])
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -95,6 +108,7 @@ class SurveyResource extends Resource
             'index' => Pages\ListSurveys::route('/'),
             'create' => Pages\CreateSurvey::route('/create'),
             'edit' => Pages\EditSurvey::route('/{record}/edit'),
+            'view' => Pages\ViewSurvey::route('/{record}'),
         ];
     }
 }

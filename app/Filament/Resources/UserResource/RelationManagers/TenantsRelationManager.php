@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\TenantResource\RelationManagers;
+namespace App\Filament\Resources\UserResource\RelationManagers;
 
 use App\Models\Role;
 use Filament\Forms;
@@ -12,20 +12,21 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
-class UsersRelationManager extends RelationManager
+class TenantsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'users';
+    protected static string $relationship = 'tenants';
 
     protected static ?string $recordTitleAttribute = 'name';
 
+
     public static function getTitle(Model $ownerRecord, string $pageClass): string
     {
-        return __('users.plural');
+        return __('tenants.plural');
     }
 
     public static function getModelLabel(): string
     {
-        return __('users.singular');
+        return __('filament/resources/user.relationships.tenants.label');
     }
 
     public function form(Form $form): Form
@@ -33,7 +34,8 @@ class UsersRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\Select::make('name')
-                    ->relationship('user', 'name')
+                    ->relationship('tenant', 'name')
+                    ->preload()
                     ->required(),
                 Forms\Components\Select::make('role_id')
                     ->label('Role')
@@ -41,7 +43,7 @@ class UsersRelationManager extends RelationManager
                         $roles = Role::query();
 
                         if (Auth::user()->email !== 'chase@crumbls.com') {
-                            $roles->where('name', '!=', 'Administrator');
+                            $roles->where('name', '!=', 'administrator');
                         }
 
                         return $roles->pluck('name', 'id');
@@ -67,7 +69,7 @@ class UsersRelationManager extends RelationManager
                         return $roles->pluck('name', 'id');
                     })
                     ->afterStateUpdated(function ($record, $state) {
-                        $this->ownerRecord->users()->updateExistingPivot(
+                        $this->ownerRecord->tenants()->updateExistingPivot(
                             $record->id,
                             ['role_id' => $state]
                         );
@@ -94,9 +96,9 @@ class UsersRelationManager extends RelationManager
                 Tables\Actions\AttachAction::make()
                     ->preloadRecordSelect()
                     ->recordSelectOptionsQuery(function (Builder $query) {
-                        // Exclude users that are already attached
-                        return $query->whereDoesntHave('tenants', function (Builder $query) {
-                            $query->where('tenants.id', $this->ownerRecord->id);
+                        // Exclude tenants that are already attached
+                        return $query->whereDoesntHave('users', function (Builder $query) {
+                            $query->where('users.id', $this->ownerRecord->id);
                         });
                     })
                     ->form(fn (Tables\Actions\AttachAction $action): array => [

@@ -57,8 +57,8 @@ Route::group([
         ->name('survey.responses.index');
 
 
-    Route::get('surveys/{record}/reports', \App\Livewire\Report\ListResource::class)
-        ->name('survey.reports.index');
+    Route::get('surveys/{surveyId}/reports', \App\Livewire\Report\ListResource::class)
+        ->name('surveys.reports.index');
 
     Route::get('surveys/{surveyId}/reports/create', \App\Livewire\Report\CreateFromSurveyResource::class)
         ->name('surveys.reports.create-from-survey');
@@ -75,12 +75,25 @@ Route::group([
     Route::get('reports/create', \App\Livewire\Report\CreateResource::class)
         ->name('reports.create');
 
+    Route::get('reports/{record}/edit', \App\Livewire\Report\EditResource::class)
+        ->name('reports.edit');
+
     Route::resource('reports', \App\Http\Controllers\ReportController::class)
-        ->except(['index', 'create'])
+        ->except(['index', 'create', 'edit', 'update', 'show'])
         ->parameters([
             'report' => 'record'
         ]);
 
+    Route::get('reports/{record}', function() {
+        $user = request()->user();
+        $record = \App\Models\Report::where('id',request()->record)
+            ->whereIn('survey_id', \App\Models\Survey::whereIn('surveys.tenant_id', $user->tenants()->select('tenants.id'))->select('id'))
+            ->firstOrFail();
+        return view('report.show', [
+            'breadcrumbs' => [],
+            'record' => $record
+        ]);
+    })->name('reports.show');
 
     Route::get('tenants', \App\Livewire\Tenant\ListResource::class)
         ->name('tenants.index');
