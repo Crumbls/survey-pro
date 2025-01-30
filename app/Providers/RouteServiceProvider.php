@@ -29,6 +29,7 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         Route::model('client', \App\Models\Client::class);
+        Route::model('report', \App\Models\Report::class);
         Route::model('survey', \App\Models\Survey::class);
         Route::model('tenant', \App\Models\Tenant::class);
 

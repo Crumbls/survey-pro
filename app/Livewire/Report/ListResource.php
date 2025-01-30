@@ -218,6 +218,10 @@ class ListResource extends Component implements HasForms, HasTable {
     public function render(): View {
         return view('livewire.report.list-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
+            'title' => __('clients.create'),
+            'subtitle' => __('clients.description'),
+            'cancelUrl' => $this->tenant ? route('tenants.clients.index', $this->tenant) : route('clients.index'),
+            'createText' => __('clients.create')
         ]);
     }
 }

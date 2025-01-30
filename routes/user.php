@@ -47,39 +47,17 @@ Route::group([
         ->except(['show', 'index', 'store', 'create', 'update', 'destroy']);
 */
 
-
-    Route::get('reports', \App\Livewire\Report\ListResource::class)
-        ->name('reports.index');
-
-    Route::get('reports/create', \App\Livewire\Report\CreateResource::class)
-        ->name('reports.create');
-
-    Route::get('reports/{record}/edit', \App\Livewire\Report\EditResource::class)
-        ->name('reports.edit');
-
-    Route::resource('reports', \App\Http\Controllers\ReportController::class)
-        ->except(['index', 'create', 'edit', 'update', 'show'])
-        ->parameters([
-            'report' => 'record'
-        ]);
-
-    Route::get('reports/{record}', function() {
-        $user = request()->user();
-        $record = \App\Models\Report::where('id',request()->record)
-            ->whereIn('survey_id', \App\Models\Survey::whereIn('surveys.tenant_id', $user->tenants()->select('tenants.id'))->select('id'))
-            ->firstOrFail();
-        return view('report.show', [
-            'breadcrumbs' => [],
-            'record' => $record
-        ]);
-    })->name('reports.show');
-
     Route::get('tenants', \App\Livewire\Tenant\ListResource::class)
         ->name('tenants.index');
     /*
     Route::get('tenants/create', \App\Livewire\Tenant\CreateResource::class)
         ->name('tenants.create');
 */
+    Route::get('reports', \App\Livewire\Report\ListResource::class)
+        ->name('reports.index');
+
+    Route::get('reports/create', \App\Livewire\Report\CreateResource::class)
+        ->name('reports.create');
 
     Route::get('tenants/{tenant}/reports', \App\Livewire\Report\ListResource::class)
         ->name('tenants.reports.index');

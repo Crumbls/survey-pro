@@ -2,13 +2,19 @@
 
 namespace App\Livewire\Report;
 
+use App\Filament\Forms\Blocks\CenterLogoBlock;
 use App\Filament\Forms\Blocks\ChartsBlock;
+use App\Filament\Forms\Blocks\ClientLogoBlock;
 use App\Filament\Forms\Blocks\CylindersBlock;
 use App\Filament\Forms\Blocks\HeadingBlock;
 use App\Filament\Forms\Blocks\HeatmapBlock;
 use App\Filament\Forms\Blocks\ImageBlock;
+use App\Models\Client;
+use App\Models\Collector;
+use App\Models\Report;
 use App\Models\Report as Model;
 use App\Models\Survey;
+use App\Models\Tenant;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
@@ -29,23 +35,34 @@ class EditResource extends Component implements HasForms
         InteractsWithForms;
 
     public ?array $data = [];
-    public Model $record;
 
-    public function getRecord(): Model {
-        return $this->record;
-    }
+    public ?Report $report = null;
+    public ?Survey $survey = null;
+    public ?Client $client = null;
+    public ?Tenant $tenant = null;
+
     public function mount(): void
     {
-        abort_if(!Gate::allows('update', $this->record), 403);
+        abort_if(!Gate::allows('update', $this->report), 403);
 
-        $this->data = $this->record->toArray();
+        $this->data = $this->report->toArray();
 
         $this->form->fill($this->data);
 
+        $this->survey = $this->report->survey;
+        $this->client = $this->survey->client;
+        $this->tenant = $this->client->tenant;
+
+        $this->addBreadcrumb('Center: '.$this->tenant->name, route('tenants.show', $this->tenant));
+        $this->addBreadcrumb('Client: '.$this->client->name, route('clients.show', $this->client));
+        $this->addBreadcrumb('Survey: '.$this->survey->title, route('surveys.show', $this->survey));
+        $this->addBreadcrumb('All Reports', route('surveys.reports.index', $this->survey));
+
+
+        return;
         $tenant = $this->record->survey->tenant;
 
         if ($tenant) {
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
         } else {
             $this->addBreadcrumb('All Centers', route('surveys.index'));
         }
@@ -63,10 +80,8 @@ class EditResource extends Component implements HasForms
                 Builder::make('data')
                     ->label('Content')
                     ->blocks([
-                        Builder\Block::make('center-logo')
-                            ->schema([
-                            ])
-                            ->columns(1),
+                        CenterLogoBlock::make('center-logo'),
+                        ClientLogoBlock::make('client-logo'),
                         HeadingBlock::make(''),
                         Builder\Block::make('paragraph')
                             ->schema([
@@ -81,17 +96,16 @@ class EditResource extends Component implements HasForms
                     ])
             ])
             ->statePath('data')
-            ->model($this->getRecord());
+            ->model($this->report);
     }
 
     public function save(): void
     {
-        $record = $this->getRecord();
-        abort_if(!Gate::allows('update', $record), 403);
+        abort_if(!Gate::allows('update', $this->report), 403);
 
         $data = $this->form->getState();
 
-        $this->record->update($data);
+        $this->report->update($data);
 
 
         // Handle any orphaned media
@@ -106,6 +120,7 @@ class EditResource extends Component implements HasForms
 
     public function cleanupOldMedia(): void
     {
+        return;
         $record = $this->getRecord();
         $content = $this->data ?? [];
 
@@ -129,7 +144,12 @@ class EditResource extends Component implements HasForms
     {
         return view('livewire.report.edit-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
-            'record' => $this->getRecord()
+            'title' => __('reports.singular_edit'),
+            'subtitle' => __('reports.description'),
+//            'cancelUrl' => $this->tenant ? route('tenants.clients.index', $this->tenant) : route('clients.index'),
+            'saveText' => __('reports.singular_update'),
+            'record' => $this->report
+
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\Report;
 use App\Models\Survey;
 use App\Traits\HasBreadcrumbs;
@@ -40,46 +41,50 @@ class ReportController extends Controller
      * Display the specified resource.
      * TODO: Route model binding is not working here.  Figure out why.
      */
-    public function show(Request $request, string $record)
+    public function show(Request $request, Report $report)
     {
+        abort_if(!$report || !$report->getKey(), 404);
+
         $user = request()->user();
-
-        $record = Report::where('id', $record)
-            ->whereIn('survey_id',
-                Survey::whereRaw('1=1')
-                    ->whereIn('tenant_id',
-                        $user->tenants()->select('tenants.id')
-                    )
-                    ->select('surveys.id')
-            )
-            ->firstOrFail()
-        ;
-
-        $tenant = $record->survey->tenant;
-
-        $this->addBreadcrumb(trans('tenants.singular').': '.$tenant->name, route('tenants.show', $tenant));
-        $this->addBreadcrumb('Survey: '.$record->survey->title, route('surveys.show', $record->survey));
-        $this->addBreadcrumb('Report: '.$record->title);
 
 
         /**
-         * TODO: Add in authorization.
+         * Pull via client, not tenant anymore.
          */
+        abort_if(!Report::where($report->getKeyName(), $report->getKey())
+            ->whereIn('client_id',
+                Client::whereIn('clients.tenant_id',
+                    request()->user()->tenants()->select('tenants.id')
+                )
+                    ->select('clients.id')
+
+
+            )
+            ->take(1)
+            ->exists(), 403);
+
+        $this->addBreadcrumb('Center: ' . $report->client->tenant->name, route('tenants.show', $report->client->tenant));
+        $this->addBreadcrumb('Client: ' . $report->client->name, route('clients.show', $report->client));
+        $this->addBreadcrumb('Survey: ' . $report->survey->title, route('surveys.show', $report->survey));
 
         return view('report.show', [
-            'tenant' => $tenant,
             'breadcrumbs' => $this->getBreadcrumbs(),
-            'record' => $record
+            'record' => $report,
+
+            'title' => __('reports.singular'),
+            'subtitle' => __('reports.description'),
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
+     * @deprecated
      */
     public function edit(string $record)
     {
         $user = request()->user();
 
+        dd(__METHOD__, $record);
         $record = Report::where('id', $record)
             ->whereIn('survey_id',
                 Survey::whereRaw('1=1')
@@ -88,8 +93,7 @@ class ReportController extends Controller
                     )
                     ->select('surveys.id')
             )
-            ->firstOrFail()
-        ;
+            ->firstOrFail();
 
         /**
          * TODO: Add in authorization.

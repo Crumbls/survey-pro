@@ -2,14 +2,8 @@
     <x-breadcrumbs :breadcrumbs="$breadcrumbs" />
 
     <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900">
-            {{ __('reports.plural') }}
-        </h1>
-        <p class="text-slate-600">
-            {{ __('reports.description') }}
-        </p>
-    </div>
+    <x-leadin :title="$title" :subtitle="$subtitle" />
+
 
     <div class="">
 
