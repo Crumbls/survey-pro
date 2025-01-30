@@ -28,6 +28,9 @@ Route::group([
 Route::group([
     'middleware' => ['auth', 'verified']
 ], function() {
+
+    Route::get('surveys', \App\Livewire\Survey\ListResource::class)
+        ->name('surveys.index');
     /*
     Route::get('surveys/{surveyId}/collectors/create', [\App\Http\Controllers\CollectorController::class, 'create'])
         ->name('surveys.collectors.create');

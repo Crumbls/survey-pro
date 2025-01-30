@@ -10,7 +10,7 @@ class HeatmapBlock extends Block
 {
     public static function make(string $name = 'heatmap'): static
     {
-        return parent::make('Heatmap')
+        return parent::make($name)
             ->schema([
 
             ])

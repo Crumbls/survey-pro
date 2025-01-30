@@ -207,7 +207,12 @@ use HasBreadcrumbs,
         $data = $this->form->getState();
 
         $data['user_id'] = $user?->getKey();
-//dd($data);
+
+        if (!isset($data['client_id'])) {
+             $survey = Survey::findOrFail($data['survey_id']);
+             $data['client_id'] = $survey->client_id;
+        }
+
         $record = Report::create($data);
 
         /**

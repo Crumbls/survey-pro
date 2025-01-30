@@ -21,6 +21,7 @@ class Report extends Model implements HasMedia
         'title',
         'survey_id',
         'user_id',
+        'client_id',
         'collector_ids',
         'data'
     ];

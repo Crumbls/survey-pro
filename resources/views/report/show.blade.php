@@ -1,21 +1,31 @@
         <x-layout>
             <div class="container mx-auto px-4 py-8">
                 <x-breadcrumbs :breadcrumbs="$breadcrumbs" />
+                <x-leadin :title="$title" :subtitle="$subtitle" />
 
-                <!-- Header -->
-                <div class="mb-8">
-                    <h1 class="text-2xl font-bold text-slate-900">
-                        Report: {{ $record->title }}
-                    </h1>
-                    <p class="text-slate-600">Advanced production metrics and insights</p>
-                </div>
 
+                <section class="report gap-y-4" id="report-{{ $record->getKey() }}">
                 @if(Auth::id() == 1)
                     @php((array)$record->data)
                     @foreach($record->data as $idx => $chunk)
-                        <p>
-                            {{ var_export($chunk) }}
-                        </p>
+                        @php($componentName = 'report.'.$chunk['type'])
+                    @if(View::exists('components.'.$componentName))
+
+                    <x-dynamic-component
+                        :component="$componentName"
+                        :data="array_key_exists('data', $chunk) ? $chunk['data'] : []"
+                        :record="$record"
+                    />
+                        @else
+                        <div>
+                            <p>
+                                Component does not exist: {{ $componentName  }}
+
+                            </p>
+                        </div>
+
+                        @endif
+                </section>
                     @endforeach
                     @else
                 <!-- Coming Soon Card -->

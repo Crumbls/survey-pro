@@ -82,7 +82,7 @@ class EditResource extends Component implements HasForms
                     ->blocks([
                         CenterLogoBlock::make('center-logo'),
                         ClientLogoBlock::make('client-logo'),
-                        HeadingBlock::make(''),
+                        HeadingBlock::make('heading'),
                         Builder\Block::make('paragraph')
                             ->schema([
                                 Textarea::make('content')

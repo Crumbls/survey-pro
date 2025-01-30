@@ -3,11 +3,8 @@
     <div class="container mx-auto px-4 py-8">
         <x-breadcrumbs :breadcrumbs="$breadcrumbs" />
 
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold text-slate-900">Reports</h1>
-            <p class="text-slate-600">Production insights and analysis</p>
-        </div>
+        <x-leadin :title="$title" :subtitle="$subtitle" />
+
 
         <!-- Coming Soon Card -->
         <div class="max-w-2xl mx-auto">

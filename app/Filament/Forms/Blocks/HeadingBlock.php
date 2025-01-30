@@ -10,7 +10,7 @@ class HeadingBlock extends Block
 {
     public static function make(string $name = 'heading'): static
     {
-        return parent::make('Heading')
+        return parent::make($name)
             ->schema([
                 TextInput::make('content')
                     ->label('Heading')
