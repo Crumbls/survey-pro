@@ -59,7 +59,8 @@ class RoleResource extends AbstractResource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\UsersRelationManager::make()
+            RelationManagers\UsersRelationManager::make(),
+            RelationManagers\AbilitiesRelationManager::make()
             //
         ];
     }

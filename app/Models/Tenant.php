@@ -39,6 +39,10 @@ class Tenant extends Model implements HasMedia
             ->using(TenantUserRole::class);
     }
 
+    public function clients() : HasMany {
+        return $this->hasMany(Client::class);
+    }
+
     public function surveys() : HasMany
     {
         return $this->hasMany(Survey::class);

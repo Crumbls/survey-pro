@@ -13,6 +13,7 @@ class TopBar
 {
     protected static array $childPatterns = [
         'dashboard' => ['dashboard*'],
+        'clients' => ['clients*'],
         'surveys' => ['surveys*', 'responses*'],
         'reports' => ['reports*', 'export*', 'downloads*'],
         'analytics' => ['analytics*', 'metrics*', 'insights*']
@@ -84,46 +85,6 @@ class TopBar
                 }
 
                 return false;
-                dd($activeUrl, $url);
-
-//                $base = url('/');
-                if (preg_match('#^(\w+s)\/?#', $activeUrl, $temp)) {
-                    if ($temp[1] == 'tenants') {
-                        if (preg_match('#^tenants\/' . $uuid . '/(\w+s)\/?$#', $activeUrl, $temp)) {
-                            $section = $temp[1];
-                        } else {
-                            dd($activeUrl);
-                        }
-                    } else {
-                        dd($temp);
-                    }
-                } else {
-                    dd($activeUrl, $url);
-                    dd(__LINE__);
-                }
-
-                if ($section) {
-                    if (str_starts_with($url, $section)) {
-                        return true;
-                        dd(__LINE__);
-                    }
-//                    dd($section);
-                }
-                dd($activeUrl, $section, $url);
-                dd(__LINE__);
-                dd($base);
-
-
-                /**
-                 * Extract urls based under /tenants
-                 */
-                if (preg_match('#\/tenants\/' . $uuid . '\/(\w+s)\/?#', $activeUrl, $matches)) {
-                    dd($activeUrl, url($matches[1]));
-                    return str_starts_with($activeUrl, url($matches[1]));
-                    echo url($matches[1]);
-                    dd($matches, $url);
-                }
-                return false;
             })
 
             ;
@@ -151,9 +112,18 @@ class TopBar
             $menu->add(Link::toRoute('tenants.index', trans('tenants.plural')));
         }
 
+        if ($user->can('viewAny', \App\Models\Client::class)) {
+            if ($tenantCount == 1) {
+                $menu->add(Link::toRoute('tenants.clients.index', trans('clients.plural'), ['tenant' => $tenant]));
+            } else {
+                $menu->add(Link::toRoute('clients.index', trans('clients.plural')));
+            }
+        }
+
+
         if ($tenantCount && $user->can('viewAny', \App\Models\Survey::class)) {
             if ($tenantCount == 1) {
-                $menu->add(Link::toRoute('tenants.surveys.index', trans('surveys.plural'), ['tenantId' => $tenant]));
+                $menu->add(Link::toRoute('tenants.surveys.index', trans('surveys.plural'), ['tenant' => $tenant]));
             } else {
                 $menu->add(Link::toRoute('surveys.index', trans('surveys.plural')));
             }
@@ -163,7 +133,7 @@ class TopBar
         if (!$tenantCount) {
         } elseif ($user->can('viewAny', \App\Models\Report::class)) {
             if ($tenantCount == 1) {
-                $menu->add(Link::toRoute('tenants.reports.index', trans('reports.plural'), ['tenantId' => $tenant]));
+                $menu->add(Link::toRoute('tenants.reports.index', trans('reports.plural'), ['tenant' => $tenant]));
             } else {
                 $menu->add(Link::toRoute('reports.index', trans('reports.plural')));
             }

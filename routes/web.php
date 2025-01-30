@@ -44,60 +44,6 @@ Route::get('/', function () {
 Route::get('/r/{record}', [\App\Http\Controllers\CollectorController::class, 'show'])
     ->name('collector.show');
 
-Route::get('test', function() {
-/*
-// Create a server node
-    $server = \Crumbls\Infrastructure\Models\Node::create([
-        'name' => 'Primary Server',
-        'type' => 'server',
-        'status' => 'operational',
-        'metadata' => [
-            'ip' => '192.168.1.1',
-            'location' => 'us-east-1'
-        ]
-    ]);
-
-// Add child nodes
-    $database = \Crumbls\Infrastructure\Models\Node::create([
-        'name' => 'Main Database',
-        'type' => 'database',
-        'status' => 'operational'
-    ]);
-
-    $server->children()->attach($database->id);
-*/
-    \Crumbls\Infrastructure\Models\Node::all()->each(function($node) {
-//        $node->delete();
-    });
-
-    $nodes = \Crumbls\Infrastructure\Models\Node::with(['parents', 'children'])->get();
-
-    $nodesForVis = $nodes->map(function($node) {
-        return [
-            'id' => $node->id,
-            'label' => $node->name,
-            'group' => $node->type,
-            'color' => config("infrastructure.nodes.statuses.{$node->status}"),
-            'title' => $node->metadata['error'] ?? "Status: {$node->status}"
-        ];
-    });
-
-    $edges = collect();
-    $nodes->each(function($node) use ($edges) {
-        $node->children->each(function($child) use ($edges, $node) {
-            $edges->push([
-                'from' => $node->id,
-                'to' => $child->id,
-                'color' => ['color' => config("infrastructure.nodes.statuses.{$node->status}")]
-            ]);
-        });
-    });
-
-    return view('infrastructure::map', [
-        'nodes' => $nodesForVis,
-        'edges' => $edges
-    ]);
-});
 Route::get('/test1', function () {
     return view('builder');
 });
@@ -116,6 +62,45 @@ Route::get('terms-of-service', function() {
 Route::get('privacy-policy', function() {
     return view('privacy-policy');
 })->name('privacy-policy');
+
+Route::group([
+    'prefix' => 'tenants/{tenant}',
+    'as' => 'tenants.',
+    'middleware' => [
+        'web',
+        'auth',
+        \App\Http\Middleware\TenantMember::class
+    ]
+], function () {
+    require_once(__DIR__.'/tenant.php');
+});
+
+
+Route::group([
+    'prefix' => 'clients/{client}',
+    'as' => 'clients.',
+    'middleware' => [
+        'web',
+        'auth',
+\App\Http\Middleware\ClientMember::class,
+//        \App\Http\Middleware\TenantMember::class
+    ]
+], function () {
+    require_once(__DIR__.'/client.php');
+});
+
+Route::group([
+    'prefix' => 'surveys/{survey}',
+    'as' => 'surveys.',
+    'middleware' => [
+        'web',
+        'auth',
+//        \App\Http\Middleware\ClientMember::class,
+//        \App\Http\Middleware\TenantMember::class
+    ]
+], function () {
+    require_once(__DIR__.'/survey.php');
+});
 
 require __DIR__.'/user.php';
 require __DIR__.'/auth.php';

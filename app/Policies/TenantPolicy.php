@@ -2,18 +2,13 @@
 
 namespace App\Policies;
 
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\AuthorizationCache;
+use Filament\Facades\Filament;
 
-class TenantPolicy {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
-    {
-//        dd($user->tenants);
-        return $user->tenants->count() > 1;
-    }
+class TenantPolicy extends AbstractPolicy {
 
     /**
      * Determine whether the user can view the model.

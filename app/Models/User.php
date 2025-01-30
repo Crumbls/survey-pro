@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\ClientService;
 use App\Services\TenantService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,11 +19,12 @@ use Laravolt\Avatar\Avatar;
 
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-
+use Silber\Bouncer\Database\HasRolesAndAbilities;
 class User extends Authenticatable implements FilamentUser, HasMedia
 {
     use HasApiTokens,
         HasFactory,
+        HasRolesAndAbilities,
         InteractsWithMedia,
         Notifiable;
 
@@ -59,7 +61,8 @@ class User extends Authenticatable implements FilamentUser, HasMedia
 
     public static function booted() : void {
         static::created(function(Model $record) {
-            app(TenantService::class)->getOrCreateDefault($record);
+            $tenant = app(TenantService::class)->getOrCreateDefault($record);
+            $center = app(ClientService::class)->getOrCreateDefault($tenant);
         });
     }
 
@@ -75,6 +78,14 @@ class User extends Authenticatable implements FilamentUser, HasMedia
             ->using(TenantUserRole::class);
     }
 
+/*
+    public function roles() : BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'tenant_user_role')
+            ->withPivot('tenant_id')
+            ->using(TenantUserRole::class);
+    }
+*/
     public function surveys() : HasMany
     {
         return $this->hasMany(Survey::class);
@@ -155,5 +166,12 @@ class User extends Authenticatable implements FilamentUser, HasMedia
     public function scopeWithAvatar($query)
     {
         return $query->with('media');
+    }
+    // Override Bouncer's default role checking to be tenant-aware
+    public function getRoles()
+    {
+        dd(__LINE__);
+        $tenantId = tenant()->id; // Adjust based on your tenant resolution
+        return $this->tenantRoles()->wherePivot('tenant_id', $tenantId)->get();
     }
 }

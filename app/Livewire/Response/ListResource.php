@@ -3,9 +3,11 @@
 namespace App\Livewire\Response;
 
 use App\Livewire\Contracts\HasTenant;
+use App\Models\Client;
 use App\Models\Collector;
-use App\Models\Response as Model;
+use App\Models\Response;
 use App\Models\Survey;
+use App\Models\Tenant;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -23,40 +25,64 @@ use Filament\Tables\Actions\CreateAction;
 class ListResource extends Component implements HasForms, HasTable
 {
     use HasBreadcrumbs,
-        HasTenant,
         InteractsWithTable,
         InteractsWithForms;
 
     protected $isSingle = 1;
 
-    public string $collectorId;
-    public Collector $collector;
-    public string $surveyId;
-    public Survey $survey;
+    public ?Collector $collector = null;
+    public ?Survey $survey = null;
+    public ?Client $client = null;
+    public ?Tenant $tenant = null;
 
     public function mount()
     {
-        $user = request()->user();
+        abort_if(!Gate::allows('viewAny', Response::class), 403);
 
-        if (!isset($this->collector) && isset($this->collectorId)) {
-            dd($this->collectorId);
+        if (isset($this->collector) && $this->collector) {
             $this->survey = $this->collector->survey;
         }
-
-        if (!isset($this->survey) && isset($this->surveyId)) {
-            $this->survey = Survey::where('uuid', $this->surveyId)
-                ->whereIn('tenant_id', $user->tenants()->select('tenants.id'))
-                ->when(isset($this->collector), function($query) {
-                    dd($this->collector);
-                })
-                ->firstOrFail();
+        if ($this->survey) {
+            $this->client = $this->survey->client;
+        }
+        if ($this->client) {
+            $this->tenant = $this->client->tenant;
         }
 
+        abort_if(!$this->tenant, 403);
+
+        /**
+         * Verify they exist as part of the tenant.
+         * TODO: Just use middleware.
+         */
+        abort_if(!request()->user()->tenants()->where('tenants.id', $this->tenant->getKey())->exists(), 403);
+
+        if ($this->collector) {
+            dd(__LINE__);
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('surveys.all'));//, route('clients.surveys.index', $this->client))   ;
+        } else if ($this->survey) {
+            $this->addBreadcrumb(__('tenants.singular') . ': ' . $this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular') . ': ' . $this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
+        } else if ($this->client) {
+            $this->addBreadcrumb(__('tenants.singular') . ': ' . $this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular') . ': ' . $this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
+        } else if ($this->tenant) {
+            dd(__LINE__);
+            $this->addBreadcrumb(__('tenants.singular') . ': ' . $this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
+
+        } else {
+            $this->addBreadcrumb(__('surveys.all'));//, route('client.surveys.index', $this->client));
+        }
     }
 
     protected function getTableQuery()
     {
-        abort_if(!Gate::allows('viewAny', Model::class), 403);
 
 //        $tenant = $this->getTenant();
         $user = request()->user();
@@ -65,30 +91,18 @@ class ListResource extends Component implements HasForms, HasTable
             return $this->collector->responses()->getQuery();
         } else if (isset($this->survey)) {
             return $this->survey->responses()->getQuery();
-        } else {
-            return Collector::query();
+        } else if ($this->client) {
+            return Response::whereIn(
+                'collector_id',
+                Collector::whereIn(
+                    'survey_id',
+                    Survey::where('surveys.client_id', $this->client->getKey())->select('surveys.id')
+                )->select('collectors.id')
+            );
         }
 
-        if ($tenant) {
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
-            $this->addBreadcrumb('All Responses');
-            $this->isSingle = true;
-        } else {
-            $this->addBreadcrumb('All Responses');
-            $this->isSingle = false;
-        }
-
-        return Model::query()
-            ->when($tenant, function ($query) use ($tenant) {
-                return $query->whereHas('tenants', function ($query) use ($tenant) {
-                    $query->where('tenants.id', $tenant->id);
-                });
-            })
-            ->when(!$tenant, function ($query) use ($user) {
-                return $query->whereHas('tenants', function ($query) use ($user) {
-                    $query->whereIn('tenants.id', $user->tenants->pluck('id'));
-                });
-            });
+        dd(__LINE__);
+        return Collector::query();
     }
 
     public function table(Table $table): Table
@@ -97,6 +111,17 @@ class ListResource extends Component implements HasForms, HasTable
             ->query($this->getTableQuery())
             ->columns([
 //                TextColumn::make('id'),
+
+                TextColumn::make('survey.client.tenant.name')
+                    ->label(trans('tenants.singular'))
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                ,
+                TextColumn::make('survey.client.name')
+                    ->label(trans('clients.singular'))
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                ,
             TextColumn::make('survey.title')
                 ->label('Survey'),
             TextColumn::make('collector.name')
@@ -154,7 +179,10 @@ class ListResource extends Component implements HasForms, HasTable
     {
         return view('livewire.response.list-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
-            'survey' => $this->survey
+            'title' => __('responses.plural'),
+            'subtitle' => __('responses.description'),
+            'survey' => $this->survey,
+            'updateUrl' => null
         ]);
     }
 }

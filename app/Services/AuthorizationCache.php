@@ -2,7 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\TenantUserRole;
+use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 
 class AuthorizationCache
@@ -14,12 +17,12 @@ class AuthorizationCache
         return 'auth:' . implode(':', array_filter($parts));
     }
 
-    public function getUserRoles($userId, $tenantId)
+    public function getUserRoles(User $user, Tenant $tenant)
     {
         return Cache::remember(
-            $this->makeKey('user', $userId, 'tenant', $tenantId, 'roles'),
+            $this->makeKey('user', $user->getKey(), 'tenant', $tenant->getKey(), 'roles'),
             $this->ttl,
-            fn() => TenantUserRole::where(['user_id' => $userId, 'tenant_id' => $tenantId])
+            fn() => TenantUserRole::where(['user_id' => $user->getKey(), 'tenant_id' => $tenant->getKey()])
                 ->with('role')
                 ->get()
         );

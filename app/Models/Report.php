@@ -70,5 +70,9 @@ class Report extends Model implements HasMedia
             ->useDisk('public');
     }
 
+    public function client() : BelongsTo {
+        return $this->belongsTo(Client::class);
+    }
+
 }
 

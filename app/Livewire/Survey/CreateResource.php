@@ -3,10 +3,12 @@
 namespace App\Livewire\Survey;
 
 use App\Livewire\Contracts\HasTenant;
+use App\Models\Client;
 use App\Models\Collector;
 use App\Models\Collector as Model;
 use App\Models\Report;
 use App\Models\Survey;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Components\Hidden;
@@ -16,6 +18,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
@@ -35,38 +38,31 @@ use Livewire\WithUrlParams;
 class CreateResource extends Component implements HasForms {
 
     use HasBreadcrumbs,
-        HasTenant,
         InteractsWithForms;
 
     public $data = [];
+
+    public ?Client $client = null;
+    public ?Tenant $tenant = null;
+
     public function mount() {
+
         abort_if(!Gate::allows('create', Survey::class), 403);
 
-        $tenantId = request()->tenantId;
-
-        $this->setTenant($tenantId);
-
-        $tenant = $this->getTenant();
 
         $user = request()->user();
 
-        if (!$tenant) {
-            if ($user->tenants()->count() == 1) {
-                $tenant = $user->tenants()->first();
-                if (!Gate::allows('viewAny', \App\Models\Survey::class)) {
-                    return redirect()->route('tenants.surveys.show', $tenant);
-                }
-
-            }
-        }
-
-        if ($tenant) {
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
+        if ($this->client) {
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('surveys.create'))   ;
+        } else if ($this->tenant) {
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('surveys.create'), route('tenants.surveys.index', $this->tenant));
         } else {
-            $this->addBreadcrumb('All Centers');
+            $this->addBreadcrumb(__('surveys.create'));//, route('client.surveys.index', $this->client));
         }
-
-        $this->addBreadcrumb('Create Survey');
 
         $this->form->fill();
     }
@@ -81,9 +77,8 @@ class CreateResource extends Component implements HasForms {
             abort(500);
         }
 
-        $tenant = $this->getTenant();
 
-        $tenants = $tenant ? collect([$tenant])->pluck('name', 'id') : $user
+        $tenants = $this->tenant ? collect([$this->tenant])->pluck('name', 'id') : $user
             ->tenants()
             ->select('tenants.name','tenants.id')
             ->get()
@@ -119,17 +114,20 @@ class CreateResource extends Component implements HasForms {
         $data = $this->form->getState();
         $data['user_id'] = $user?->getKey();
 
-        if (!array_key_exists('tenant_id', $data) || !$data['tenant_id']) {
-            $tenant = $this->getTenant();
-            abort_if(!$tenant, 500);
-            $data['tenant_id'] = $tenant->getKey();
+        if ($this->client) {
+            $data['client_id'] = $this->client->getKey();
+        }
+
+        if ($this->tenant) {
+            $data['tenant_id'] = $this->tenant->getKey();
         }
 
         $record = Survey::create($data);
 
-        /**
-         * TODO: Add in notification?
-         */
+        Notification::make()
+            ->title(__('surveys.created'))
+            ->success()
+            ->send();
 
         $this->redirectRoute('surveys.edit', $record);
     }
@@ -138,6 +136,8 @@ class CreateResource extends Component implements HasForms {
     {
         return view('livewire.create-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
+            'title' => __('surveys.create'),
+            'subtitle' => __('surveys.description')
         ]);
     }
 

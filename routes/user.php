@@ -32,8 +32,6 @@ Route::group([
     Route::get('surveys/{surveyId}/collectors/create', [\App\Http\Controllers\CollectorController::class, 'create'])
         ->name('surveys.collectors.create');
 */
-    Route::get('surveys/{surveyId}/collectors/create', \App\Livewire\Collector\CreateResource::class)
-        ->name('surveys.collectors.create');
 
 
     Route::get('collectors/create', \App\Livewire\Collector\CreateResource::class)
@@ -48,26 +46,7 @@ Route::group([
     Route::resource('collectors', \App\Http\Controllers\CollectorController::class)
         ->except(['show', 'index', 'store', 'create', 'update', 'destroy']);
 */
-    Route::get('surveys', \App\Livewire\Survey\ListResource::class)->name('surveys.index');
 
-    Route::get('surveys/{surveyId}/collectors', \App\Livewire\Collector\ListResource::class)
-        ->name('surveys.collectors.index');
-
-    Route::get('surveys/{surveyId}/responses', \App\Livewire\Response\ListResource::class)
-        ->name('survey.responses.index');
-
-
-    Route::get('surveys/{surveyId}/reports', \App\Livewire\Report\ListResource::class)
-        ->name('surveys.reports.index');
-
-    Route::get('surveys/{surveyId}/reports/create', \App\Livewire\Report\CreateFromSurveyResource::class)
-        ->name('surveys.reports.create-from-survey');
-
-    Route::resource('surveys', \App\Http\Controllers\SurveyController::class)
-        ->except(['index'])
-        ->parameters([
-            'survey' => 'record'
-        ]);
 
     Route::get('reports', \App\Livewire\Report\ListResource::class)
         ->name('reports.index');
@@ -102,26 +81,9 @@ Route::group([
         ->name('tenants.create');
 */
 
-    Route::resource('tenants', \App\Http\Controllers\TenantController::class)
-        ->except(['index','create','store','update'])
-        ->parameters([
-            'tenant' => 'record'
-        ]);
-
-    Route::get('tenants/{tenantId}/reports', \App\Livewire\Report\ListResource::class)
+    Route::get('tenants/{tenant}/reports', \App\Livewire\Report\ListResource::class)
         ->name('tenants.reports.index');
 
-    Route::get('tenants/{tenantId}/collectors', \App\Livewire\Collector\ListResource::class)
-        ->name('tenants.collectors.index');
-
-    Route::get('tenants/{tenantId}/surveys', \App\Livewire\Survey\ListResource::class)->name('tenants.surveys.index');
-    Route::get('tenants/{tenantId}/surveys/create', \App\Livewire\Survey\CreateResource::class)
-        ->name('tenants.surveys.create');
-    Route::get('tenants/{tenantId}/reports/create', \App\Livewire\Report\CreateResource::class)
-        ->name('tenants.reports.create');
-
-    Route::get('tenants/{tenantId}/users', \App\Livewire\User\ListResource::class)
-        ->name('tenants.users.index');
 
     Route::get('analytics', function() {
         return view('analytics');
@@ -145,7 +107,7 @@ Route::group([
     Route::get('users', \App\Livewire\User\ListResource::class)
         ->name('users.index');
 
-    Route::get('tenant/{tenantId}/users/create', \App\Livewire\User\CreateResource::class)
+    Route::get('tenant/{tenant}/users/create', \App\Livewire\User\CreateResource::class)
         ->name('tenants.users.create');
     Route::get('users/create', \App\Livewire\User\CreateResource::class)
         ->name('users.create');

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Collector;
 
+use App\Models\Client;
 use App\Models\Collector;
 use App\Models\Collector as Model;
 use App\Models\Survey;
@@ -29,42 +30,30 @@ class ListResource extends Component implements HasForms, HasTable {
         InteractsWithTable,
         InteractsWithForms;
 
-    public ?string $surveyId = null;
-    public ?string $tenantId = null;
-
-    public Survey $survey;
+    public ?Client $client = null;
+    public ?Tenant $tenant = null;
+    public ?Survey $survey = null;
 
     public function mount() {
-        $user = request()->user();
-
-        if ($this->surveyId) {
-            $survey = $this->getRecord();
-
-            $this->addBreadcrumb(trans('tenants.singular').': '.$survey->tenant?->name, route('tenants.show', $survey->tenant));
-
-            $this->addBreadcrumb('Survey: '.$survey->title, route('surveys.show', $survey));
+        if ($this->survey) {
+            $this->client = $this->survey->client;
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('surveys.singular').': '.$this->survey->title, route('surveys.show', $this->survey));
+            $this->addBreadcrumb(__('collectors.all'));
+        } else if ($this->client) {
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('collectors.all'));
+        } elseif ($this->tenant) {
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('collectors.all'));
+        } else {
+            $this->addBreadcrumb(__('collectors.all'));//, route('surveys.index'));
         }
 
-    }
-
-    public function getRecord() : ?Survey {
-        if (isset($this->survey) && $this->survey) {
-            return $this->survey;
-        }
-        if (!isset($this->surveyId)) {
-            return null;
-        }
-
-        abort_if(!Str::of($this->surveyId)->isUuid(), 404);
-
-        $survey = Survey::where('surveys.uuid', $this->surveyId)
-            ->whereIn('tenant_id', request()->user()->tenants()->select('tenants.id'))
-            ->take(1)
-            ->firstOrFail();
-
-        $this->survey = $survey;
-
-        return $this->survey;
     }
 
     public function getTenant() : ?Tenant {
@@ -93,6 +82,25 @@ class ListResource extends Component implements HasForms, HasTable {
 
     protected function getTableQuery()
     {
+        if ($this->survey) {
+            return $this->survey->collectors()->getQuery();
+        } else if ($this->client) {
+            return Collector::where('client_id', $this->client->getKey())
+                ->with([
+                    'client',
+                    'client.tenant'
+                ]);
+        } elseif ($this->tenant) {
+            return Collector::whereIn('survey_id', Survey::where('tenant_id', $this->tenant->getKey())->select('surveys.id'))
+                ->with([
+                    'client',
+                    'client.tenant'
+                ]);
+        } else {
+            dd($this->client, $this->tenant, $this->survey);
+            dd(__LINE__);
+            $this->addBreadcrumb(__('collectors.all'));//, route('surveys.index'));
+        }
         if (isset($this->survey)) {
             return $this->survey->collectors()->withCount('responses')->getQuery();
         } else if ($this->surveyId) {
@@ -147,18 +155,29 @@ class ListResource extends Component implements HasForms, HasTable {
             TextColumn::make('status'),
             TextColumn::make('responses_count')
                 ->counts('responses')
-                ->label('Responses')
+                ->label('Responses'),
+
+            $tenantCount ? TextColumn::make('client.tenant.name')
+                ->label(trans('tenants.singular'))
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true)
+                : null,
+
+            TextColumn::make('client.name')
+                ->label(trans('clients.singular'))
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
 
         ])
         ->recordUrl(function (Model $record) {
-                return $record->status == 'open' && $record->type == 'url' ? url('/r/'.$record->unique_code) : '';
+            return $record->status == 'open' && $record->type == 'url' ? url('/r/'.$record->unique_code) : '';
         })
         ->headerActions([
             // Add a custom button in the header
             CreateAction::make('create')
                 ->label('Create New')
                 ->url(function() : string {
-                    return $this->surveyId ? route('surveys.collectors.create', $this->surveyId) : route('collectors.create');
+                    return $this->survey ? route('surveys.collectors.create', $this->survey) : route('collectors.create');
                 })
                 ->button()
                 ->color('custom') // Use custom color
@@ -211,6 +230,19 @@ class ListResource extends Component implements HasForms, HasTable {
                     })
                     ->hidden(function (Model $record) {
                         return $record->status == 'closed';
+                    }),
+                Action::make('report-create')
+                    ->label('Create Report')
+                    ->icon('heroicon-m-pencil-square')
+                    ->color('custom')
+                    ->extraAttributes([
+                        'class' => 'text-secondary-600 hover:text-secondary-700' // Add hover state
+                    ])
+                    ->action(function(Model $record) {
+                        dd($record);
+                    })
+                    ->hidden(function (Model $record) {
+                        return !$record->responses()->count();
                     })
 
             ])

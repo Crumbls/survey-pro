@@ -3,6 +3,8 @@
 namespace App\Livewire\Survey;
 
 use App\Livewire\Contracts\HasTenant;
+use App\Models\Client;
+use App\Models\Survey;
 use App\Models\Survey as Model;
 use App\Models\Tenant;
 use App\Models\User;
@@ -25,47 +27,53 @@ use Filament\Tables\Actions\CreateAction;
 
 class ListResource extends Component implements HasForms, HasTable {
     use HasBreadcrumbs,
-        HasTenant,
+//        HasTenant,
         InteractsWithTable,
         InteractsWithForms;
 
+    public ?Client $client = null;
+    public ?Tenant $tenant = null;
 
+    public function mount() {
+        abort_if(!Gate::allows('viewAny', Model::class), 403);
+
+        if ($this->client) {
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('surveys.all'));//, route('clients.surveys.index', $this->client))   ;
+        } else if ($this->tenant) {
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
+        } else {
+            $this->addBreadcrumb(__('surveys.all'));//, route('client.surveys.index', $this->client));
+        }
+    }
 
     protected function getTableQuery()
     {
-        abort_if(!Gate::allows('viewAny', Model::class), 403);
 
-        $tenantId = request()->tenantId;
+        if ($this->client) {
+            return $this->client->surveys()
+                ->with(['client', 'client.tenant'])
+                ->withCount('responses')
+                ->getQuery();
 
-        $this->setTenant($tenantId);
+        } else if ($this->tenant) {
+            return Survey::whereIn('client_id', $this->tenant->clients()->select('clients.id'))
+                ->with(['client', 'client.tenant'])
+                ->withCount('responses');
 
-        $tenant = $this->getTenant();
+        }
 
         $user = request()->user();
 
-        if (!$tenant) {
-            if ($user->tenants()->count() == 1) {
-                $tenant = $user->tenants()->first();
-                $this->setTenant($tenant);
-//                return redirect()->route('tenants.surveys.index', $tenant);
-            }
-        }
-
-        if ($tenant) {
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
-            $this->addBreadcrumb('Surveys', route('tenants.surveys.index', $tenant));
-        } else {
-            $this->addBreadcrumb('All Surveys', route('surveys.index'));
-        }
-
-        return Model::whereRaw('1=1')
-            ->when($tenant, function ($query, $tenant) {
-                $query->where('tenant_id', $tenant->getKey());
-            })
-            ->when(!$tenant, function ($query) use ($user) {
-                $query->whereIn('tenant_id', $user->tenants()->select('tenants.id'));
-            })
-            ->withCount('responses');
+        return Survey::whereIn('client_id',
+            Client::whereIn('tenant_id', $user->tenants()->select('tenants.id'))->select('clients.id')
+        )
+            ->with(['client', 'client.tenant'])
+            ->withCount('responses')
+            ;
     }
 
     public function table(Table $table): Table {
@@ -85,7 +93,15 @@ class ListResource extends Component implements HasForms, HasTable {
 
                     return number_format($record->getQuestionCount());
                 }),
-            $tenantCount ? TextColumn::make('tenant.name')->label('Center') : null
+            $tenantCount ? TextColumn::make('client.tenant.name')
+                ->label(__('tenants.singular'))
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true)
+                : null,
+            TextColumn::make('client.name')
+                ->label('clients.singular')
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
         ]))
         ->recordUrl(function (Model $record) {
             return route('surveys.show', $record);
@@ -95,8 +111,12 @@ class ListResource extends Component implements HasForms, HasTable {
             CreateAction::make('create')
                 ->label('Create New')
                 ->url(function() {
-                    $tenant = $this->getTenant();
-                    return $tenant ? route('tenants.surveys.create', $tenant) : route('surveys.create');
+                    if ($this->client) {
+                        return route('clients.surveys.create', $this->client);
+                    } else if ($this->tenant) {
+                        return route('tenants.surveys.create', $this->tenant);
+                    }
+                    return route('surveys.create');
                 })
                 ->button()
                 ->color('custom') // Use custom color

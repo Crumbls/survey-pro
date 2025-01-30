@@ -2,15 +2,8 @@
     @if(isset($breadcrumbs))
     <x-breadcrumbs :breadcrumbs="$breadcrumbs" />
     @endif
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-2xl font-bold text-slate-900">
-            {{ __('responses.plural') }}: {{ $survey->title }}
-        </h1>
-        <p class="text-slate-600">
-            Subtitle
-        </p>
-    </div>
+
+        <x-leadin :title="$title" :subtitle="$subtitle" :updateUrl="$updateUrl"/>
 
     {{ $this->table }}
 </div>

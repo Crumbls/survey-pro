@@ -3,11 +3,13 @@
 namespace App\Livewire\Report;
 
 use App\Livewire\Contracts\HasTenant;
+use App\Models\Client;
 use App\Models\Collector;
 
 use App\Models\Report;
 use App\Models\Report as Model;
 use App\Models\Survey;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -30,15 +32,39 @@ use Filament\Tables\Actions\CreateAction;
 
 class ListResource extends Component implements HasForms, HasTable {
     use HasBreadcrumbs,
-        HasTenant,
         InteractsWithTable,
         InteractsWithForms;
 
     public $isSingle = false;
 
-    public $surveyId;
+    public ?Collector $collector = null;
+    public ?Survey $survey = null;
+    public ?Client $client = null;
+    public ?Tenant $tenant = null;
+//    public $surveyId;
 
     public function mount() {
+
+        if ($this->survey) {
+            $this->client = $this->survey->client;
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('reports.all'));
+        } else if ($this->client) {
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('reports.all'));
+        } elseif ($this->tenant) {
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('reports.all'));
+        } else {
+            $this->addBreadcrumb(__('reports.all'));//, route('surveys.index'));
+        }
+
+        return;
+        dd($this->collector, $this->survey, $this->client, $this->tenant);
         $user = request()->user();
 
         if ($this->surveyId) {
@@ -72,23 +98,24 @@ class ListResource extends Component implements HasForms, HasTable {
     }
     protected function getTableQuery()
     {
-        if (isset($this->survey) && $this->survey) {
+        if ($this->collector) {
+            dd(__LINE__);
+        } else if ($this->survey) {
             return $this->survey->reports()->getQuery();
+        } else if ($this->client) {
+            return $this->client->reports()
+                ->getQuery();
+        } else if ($this->tenant) {
+            return Report::whereIn('reports.client_id', $this->tenant->clients()->select('clients.id'))
+                ->with(['survey','client']);
+        } else {
+            $user = request()->user();
+            return Report::whereIn('reports.survey_id', Survey::whereIn('surveys.tenant_id', $user->tenants()->select('tenants.id'))->select('surveys.id'))
+                ->with([
+                    'client',
+                    'client.tenant'
+                ]);
         }
-        $tenant = $this->getTenant();
-
-        $user = request()->user();
-
-        return Model::query()
-            ->when($tenant, function ($query) use ($tenant) {
-                $this->isSingle = true;
-                $query->whereIn('reports.survey_id', Survey::where('tenant_id', $tenant->getKey())->select('surveys.id'));
-
-            })
-            ->when(!$tenant, function ($query) use ($user) {
-                $query->whereIn('reports.survey_id', Survey::whereIn('surveys.tenant_id', $user->tenants()->select('id'))->select('surveys.id'));
-            })
-            ;
     }
 
     public function table(Table $table): Table {
@@ -97,6 +124,16 @@ class ListResource extends Component implements HasForms, HasTable {
     return $table
         ->query($this->getTableQuery())
         ->columns(array_filter([
+            TextColumn::make('client.tenant.name')
+                ->label(trans('tenants.singular'))
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true)
+            ,
+            TextColumn::make('client.name')
+                ->label(trans('clients.singular'))
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true)
+            ,
             TextColumn::make('title'),
             TextColumn::make('created_at')
                 ->dateTime()
@@ -104,9 +141,15 @@ class ListResource extends Component implements HasForms, HasTable {
                 ->toggleable(isToggledHiddenByDefault: true),
             TextColumn::make('survey.title')
                 ->sortable(),
-            TextColumn::make('survey.tenant.name')
-                ->label('Center')
-                ->sortable(),
+            $tenantCount ? TextColumn::make('survey.client.tenant.name')
+                ->label(__('tenants.singular'))
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true)
+                : null,
+            TextColumn::make('survey.client.name')
+                ->label(trans('clients.singular'))
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
         ]))
         ->recordUrl(function (Model $record) {
             return route('reports.edit', $record);
@@ -116,6 +159,7 @@ class ListResource extends Component implements HasForms, HasTable {
             CreateAction::make('create')
                 ->label('Create New')
                 ->url(function() : string {
+                    return '#';
                     $tenant = $this->getTenant();
 
                     return $tenant ? route('tenants.reports.create', $tenant) : route('reports.create');

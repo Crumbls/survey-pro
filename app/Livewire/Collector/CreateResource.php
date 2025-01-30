@@ -159,6 +159,10 @@ class CreateResource extends Component implements HasForms {
     {
         return view('livewire.create-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
+            'title' => __('collectors.create'),
+            'subtitle' => __('collectors.description'),
+            'cancelUrl' => $this->survey ? route('surveys.collectors.index', $this->survey) : route('surveys.index'),
+            'createText' => __('collectors.create')
         ]);
     }
 }

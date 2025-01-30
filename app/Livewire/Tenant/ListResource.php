@@ -27,33 +27,19 @@ class ListResource extends Component implements HasForms, HasTable
         InteractsWithForms;
 
     public function mount() {
-        $tenantId = request()->tenantId;
-
-        $this->setTenant($tenantId);
-
-        $tenant = $this->getTenant();
 
         $user = request()->user();
 
-
-        if (!$tenant) {
-            if ($user->tenants()->count() == 1) {
-                $tenant = $user->tenants()->first();
-//                $this->setTenant($tenant);
-                if (!Gate::allows('viewAny', Model::class)) {
-                    return redirect()->route('tenants.show', $tenant);
-                }
-            }
+        if ($user->tenants()->count() == 1) {
+            return redirect()->route('tenants.show', $user->tenants->first());
         }
 
-        $this->addBreadcrumb('All Centers');
+        $this->addBreadcrumb(__('tenants.all'));
 
     }
 
     protected function getTableQuery()
     {
-        $tenant = $this->getTenant();
-
         $user = request()->user();
 
         return $user->tenants()
@@ -152,8 +138,10 @@ class ListResource extends Component implements HasForms, HasTable
 
     public function render(): View
     {
-        return view('livewire.tenant.list-resource', [
-            'breadcrumbs' => $this->getBreadcrumbs()
+        return view('livewire.list-resource', [
+            'breadcrumbs' => $this->getBreadcrumbs(),
+            'title' => __('tenants.all'),
+            'subtitle' => __('tenants.description')
         ]);
     }
 }

@@ -6,16 +6,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 
-class PermissionPolicy {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
-    {
-        return true;
-
-        //
-    }
+class PermissionPolicy extends AbstractPolicy {
 
     /**
      * Determine whether the user can view the model.

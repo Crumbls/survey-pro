@@ -5,16 +5,7 @@ namespace App\Policies;
 use App\Models\Role;
 use App\Models\User;
 
-class RolePolicy {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
-    {
-        return true;
-
-        //
-    }
+class RolePolicy extends AbstractPolicy {
 
     /**
      * Determine whether the user can view the model.

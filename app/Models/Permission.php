@@ -9,7 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Permission extends Model
 {
-    protected $fillable = ['ability_id', 'entity_type', 'entity_id', 'forbidden'];
+    protected $fillable = [
+        'ability_id',
+        'entity_type',
+        'entity_id',
+        'forbidden'
+    ];
 
     public function ability()
     {

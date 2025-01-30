@@ -1,5 +1,5 @@
 <x-layout>
-    <div class="pt-16">
+    <div class="dis-pt-16">
         <!-- Hero Section -->
         <section class="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-gradient-to-b from-slate-50 to-white">
             <div class="container px-4 mx-auto">

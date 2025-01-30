@@ -19,6 +19,7 @@ class Survey extends Model
 
     protected $fillable = [
         'tenant_id',
+        'client_id',
         'user_id',
         'title',
         'description',
@@ -32,6 +33,11 @@ class Survey extends Model
     public function tenant() : BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function client() : BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 
     public function user() : BelongsTo
