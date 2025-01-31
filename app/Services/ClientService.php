@@ -15,7 +15,8 @@ class ClientService
 
         // Create new tenant with default naming convention
         $client = Client::create([
-            'name' => $this->generateDefaultClientName($tenant)
+            'name' => $this->generateDefaultClientName($tenant),
+            'tenant_id' => $tenant->getKey()
         ]);
 
         return $client;
@@ -23,6 +24,9 @@ class ClientService
 
     private function generateDefaultClientName(Tenant $tenant): string
     {
-        return $tenant->user->name.'\' Client';
+        if ($tenant->user) {
+            return $tenant->user->name.'\' Client';
+        }
+        return 'Your Client';
     }
 }

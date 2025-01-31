@@ -14,7 +14,7 @@ return new class extends Migration
      */
     public function up()
     {
-        /*
+
         Schema::create(Models::table('abilities'), function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->integer('scope')->nullable()->index();
             $table->timestamps();
         });
-        */
+
 
 
         Schema::dropIfExists(Models::table('roles'));
@@ -93,9 +93,9 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::drop(Models::table('permissions'));
-        Schema::drop(Models::table('assigned_roles'));
-        Schema::drop(Models::table('roles'));
-        Schema::drop(Models::table('abilities'));
+//        Schema::dropIfExists(Models::table('permissions'));
+  //      Schema::dropIfExists(Models::table('assigned_roles'));
+    //    Schema::dropIfExists(Models::table('roles'));
+        Schema::dropIfExists(Models::table('abilities'));
     }
 };

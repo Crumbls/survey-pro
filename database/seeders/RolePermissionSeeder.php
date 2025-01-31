@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Crumbls\Infrastructure\Models\Node;
 use Bouncer;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class RolePermissionSeeder extends Seeder
@@ -40,12 +41,17 @@ class RolePermissionSeeder extends Seeder
 
 //        Bouncer::allow($admin)->to('viewAny', Role::class);
 
-        $user = User::where('email','chase@crumbls.com')->take(1)->first();
+        $user = User::firstOrCreate([
+            'email' => 'chase@crumbls.com'
+        ], [
+            'name' => 'Chase Miller',
+            'password' => Hash::make('password')
+        ]);
 
         Bouncer::assign('administrator')->to($user);
 
         Bouncer::allow($admin)->everything();
-
+return;
         print_r(User::whereIs('administrator')->get());
 //        print_r($admin->toArray());
         exit;
