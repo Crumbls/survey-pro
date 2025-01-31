@@ -69,14 +69,16 @@ mobileMenuOpen: false,
 </div>
 
 @stack('scripts')
-
 <footer class="bg-gray-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
             <div class="flex items-center flex-grow">
                 <div class="flex-grow">
-                    <div class="ml-10 items-baseline space-x-4 text-center w-100">
-                        <p class="text-center w-100 text-white"><small>© Copyright {{ date('Y') }}, {{ config('app.name') }}. All rights reserved.</small></p>
+                    <div class="ml-10 items-baseline space-x-4 w-100 text-center w-100 text-white ">
+                        <p class=""><small>© Copyright {{ date('Y') }}, {{ config('app.name') }}. All rights reserved.</small></p>
+                        <p class="text-xs">
+                            Version: {{ \App\Helpers\VersionHelper::getVersion() }}
+                        </p>
                     </div>
                 </div>
             </div>
