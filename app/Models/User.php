@@ -61,8 +61,6 @@ class User extends Authenticatable implements FilamentUser, HasMedia
 
     public static function booted() : void {
         static::created(function(Model $record) {
-            $tenant = app(TenantService::class)->getOrCreateDefault($record);
-            $center = app(ClientService::class)->getOrCreateDefault($tenant);
         });
     }
 
