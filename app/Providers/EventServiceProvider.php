@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Events\PageBuilderInitialized;
 use App\Listeners\PageBuilderRegisterWidgets;
+use App\Models\Report;
+use App\Services\BizXReportService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -30,7 +32,9 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Report::creating(function ($record) {
+            BizXReportService::createDefault($record);
+        });
     }
 
     /**

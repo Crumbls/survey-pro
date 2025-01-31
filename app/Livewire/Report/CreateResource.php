@@ -3,10 +3,13 @@
 namespace App\Livewire\Report;
 
 use App\Livewire\Contracts\HasTenant;
+use App\Models\Client;
 use App\Models\Collector;
 use App\Models\Collector as Model;
 use App\Models\Report;
+use App\Models\Response;
 use App\Models\Survey;
+use App\Models\Tenant;
 use App\Models\TenantUserRole;
 use App\Models\User;
 use App\Traits\HasBreadcrumbs;
@@ -18,6 +21,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
@@ -37,47 +41,47 @@ use Livewire\WithUrlParams;
 
 class CreateResource extends Component implements HasForms {
 use HasBreadcrumbs,
-    HasTenant,
     InteractsWithForms;
 
-
-    public $surveyId;
-    public $collectorId;
-
-    private \Illuminate\Database\Eloquent\Model $_survey;
+    public ?Client $client = null;
+    public ?Collector $collector = null;
+    public ?Survey $survey = null;
+    public ?Tenant $tenant = null;
 
     public ?array $data = [];
 
     public function mount() {
         abort_if(!Gate::allows('create', Report::class), 403);
 
-        $tenantId = request()->tenantId;
-
-        $this->setTenant($tenantId);
-
-        $tenant = $this->getTenant();
-
-        $user = request()->user();
-
-        if (!$tenant) {
-            if ($user->tenants()->count() == 1) {
-                $tenant = $user->tenants()->first();
-                if (!Gate::allows('viewAny', \App\Models\Report::class)) {
-                    return redirect()->route('tenants.reports.show', $tenant);
-                }
-
-            }
+        if ($this->collector) {
+            $this->data['collector_id'] = $this->collector->getKey();
+            $this->survey = $this->collector->survey;
         }
 
-        if ($tenant) {
-            $this->addBreadcrumb(trans('tenants.singular').': '.$tenant->name, route('tenants.show', $tenant));
-        } else {
+        if ($this->survey) {
+            $this->data['survey_id'] = $this->survey->getKey();
+            $this->client = $this->survey->client;
+        }
+
+        if ($this->client) {
+            $this->data['client_id'] = $this->client->getKey();
+            $this->tenant = $this->client->tenant;
+        }
+
+        if ($this->tenant) {
+            $this->data['tenant_id'] = $this->tenant->getKey();
+
+        }
+
+        /**
+         * Add breadcrumbs.
+         */
+
             $this->addBreadcrumb(trans('tenants.all'));
-        }
 
         $this->addBreadcrumb('Create Survey');
 
-        $this->form->fill();
+        $this->form->fill($this->data);
     }
 
 
@@ -133,12 +137,12 @@ use HasBreadcrumbs,
     public function form(Form $form): Form
     {
         $user = request()->user();
-        $tenant = $this->getTenant();
 
         $surveys = null;
 
-        if ($tenant) {
-            $surveys = $tenant->surveys->pluck('title','id');
+
+        if ($this->tenant) {
+            $surveys = $this->tenant->surveys->pluck('title','id');
         } else if (Gate::allows('viewAny', Survey::class)) {
             $surveys = Survey::all()->pluck('title','id');
         } else {
@@ -147,27 +151,87 @@ use HasBreadcrumbs,
 
         $collectors = null;
 
-        if ($tenant) {
-            $collectors = Collector::whereIn('survey_id', $tenant->surveys()->select('id'))->get()->pluck('name', 'id');
+        if ($this->tenant) {
+            $collectors = Collector::whereIn('survey_id', $this->tenant->surveys()->select('id'))->get()->pluck('name', 'id');
         } else if (Gate::allows('viewAny', Report::class)) {
             $collectors = Collector::all()->pluck('name', 'id');
         } else {
             /**
              * This needs to clean up and only show them by survey, right?
              */
-            $collectors = Collector::whereIn('survey_id', $tenant->surveys()
+            $collectors = Collector::whereIn('survey_id', $this->tenant->surveys()
                 ->whereIn('tenant_id', TenantUserRole::where('user_id', auth()->id())->select('tenant_id'))
                 ->select('id'))->get()->pluck('name', 'id');
 
         }
-//dd($surveys);
+
         return $form
             ->schema([
+                Select::make('tenant_id')
+                    ->label(__('tenants.singular'))
+                    ->options(function () {
+                        if ($this->tenant) {
+                            return [$this->tenant->getKey() => $this->tenant->name];
+                        }
+                        return request()->user()->tenants->pluck('name', 'id');
+                    })->hidden(function() {
+                        return isset($this->tenant) && $this->tenant;
+                    })
+                    ->live()  // Makes the field reactive
+                    ->afterStateUpdated(function (Set $set) {
+                        // Clear the dependent field when parent changes
+                        $set('client_id', null);
+                        $set('survey_id', null);
+                        $set('collector_ids', null);
+                    })
+                    ->required(),
+
+
+                Select::make('client_id')
+                    ->label(__('clients.singular'))
+                    ->options(function (Get $get) {
+                        if ($this->client) {
+                            return [$this->client->getKey() => $this->client->name];
+                        }
+                        $tenantId = $get('tenant_id');
+                        if (!$tenantId) {
+                            return [];
+                        }
+                        return Client::where('tenant_id', $tenantId)
+                            ->orderBy('clients.name','asc')
+                            ->pluck('name','id');
+                    })->hidden(function() {
+                        return isset($this->client) && $this->client;
+                    })
+                    ->live()  // Makes the field reactive
+                    ->afterStateUpdated(function (Set $set) {
+                        // Clear the dependent field when parent changes
+                        $set('survey_id', null);
+                        $set('collector_ids', null);
+                    })
+                    ->required(),
+
                 Select::make('survey_id')
                     ->label('Survey')
-                    ->options(function () {
+                    ->options(function (Get $get) {
+                        $clientId = $get('client_id');
+                        if (!$clientId) {
+                            return [];
+                        }
+
                         return Survey::query()
-                            ->whereIn('tenant_id', auth()->user()->tenants->pluck('id'))
+                            ->where('client_id', $clientId)
+                            ->whereIn('surveys.id',
+                                Collector::whereRaw('1=1')
+                                    ->whereIn('collectors.id',
+                                        Response::select('collector_id')
+                                        /**
+                                         * TODO: Revise this query to make it simpler to speed up down the road.
+                                         */
+                                    )
+                                    ->select('survey_id')
+                            )
+                            ->get()
                             ->pluck('title', 'id');
                     })
                     ->live()  // Makes the field reactive
@@ -178,14 +242,13 @@ use HasBreadcrumbs,
                     ->required(),
 
                 Select::make('collector_ids')
-                    ->label('Collector')
+                    ->label(trans('collectors.plural'))
                     ->options(function (Get $get) {
                         $surveyId = $get('survey_id');
 
                         if (!$surveyId) {
                             return [];
                         }
-
                         return Collector::query()  // Assuming 'Collector' is your links model
                             ->where('survey_id', $surveyId)
                             ->pluck('name', 'id');
@@ -215,9 +278,10 @@ use HasBreadcrumbs,
 
         $record = Report::create($data);
 
-        /**
-         * TODO: Add in notification?
-         */
+        Notification::make()
+            ->title(__('reports.created'))
+            ->success()
+            ->send();
 
         $this->redirectRoute('reports.edit', $record);
     }
@@ -226,7 +290,7 @@ use HasBreadcrumbs,
     {
         return view('livewire.report.create-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
-            'tenant' => $this->getTenant()
+//            'tenant' => $this->getTenant()
         ]);
     }
 

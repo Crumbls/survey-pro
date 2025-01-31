@@ -28,7 +28,7 @@ Route::get('reports', \App\Livewire\Report\ListResource::class)
     ->name('reports.index');
 
 Route::get('reports/create', \App\Livewire\Report\CreateResource::class)
-    ->name('reports.create-from-survey');
+    ->name('reports.create');
 
 Route::get('/create', \App\Livewire\Survey\CreateResource::class)
     ->name('create');

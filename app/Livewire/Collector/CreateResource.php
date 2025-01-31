@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Collector;
 
+use App\Models\Client;
 use App\Models\Collector;
-use App\Models\Collector as Model;
+use App\Models\Response;
 use App\Models\Survey;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Components\Select;
@@ -13,6 +15,9 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
@@ -33,65 +38,124 @@ class CreateResource extends Component implements HasForms {
         InteractsWithForms;
 
     public array $data;
-    public ?string $surveyId;
-    public ?Survey $survey;
+
+    public ?Tenant $tenant = null;
+    public ?Client $client = null;
+    public ?Survey $survey = null;
 
     public function mount() {
         abort_if(!Gate::allows('create', Collector::class), 403);
 
         $user = request()->user();
 
-        if (isset($this->surveyId)) {
-            $this->survey = Survey::where('uuid', $this->surveyId)
-                ->whereIn('tenant_id', $user->tenants()->select('tenants.id'))
-                ->firstOrFail();
+        if ($this->survey) {
+            $this->client = $this->survey->client;
+            $this->data['survey_id'] = $this->survey->getKey();
         }
 
-/*
-        if ($tenant) {
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
-        } else {
-            $this->addBreadcrumb('All Centers');
+        if ($this->client) {
+            $this->tenant = $this->client->tenant;
+            $this->data['client_id'] = $this->client->getKey();
         }
 
-*/
+        if ($this->tenant) {
+            $this->data['tenant_id'] = $this->tenant->getKey();
+        }
+
         $this->addBreadcrumb('Create Survey');
 
-        $this->form->fill();
+        $this->form->fill($this->data);
     }
 
 
 
     public function form(Form $form): Form
     {
-        $user = request()->user();
-
-        if (!$user) {
-            abort(500);
-        }
-
-
-        $surveys = isset($this->survey) && $this->survey ? collect([$this->survey])->pluck('title','id') :
-            Survey::whereIn('tenant_id', $user->tenants()->select('tenants.id'))
-                ->get()
-                ->filter(function(Survey $record) {
-                    return $record->getQuestionCount();
-                })
-                ->pluck('title','id');
-
-        $hasSingleSurvey = $surveys->count() === 1;
-
-        if ($hasSingleSurvey) {
-            $this->data['survey_id'] = $surveys->keys()->first();
-        }
-
         return $form
             ->schema([
+
+
+
+                Select::make('tenant_id')
+                    ->label(__('tenants.singular'))
+                    ->options(function () {
+                        if ($this->tenant) {
+                            return [$this->tenant->getKey() => $this->tenant->name];
+                        }
+                        return request()->user()->tenants->pluck('name', 'id');
+                    })->hidden(function() {
+                        return isset($this->tenant) && $this->tenant;
+                    })
+                    ->live()  // Makes the field reactive
+                    ->afterStateUpdated(function (Set $set) {
+                        // Clear the dependent field when parent changes
+                        $set('client_id', null);
+                        $set('survey_id', null);
+                        $set('collector_ids', null);
+                    })
+                    ->required(),
+
+                Select::make('client_id')
+                    ->label(__('clients.singular'))
+                    ->options(function (Get $get) {
+                        if ($this->client) {
+                            return [$this->client->getKey() => $this->client->name];
+                        }
+                        $tenantId = $get('tenant_id');
+                        if (!$tenantId) {
+                            return [];
+                        }
+                        return Client::where('tenant_id', $tenantId)
+                            ->orderBy('clients.name','asc')
+                            ->pluck('name','id');
+                    })
+                    ->hidden(function() {
+                        return isset($this->client) && $this->client;
+                    })
+                    ->live()  // Makes the field reactive
+                    ->afterStateUpdated(function (Set $set) {
+                        // Clear the dependent field when parent changes
+                        $set('survey_id', null);
+                        $set('collector_ids', null);
+                    })
+                    ->required(),
+
                 Select::make('survey_id')
-                    ->options($surveys)
-                    ->required()
-                    ->hidden($hasSingleSurvey)
-                    ->label('Survey'),
+                    ->label('Survey')
+                    ->options(function (Get $get) {
+                        if ($this->survey) {
+                            return [$this->survey->getKey() => $this->survey->title];
+                        }
+
+                        $clientId = $get('client_id');
+                        if (!$clientId) {
+                            return [];
+                        }
+
+                        return Survey::query()
+                            ->where('client_id', $clientId)
+                            ->whereIn('surveys.id',
+                                Collector::whereRaw('1=1')
+                                    ->whereIn('collectors.id',
+                                        Response::select('collector_id')
+                                    /**
+                                     * TODO: Revise this query to make it simpler to speed up down the road.
+                                     */
+                                    )
+                                    ->select('survey_id')
+                            )
+                            ->get()
+                            ->pluck('title', 'id');
+                    })
+                    ->live()  // Makes the field reactive
+                    ->afterStateUpdated(function (Set $set) {
+                        // Clear the dependent field when parent changes
+                        $set('collector_ids', null);
+                    })
+                    ->hidden(function() {
+                        return isset($this->survey) && $this->survey;
+                    })
+                    ->required(),
                 TextInput::make('reference')
                     ->prefix('/r/')
                     ->required()
@@ -129,6 +193,20 @@ class CreateResource extends Component implements HasForms {
 
         $data = $this->form->getState();
 
+        if ($this->survey) {
+            $this->client = $this->survey->client;
+            $data['survey_id'] = $this->survey->getKey();
+        }
+
+        if ($this->client) {
+            $this->tenant = $this->client->tenant;
+            $data['client_id'] = $this->client->getKey();
+        }
+
+        if ($this->tenant) {
+            $data['tenant_id'] = $this->tenant->getKey();
+        }
+
         $data['user_id'] = $user?->getKey();
 
         if (!array_key_exists('survey_id', $data) || !$data['survey_id']) {
@@ -146,11 +224,14 @@ class CreateResource extends Component implements HasForms {
 
         $data['unique_code'] = $data['reference'];
 
+        $data['status'] = 'open';
+
         $record = Collector::create($data);
 
-        /**
-         * TODO: Add in notification?
-         */
+        Notification::make()
+            ->title(__('collectors.created'))
+            ->success()
+            ->send();
 
         $this->redirectRoute('surveys.collectors.index', $record->survey);
     }

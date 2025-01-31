@@ -124,23 +124,6 @@ class ListResource extends Component implements HasForms, HasTable {
     return $table
         ->query($this->getTableQuery())
         ->columns(array_filter([
-            TextColumn::make('client.tenant.name')
-                ->label(trans('tenants.singular'))
-                ->sortable()
-                ->toggleable(isToggledHiddenByDefault: true)
-            ,
-            TextColumn::make('client.name')
-                ->label(trans('clients.singular'))
-                ->sortable()
-                ->toggleable(isToggledHiddenByDefault: true)
-            ,
-            TextColumn::make('title'),
-            TextColumn::make('created_at')
-                ->dateTime()
-                ->sortable()
-                ->toggleable(isToggledHiddenByDefault: true),
-            TextColumn::make('survey.title')
-                ->sortable(),
             $tenantCount ? TextColumn::make('survey.client.tenant.name')
                 ->label(__('tenants.singular'))
                 ->sortable()
@@ -150,6 +133,14 @@ class ListResource extends Component implements HasForms, HasTable {
                 ->label(trans('clients.singular'))
                 ->sortable()
                 ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('title'),
+            TextColumn::make('created_at')
+                ->dateTime()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('survey.title')
+                ->sortable(),
+
         ]))
         ->recordUrl(function (Model $record) {
             return route('reports.edit', $record);
@@ -159,6 +150,19 @@ class ListResource extends Component implements HasForms, HasTable {
             CreateAction::make('create')
                 ->label('Create New')
                 ->url(function() : string {
+
+                    if ($this->collector) {
+                        return route('collectors.reports.create', $this->collector);
+                    } else if ($this->survey) {
+                        return route('surveys.reports.create', $this->survey);
+                    } else if ($this->client) {
+                        return route('clients.reports.create', $this->client);
+                    } else if ($this->tenant) {
+                        return route('tenants.reports.create', $this->tenant);
+                    }
+
+                    return route('reports.create');
+
                     return '#';
                     $tenant = $this->getTenant();
 

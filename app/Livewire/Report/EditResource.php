@@ -9,6 +9,7 @@ use App\Filament\Forms\Blocks\CylindersBlock;
 use App\Filament\Forms\Blocks\HeadingBlock;
 use App\Filament\Forms\Blocks\HeatmapBlock;
 use App\Filament\Forms\Blocks\ImageBlock;
+use App\Filament\Forms\Blocks\PistonBlock;
 use App\Models\Client;
 use App\Models\Collector;
 use App\Models\Report;
@@ -89,6 +90,7 @@ class EditResource extends Component implements HasForms
                                     ->label('Paragraph')
                                     ->required(),
                             ]),
+                        PistonBlock::make('pistons'),
                         ImageBlock::make('image'),
                         ChartsBlock::make('chart'),
                         HeatmapBlock::make('heatmap'),

@@ -3,8 +3,9 @@
                 <x-breadcrumbs :breadcrumbs="$breadcrumbs" />
                 <x-leadin :title="$title" :subtitle="$subtitle" />
 
+                @vite('resources/css/report.css')
 
-                <section class="report gap-y-4" id="report-{{ $record->getKey() }}">
+                <section class="report flex flex-col gap-y-4" id="report-{{ $record->getKey() }}">
                 @if(Auth::id() == 1)
                     @php((array)$record->data)
                     @foreach($record->data as $idx => $chunk)
@@ -25,8 +26,8 @@
                         </div>
 
                         @endif
-                </section>
                     @endforeach
+                </section>
                     @else
                 <!-- Coming Soon Card -->
                 <div class="max-w-2xl mx-auto">

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Client;
 use App\Models\Report;
 use App\Models\Survey;
 use App\Models\User;
@@ -16,6 +17,7 @@ class ReportPolicy extends AbstractPolicy
      */
     public function view(User $user, Report $report): bool
     {
+        return true;
         //
     }
 
@@ -34,6 +36,25 @@ class ReportPolicy extends AbstractPolicy
     public function update(User $user, Report $record): bool
     {
         return once(function() use ($user, $record) {
+            /**
+             * Determine if they match the client first.
+             */
+            if (!$record->client_id) {
+                return false;
+            }
+            if (!$record->client->tenant->users()->where('users.id', $user->getKey())->take(1)->exists()) {
+                return false;
+            }
+
+return true;
+            $ret = Survey::whereIn('client_id',
+                Client::whereIn('tenant_id',
+                    $user->tenants()->select('tenants.id')
+                )->select('clients.id')
+            )->get();
+            dd($ret, $record);
+            dd($record);
+            dd(__LINE__);
             return Survey::whereIn('surveys.tenant_id', $user->tenants()->select('tenants.id'))
                 ->where('surveys.id', $record->getKey())
                 ->take(1)
