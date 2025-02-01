@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasSubscriptions;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,7 @@ class Client extends Model implements HasMedia
         HasUuid,
         InteractsWithMedia,
         SoftDeletes,
+        HasSubscriptions,
         WithFileUploads;
 
     protected $uuidFrom = 'name';

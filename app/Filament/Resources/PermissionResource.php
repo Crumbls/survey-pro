@@ -13,16 +13,21 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class PermissionResource extends AbstractResource
+class PermissionResource extends Resource
 {
     protected static ?string $model = Permission::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function agetNavigationSort(): int
-    {
-        return RoleResource::getNavigationSort() + 5;
+    public static function getNavigationGroup(): ?string {
+        return RoleResource::getNavigationGroup();
     }
+
+    public static function getNavigationSort(): int
+    {
+        return AbilityResource::getNavigationSort() +  10;
+    }
+
 
     public static function form(Form $form): Form
     {
@@ -31,11 +36,13 @@ class PermissionResource extends AbstractResource
                 Forms\Components\TextInput::make('ability_id')
                     ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('entity_type'),
                 Forms\Components\TextInput::make('entity_id')
                     ->numeric(),
+                Forms\Components\TextInput::make('entity_type'),
                 Forms\Components\Toggle::make('forbidden')
                     ->required(),
+                Forms\Components\TextInput::make('scope')
+                    ->numeric(),
             ]);
     }
 
@@ -46,21 +53,16 @@ class PermissionResource extends AbstractResource
                 Tables\Columns\TextColumn::make('ability_id')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('entity_type')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('entity_id')
                     ->numeric()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('entity_type')
+                    ->searchable(),
                 Tables\Columns\IconColumn::make('forbidden')
                     ->boolean(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('scope')
+                    ->numeric()
+                    ->sortable(),
             ])
             ->filters([
                 //

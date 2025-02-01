@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\SurveyResource\Pages;
-use App\Filament\Resources\SurveyResource\RelationManagers;
-use App\Models\Survey;
+use App\Filament\Resources\PlanFeatureResource\Pages;
+use App\Filament\Resources\PlanFeatureResource\RelationManagers;
+use App\Models\PlanFeature;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,41 +13,46 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class SurveyResource extends AbstractResource
+class PlanFeatureResource extends Resource
 {
-    protected static ?string $model = Survey::class;
+    protected static ?string $model = PlanFeature::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function getNavigationGroup(): ?string {
-        return TenantResource::getNavigationGroup();
-    }
-
     public static function getNavigationSort(): int
     {
-        return ClientResource::getNavigationSort() + 10;
+        return PlanResource::getNavigationSort() +  10;
+    }
+
+    public static function getNavigationGroup(): ?string {
+        return PlanResource::getNavigationGroup();
     }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                Forms\Components\Select::make('plan_id')
+                    ->relationship('plan', 'name')
+                    ->required(),
                 Forms\Components\TextInput::make('uuid')
                     ->label('UUID')
                     ->required(),
-                Forms\Components\Select::make('tenant_id')
-                    ->relationship('tenant', 'name')
-                    ->label(__('tenants.singular'))
+                Forms\Components\TextInput::make('name')
                     ->required(),
-                Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
+                Forms\Components\TextInput::make('description'),
+                Forms\Components\TextInput::make('value')
                     ->required(),
-                Forms\Components\TextInput::make('title')
+                Forms\Components\TextInput::make('resettable_period')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
+                Forms\Components\TextInput::make('resettable_interval')
                     ->required(),
-                Forms\Components\Textarea::make('description')
-                    ->columnSpanFull(),
-                Forms\Components\Textarea::make('questions')
-                    ->columnSpanFull(),
+                Forms\Components\TextInput::make('sort_order')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
             ]);
     }
 
@@ -55,20 +60,26 @@ class SurveyResource extends AbstractResource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('plan.name')
+                    ->numeric()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('uuid')
                     ->label('UUID')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('tenant.name')
-                    ->label(__('tenants.singular'))
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label(__('users.singular'))
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('title')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('description')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('value')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('resettable_period')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('resettable_interval')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('sort_order')
+                    ->numeric()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -86,11 +97,7 @@ class SurveyResource extends AbstractResource
                 //
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make(),
-                ])
+                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -109,10 +116,9 @@ class SurveyResource extends AbstractResource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSurveys::route('/'),
-            'create' => Pages\CreateSurvey::route('/create'),
-            'edit' => Pages\EditSurvey::route('/{record}/edit'),
-            'view' => Pages\ViewSurvey::route('/{record}'),
+            'index' => Pages\ListPlanFeatures::route('/'),
+            'create' => Pages\CreatePlanFeature::route('/create'),
+            'edit' => Pages\EditPlanFeature::route('/{record}/edit'),
         ];
     }
 }

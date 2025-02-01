@@ -19,9 +19,13 @@ class UserResource extends AbstractResource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function getNavigationGroup(): ?string {
+        return __('users.plural');
+    }
+
     public static function getNavigationSort(): int
     {
-        return 300;
+        return PlanSubscriptionUsageResource::getNavigationSort() + 100;
     }
     public static function form(Form $form): Form
     {

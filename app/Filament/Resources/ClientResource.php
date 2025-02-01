@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\AbilityResource\Pages;
-use App\Filament\Resources\AbilityResource\RelationManagers;
-use App\Models\Ability;
+use App\Filament\Resources\ClientResource\Pages;
+use App\Filament\Resources\ClientResource\RelationManagers;
+use App\Models\Client;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,38 +13,35 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class AbilityResource extends Resource
+class ClientResource extends Resource
 {
-    protected static ?string $model = Ability::class;
+    protected static ?string $model = Client::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
     public static function getNavigationGroup(): ?string {
-        return RoleResource::getNavigationGroup();
+        return TenantResource::getNavigationGroup();
     }
 
     public static function getNavigationSort(): int
     {
-        return RoleResource::getNavigationSort() +  10;
+        return TenantResource::getNavigationSort() + 10;
     }
-
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                Forms\Components\TextInput::make('uuid')
+                    ->label('UUID')
+                    ->required(),
+                Forms\Components\Select::make('tenant_id')
+                    ->relationship('tenant', 'name')
+                    ->required(),
                 Forms\Components\TextInput::make('name')
                     ->required(),
-                Forms\Components\TextInput::make('title'),
-                Forms\Components\TextInput::make('entity_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('entity_type'),
-                Forms\Components\Toggle::make('only_owned')
-                    ->required(),
-                Forms\Components\Textarea::make('options')
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('scope')
-                    ->numeric(),
+                Forms\Components\TextInput::make('primary_color'),
+                Forms\Components\TextInput::make('secondary_color'),
+                Forms\Components\TextInput::make('accent_color'),
             ]);
     }
 
@@ -52,25 +49,29 @@ class AbilityResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('uuid')
+                    ->label('UUID')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('tenant.name')
+                    ->numeric()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('title')
+                Tables\Columns\TextColumn::make('primary_color')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('entity_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('entity_type')
+                Tables\Columns\TextColumn::make('secondary_color')
                     ->searchable(),
-                Tables\Columns\IconColumn::make('only_owned')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('scope')
-                    ->numeric()
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('accent_color')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -98,9 +99,9 @@ class AbilityResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListAbilities::route('/'),
-            'create' => Pages\CreateAbility::route('/create'),
-            'edit' => Pages\EditAbility::route('/{record}/edit'),
+            'index' => Pages\ListClients::route('/'),
+            'create' => Pages\CreateClient::route('/create'),
+            'edit' => Pages\EditClient::route('/{record}/edit'),
         ];
     }
 }

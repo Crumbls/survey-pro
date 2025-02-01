@@ -19,9 +19,13 @@ class ReportResource extends AbstractResource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function getNavigationGroup(): ?string {
+        return TenantResource::getNavigationGroup();
+    }
+
     public static function getNavigationSort(): int
     {
-        return SurveyResource::getNavigationSort() + 10;
+        return CollectorResource::getNavigationSort() + 10;
     }
 
     public static function form(Form $form): Form

@@ -6,7 +6,7 @@ use App\Models\Collector;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class CollectorPolicy
+class CollectorPolicy extends AbstractPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -39,8 +39,10 @@ class CollectorPolicy
      */
     public function update(User $user, Collector $record): bool
     {
-        dd($record);
-        //
+        if (static::isRequestFilament()) {
+            return true;
+        }
+        dd(__LINE__);
     }
 
     /**
@@ -48,6 +50,7 @@ class CollectorPolicy
      */
     public function delete(User $user, Collector $record): bool
     {
+        return false;
         //
     }
 

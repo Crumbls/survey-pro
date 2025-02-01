@@ -13,16 +13,25 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class TenantResource extends AbstractResource
+class TenantResource extends Resource
 {
     protected static ?string $model = Tenant::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    public static function getNavigationGroup(): ?string {
+        return __('commons.general');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return trans('tenants.plural');
+    }
 
     public static function getNavigationSort(): int
     {
-        return 100;
+        return 10;
     }
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
@@ -33,6 +42,9 @@ class TenantResource extends AbstractResource
                     ->required(),
                 Forms\Components\TextInput::make('name')
                     ->required(),
+                Forms\Components\TextInput::make('primary_color'),
+                Forms\Components\TextInput::make('secondary_color'),
+                Forms\Components\TextInput::make('accent_color'),
             ]);
     }
 
@@ -42,9 +54,7 @@ class TenantResource extends AbstractResource
             ->columns([
                 Tables\Columns\TextColumn::make('uuid')
                     ->label('UUID')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -59,15 +69,18 @@ class TenantResource extends AbstractResource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('primary_color')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('secondary_color')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('accent_color')
+                    ->searchable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make(),
-                ])
+                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -79,7 +92,7 @@ class TenantResource extends AbstractResource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\UsersRelationManager::make()
+            //
         ];
     }
 

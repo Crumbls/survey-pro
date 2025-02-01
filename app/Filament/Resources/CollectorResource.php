@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\AbilityResource\Pages;
-use App\Filament\Resources\AbilityResource\RelationManagers;
-use App\Models\Ability;
+use App\Filament\Resources\CollectorResource\Pages;
+use App\Filament\Resources\CollectorResource\RelationManagers;
+use App\Models\Collector;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,38 +13,42 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class AbilityResource extends Resource
+class CollectorResource extends Resource
 {
-    protected static ?string $model = Ability::class;
+    protected static ?string $model = Collector::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function getNavigationGroup(): ?string {
-        return RoleResource::getNavigationGroup();
+        return TenantResource::getNavigationGroup();
     }
+
 
     public static function getNavigationSort(): int
     {
-        return RoleResource::getNavigationSort() +  10;
+        return SurveyResource::getNavigationSort() + 10;
     }
-
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                Forms\Components\TextInput::make('survey_id')
+                    ->required()
+                    ->numeric(),
                 Forms\Components\TextInput::make('name')
                     ->required(),
-                Forms\Components\TextInput::make('title'),
-                Forms\Components\TextInput::make('entity_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('entity_type'),
-                Forms\Components\Toggle::make('only_owned')
+                Forms\Components\TextInput::make('type')
                     ->required(),
-                Forms\Components\Textarea::make('options')
+                Forms\Components\TextInput::make('status')
+                    ->required(),
+                Forms\Components\Textarea::make('configuration')
+                    ->required()
                     ->columnSpanFull(),
-                Forms\Components\TextInput::make('scope')
-                    ->numeric(),
+                Forms\Components\TextInput::make('unique_code'),
+                Forms\Components\DateTimePicker::make('expires_at'),
+                Forms\Components\Select::make('client_id')
+                    ->relationship('client', 'name'),
             ]);
     }
 
@@ -52,19 +56,19 @@ class AbilityResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('title')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('entity_id')
+                Tables\Columns\TextColumn::make('survey_id')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('entity_type')
+                Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\IconColumn::make('only_owned')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('scope')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('type')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('unique_code')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('expires_at')
+                    ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -74,6 +78,13 @@ class AbilityResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('deleted_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('client.name')
+                    ->numeric()
+                    ->sortable(),
             ])
             ->filters([
                 //
@@ -98,9 +109,9 @@ class AbilityResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListAbilities::route('/'),
-            'create' => Pages\CreateAbility::route('/create'),
-            'edit' => Pages\EditAbility::route('/{record}/edit'),
+            'index' => Pages\ListCollectors::route('/'),
+            'create' => Pages\CreateCollector::route('/create'),
+            'edit' => Pages\EditCollector::route('/{record}/edit'),
         ];
     }
 }

@@ -18,19 +18,28 @@ trait HasUuid
         });
     }
 
-    protected static function generateUniqueUuid(Model $model): string
+    protected static function generateUniqueUuid(Model $record): string
     {
-        $from = $model->uuidFrom ?? null;
+        $from = $record->uuidFrom ?? null;
+
+        $class = get_class($record);
+
+        if ($from && $record->$from) {
+            $uuid = Str::kebab($record->$from);
+            if (!$record->where('uuid', $uuid)->take(1)->exists()) {
+                return $uuid;
+            }
+        }
 
         do {
-            if ($from && $model->{$from}) {
+            if ($from && $record->{$from}) {
                 // Generate a v5 UUID using a namespace UUID and the property value
                 $namespaceUuid = Uuid::NAMESPACE_DNS;  // Or any other namespace UUID
-                $uuid = Uuid::uuid5($namespaceUuid, $model->{$from})->toString();
+                $uuid = Uuid::uuid5($namespaceUuid, $record->{$from})->toString();
             } else {
                 $uuid = Uuid::uuid4()->toString();
             }
-        } while ($model->where('uuid', $uuid)->exists());
+        } while ($record->where('uuid', $uuid)->take(1)->exists());
 
         return $uuid;
     }

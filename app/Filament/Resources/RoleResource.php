@@ -13,26 +13,31 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class RoleResource extends AbstractResource
+class RoleResource extends Resource
 {
     protected static ?string $model = Role::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function getNavigationGroup(): ?string {
+        return trans('commons.security');
+    }
 
     public static function getNavigationSort(): int
     {
-        return UserResource::getNavigationSort() + 10;
+        return UserResource::getNavigationSort() +  100;
     }
+
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                ->required()
-                ->unique(ignoreRecord: true)
-                //
+                    ->required(),
+                Forms\Components\TextInput::make('title'),
+                Forms\Components\TextInput::make('scope')
+                    ->numeric(),
             ]);
     }
 
@@ -40,8 +45,21 @@ class RoleResource extends AbstractResource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-                //
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('title')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('scope')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
@@ -59,8 +77,6 @@ class RoleResource extends AbstractResource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\UsersRelationManager::make(),
-            RelationManagers\AbilitiesRelationManager::make()
             //
         ];
     }
