@@ -94,4 +94,8 @@ Route::group([
         ->name('users.create');
 
 
+    Route::get('users/{user}/edit', function() {
+        dd('This function is currently disabled.');
+    })->name('users.edit');
+
 });

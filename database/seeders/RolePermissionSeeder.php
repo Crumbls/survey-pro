@@ -50,23 +50,8 @@ class RolePermissionSeeder extends Seeder
 
         Bouncer::assign('administrator')->to($user);
 
-        $user = User::firstOrCreate([
-            'email' => 'sumer@thebizxgroup.com'
-        ], [
-            'name' => 'Sumer',
-            'password' => Hash::make('password')
-        ]);
-
-        Bouncer::assign('administrator')->to($user);
-
         Bouncer::allow($admin)->everything();
-return;
-        print_r(User::whereIs('administrator')->get());
-//        print_r($admin->toArray());
-        exit;
 
-        print_r($models);
-        exit;
     }
     public function getModels() : array {
         $files = glob(app_path('Models/*.php'));

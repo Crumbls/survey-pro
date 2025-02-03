@@ -3,7 +3,10 @@
 namespace App\Livewire\User;
 
 use App\Livewire\Contracts\HasTenant;
+use App\Models\Client;
+use App\Models\Tenant;
 use App\Models\TenantUserRole;
+use App\Models\User;
 use App\Models\User as Model;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -24,97 +27,40 @@ use Filament\Tables\Actions\CreateAction;
 
 class ListResource extends Component implements HasForms, HasTable {
     use HasBreadcrumbs,
-        HasTenant,
         InteractsWithTable,
         InteractsWithForms;
 
     protected $isSingle = 1;
+
+    public ?Client $client = null;
+    public ?Tenant $tenant = null;
+
     public function mount() {
-        $tenantId = request()->tenantId;
+        abort_if(!Gate::allows('viewAny', \App\Models\User::class), 403);
 
-        $this->setTenant($tenantId);
-
-        $tenant = $this->getTenant();
-
-        $user = request()->user();
-
-        if (!$tenant) {
-            if ($user->tenants()->count() == 1) {
-                $tenant = $user->tenants()->first();
-                return redirect()->route('tenants.users.index', $tenant);
-            }
+        if ($this->client) {
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('users.all'));//, route('clients.surveys.index', $this->client))   ;
+        } else if ($this->tenant) {
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('users.all'), route('tenants.users.index', $this->tenant));
+        } else {
+            $this->addBreadcrumb(__('users.all'));//, route('client.surveys.index', $this->client));
         }
     }
 
     protected function getTableQuery()
     {
-        abort_if(!Gate::allows('viewAny', Model::class), 403);
+        if ($this->client) {
 
-        $tenant = $this->getTenant();
-        $user = request()->user();
-
-        if ($tenant) {
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
-            $this->addBreadcrumb('All Users');
-            $this->isSingle = true;
-        } else {
-            $this->addBreadcrumb('All Users');
-            $this->isSingle = false;
+        } else if ($this->tenant) {
+            return $this->tenant->users()->getQuery();
         }
 
-        $tenant = $this->getTenant();
+        return User::query();
 
-        $query = Model::whereRaw('1=1')
-            ->when($tenant, function ($query, $tenant) {
-                return $query->whereExists(function ($subquery) use ($tenant) {
-                    $subquery->from('tenant_user_role')
-                        ->whereColumn('tenant_user_role.user_id', 'users.id')
-                        ->where('tenant_user_role.tenant_id', $tenant->id);
-                })
-                    ->with(['tenants' => function ($query) use ($tenant) {
-                        $query->where('tenants.id', $tenant->id);
-                    }]);
-            })
-            ->when(!$tenant, function ($query) use ($user) {
-                /**
-                 * Problem here where it isn't showing all users associated with the tenants this user belongs to.
-                 * Move it to a tenant_id query.
-                 */
-                $query->whereIn('users.id', \DB::table('tenant_user_role')
-                    ->whereIn('tenant_user_role.tenant_id', $user->tenants->pluck('id'))
-                    ->select('tenant_user_role.user_id')
-                );
-//                dd($user->tenants);
-                return;
-// select "tenant_user_role"."user_id" from "tenants" inner join "tenant_user_role" on "tenants"."id" = "tenant_user_role"."tenant_id" where "tenant_user_role"."user_id" = 4 and "tenants"."deleted_at" is null
-//                dd($user->tenants()->select('tenant_user_role.user_id')->get());
-                $query->whereIn('users.id', $user->tenants()->select('tenant_user_role.user_id'));
-            });
-
-        // Join with the role table to get role data in a single query
-        if ($tenant) {
-            $query->leftJoin('tenant_user_role', function ($join) use ($tenant) {
-                $join->on('users.id', '=', 'tenant_user_role.user_id')
-                    ->where('tenant_user_role.tenant_id', '=', $tenant->id);
-            })
-                ->leftJoin('roles', 'tenant_user_role.role_id', '=', 'roles.id')
-                ->select('users.*', 'roles.name as role_name');
-        }
-        /*
-\DB::enableQueryLog();
-        dd($query->get(), \DB::getQueryLog());
-        */
-        return $query;
-
-        // below works, kind of.
-
-        return Model::whereRaw('1=1')
-            ->when($tenant, function ($query, $tenant) {
-                $query->whereIn('users.id', $tenant->users()->select('tenant_user_role.user_id'));
-            })
-            ->when(!$tenant, function ($query) use ($user) {
-                $query->whereIn('users.id', $user->tenants()->select('tenant_user_role.user_id'));
-            });
 
     }
 
@@ -125,14 +71,10 @@ class ListResource extends Component implements HasForms, HasTable {
         ->query($this->getTableQuery())
         ->columns(array_filter([
             TextColumn::make('name'),
-            TextColumn::make('email'),
-            $this->isSingle ? TextColumn::make('role_name')
-                ->label('Role') : null
+            TextColumn::make('email')
 
         ]))
         ->recordUrl(function (Model $record) {
-            return '#';
-
             return route('users.edit', $record);
         })
         ->headerActions([
@@ -140,7 +82,7 @@ class ListResource extends Component implements HasForms, HasTable {
             CreateAction::make('create')
                 ->label('Create New')
                 ->url(function() {
-                    $tenant = $this->getTenant();
+                    $tenant = $this->tenant;
                     return $tenant ? route('tenants.users.create', $tenant) : route('users.create');
                 })
                 ->button()
@@ -200,7 +142,11 @@ class ListResource extends Component implements HasForms, HasTable {
 
     public function render(): View {
         return view('livewire.list-resource', [
-            'breadcrumbs' => $this->getBreadcrumbs()
+            'breadcrumbs' => $this->getBreadcrumbs(),
+            'title' => __('users.create'),
+            'subtitle' => __('users.description'),
+            'cancelUrl' => $this->tenant ? route('tenants.users.index', $this->tenant) : route('users.index'),
+            'createText' => __('users.create')
         ]);
     }
 }
