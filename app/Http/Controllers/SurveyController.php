@@ -56,25 +56,33 @@ class SurveyController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $uuid)
+    public function edit(Survey $survey)
     {
+        abort_if(!$survey || !$survey->getKey(), 404);
+
         $user = request()->user();
-        $record = Survey::whereRaw('1=1')
-            ->where('uuid', $uuid)
+
+        abort_if(!$survey::where($survey->getKeyName(), $survey->getKey())
             ->whereIn('client_id', Client::whereIn('tenant_id', $user->tenants()->select('tenants.id'))->select('clients.id'))
-//            ->whereIn('tenant_id', $user->tenants()->select('tenants.id'))
-            ->firstOrFail();
-dd($record->client);
+            ->take(1)
+        ->exists(), 404);
+
         return view('survey.edit', [
-            'record' => $record
+            'record' => $survey
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $uuid)
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Survey $survey)
     {
+        abort_if(!$survey || !$survey->getKey(), 404);
+
         $data = $request->validate([
             'definition' => [
                 'required',
@@ -84,28 +92,28 @@ dd($record->client);
 
         $user = request()->user();
 
-        $record = Survey::whereRaw('1=1')
-            ->where('uuid', $uuid)
-            ->whereIn('tenant_id', $user->tenants()->select('tenants.id'))
-            ->firstOrFail();
+        abort_if(!$survey::where($survey->getKeyName(), $survey->getKey())
+            ->whereIn('client_id', Client::whereIn('tenant_id', $user->tenants()->select('tenants.id'))->select('clients.id'))
+            ->take(1)
+            ->exists(), 404);
 
         $dat = json_decode($data['definition'], true);
 
-        if (array_key_exists('title', $dat) && $dat['title'] && $dat['title'] != $record->title) {
-            $record->title = $dat['title'];
+        if (array_key_exists('title', $dat) && $dat['title'] && $dat['title'] != $survey->title) {
+            $survey->title = $dat['title'];
         }
 
-        if (array_key_exists('description', $dat) && $dat['description'] && $dat['description'] != $record->description) {
-            $record->description = $dat['description'];
+        if (array_key_exists('description', $dat) && $dat['description'] && $dat['description'] != $survey->description) {
+            $survey->description = $dat['description'];
         }
 
-        $record->questions = $data['definition'];
+        $survey->questions = $data['definition'];
 
-        $record->save();
+        $survey->save();
 
         return response()->json([
             'message' => 'Survey updated successfully',
-            'survey' => $record
+            'survey' => $survey
         ]);
     }
 

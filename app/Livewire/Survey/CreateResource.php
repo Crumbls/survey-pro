@@ -18,6 +18,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
@@ -92,12 +94,52 @@ class CreateResource extends Component implements HasForms {
 
         return $form
             ->schema([
-
                 Select::make('tenant_id')
-                    ->options($tenants)
-                    ->required()
-                    ->hidden($hasSingleTenant)
-                    ->label('Center'),
+                    ->label(__('tenants.singular'))
+                    ->options(function () {
+                        if ($this->tenant) {
+                            return [$this->tenant->getKey() => $this->tenant->name];
+                        }
+                        return request()->user()->tenants->pluck('name', 'id');
+                    })->hidden(function() {
+                        return isset($this->tenant) && $this->tenant;
+                    })
+                    ->live()  // Makes the field reactive
+                    ->afterStateUpdated(function (Set $set) {
+                        // Clear the dependent field when parent changes
+                        $set('client_id', null);
+                        $set('survey_id', null);
+                    })
+                    ->required(),
+
+                Select::make('client_id')
+                    ->label(__('clients.singular'))
+                    ->options(function (Get $get) {
+                        if ($this->client) {
+                            return [$this->client->getKey() => $this->client->name];
+                        }
+                        $tenantId = $get('tenant_id');
+
+                        if (!$tenantId && $this->tenant) {
+                            $tenantId = $this->tenant->getKey();
+                        }
+
+                        if (!$tenantId) {
+                            return [];
+                        }
+
+                        return Client::where('tenant_id', $tenantId)
+                            ->orderBy('clients.name','asc')
+                            ->pluck('name','id');
+                    })->hidden(function() {
+                        return isset($this->client) && $this->client;
+                    })
+                    ->live()  // Makes the field reactive
+                    ->afterStateUpdated(function (Set $set) {
+                        // Clear the dependent field when parent changes
+                        $set('survey_id', null);
+                    })
+                    ->required(),
 
                 TextInput::make('title')
                     ->required(),

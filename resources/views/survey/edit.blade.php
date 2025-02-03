@@ -6,19 +6,10 @@
     >
 
         {{-- Survey Creator Container --}}
-        <div id="surveyCreatorContainer" style="height: 100vh;" class="mb-6"></div>
+        <div id="surveyCreatorContainer" style="height: 100vh;" class=""></div>
 
         {{-- Save Status Indicator --}}
-        <div
-            x-show="saveStatus"
-            x-text="saveStatus"
-            :class="{
-                'bg-green-500 text-white': saveStatus === 'Saved',
-                'bg-yellow-500 text-white': saveStatus === 'Saving...',
-                'bg-red-500 text-white': saveStatus === 'Error'
-            }"
-            class="p-2 rounded mb-4"
-        ></div>
+
     </div>
 
     @push('scripts')
@@ -49,6 +40,46 @@
                             showTranslationTab: true
                         };
                         this.creator = new SurveyCreator.SurveyCreator(options);
+
+
+
+// Method 3: Using events
+                        this.creator.onNotify.add((sender, options) => {
+                            console.log(sender);
+                            console.log(options);
+                            // Prevent default notification
+                            options.cancel = true;
+
+                            // Custom notification handling
+                            var message = options.message;
+                            const type = options.type;
+
+                            switch(message) {
+                                case "Modified":
+                                    message = 'Saved';
+                                    break;
+                                default:
+                                    console.log(message);
+
+                            }
+
+
+                            new FilamentNotification()
+                                .title(message)
+                                .icon('heroicon-o-document-text')
+                                .iconColor(type)
+                                .send()
+                            return;
+
+                            // Your custom notification logic here
+                            // Example: using a custom notification library
+                            customNotify(message, {
+                                type: type,
+                                duration: 3000,
+                                position: 'top-right'
+                            });
+                        });
+
 
                         // Render the creator
                         this.creator.render('surveyCreatorContainer');

@@ -12,6 +12,9 @@ Route::get('/', [\App\Http\Controllers\SurveyController::class, 'show'])
 Route::get('/edit', [\App\Http\Controllers\SurveyController::class, 'edit'])
     ->name('edit');
 
+Route::patch('/update', [\App\Http\Controllers\SurveyController::class, 'update'])
+    ->name('update');
+
 
 
 Route::get('collectors', \App\Livewire\Collector\ListResource::class)
