@@ -30,8 +30,27 @@ class CollectorController extends Controller
         $record = Collector::where('unique_code', $uniqueCode)->firstOrFail();
 
         if ($record->status == 'closed' || !$record->survey) {
-            dd('show closed page.');
+            return view('collector.closed', [
+                'record' => $record,
+                'breadcrumbs' => $this->getBreadcrumbs()
+            ]);
         }
+
+        if ($record->survey->questions === null) {
+            return view('collector.closed', [
+                'record' => $record,
+                'breadcrumbs' => $this->getBreadcrumbs()
+            ]);
+        }
+
+        $temp = Survey::inRandomOrder()
+            ->where('id', '<>', $record->survey->id)
+            ->take(1)
+            ->first()
+            ->toArray();
+
+        dd($record->survey, $temp);
+
 
 //        dd($record->survey->questions);
         return view('collector.show', [
