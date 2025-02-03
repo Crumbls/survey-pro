@@ -37,7 +37,7 @@ class CreateResource extends Component implements HasForms {
     use HasBreadcrumbs,
         InteractsWithForms;
 
-    public array $data;
+    public array $data = [];
 
     public ?Tenant $tenant = null;
     public ?Client $client = null;
@@ -131,19 +131,8 @@ class CreateResource extends Component implements HasForms {
                         if (!$clientId) {
                             return [];
                         }
-
                         return Survey::query()
                             ->where('client_id', $clientId)
-                            ->whereIn('surveys.id',
-                                Collector::whereRaw('1=1')
-                                    ->whereIn('collectors.id',
-                                        Response::select('collector_id')
-                                    /**
-                                     * TODO: Revise this query to make it simpler to speed up down the road.
-                                     */
-                                    )
-                                    ->select('survey_id')
-                            )
                             ->get()
                             ->pluck('title', 'id');
                     })
