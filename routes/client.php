@@ -18,6 +18,7 @@ Route::get('/surveys/create', \App\Livewire\Survey\CreateResource::class)
 Route::get('/edit', \App\Http\Controllers\ClientController::class)->name('edit');
 
 Route::get('/collectors', \App\Livewire\Collector\ListResource::class)->name('collectors.index');
+Route::get('/collectors/create', \App\Livewire\Collector\CreateResource::class)->name('collectors.create');
 
 Route::get('/responses', \App\Livewire\Response\ListResource::class)
     ->name('responses.index');

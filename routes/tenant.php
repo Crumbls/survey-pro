@@ -20,6 +20,8 @@ Route::get('clients/create', \App\Livewire\Client\CreateResource::class)
 
 Route::get('collectors', \App\Livewire\Collector\ListResource::class)
     ->name('collectors.index');
+Route::get('collectors/create', \App\Livewire\Collector\CreateResource::class)
+    ->name('collectors.create');
 
 Route::get('surveys', \App\Livewire\Survey\ListResource::class)->name('surveys.index');
 Route::get('surveys/create', \App\Livewire\Survey\CreateResource::class)

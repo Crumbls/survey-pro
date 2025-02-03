@@ -56,30 +56,6 @@ class ListResource extends Component implements HasForms, HasTable {
 
     }
 
-    public function getTenant() : ?Tenant {
-        if (isset($this->tenant) && $this->tenant) {
-            return $this->tenant;
-        }
-        if (!isset($this->tenantId)) {
-            return null;
-        }
-
-        abort_if(!Str::of($this->tenantId)->isUuid(), 404);
-
-        $user = request()->user();
-
-        $record = $user
-            ->tenants()
-            ->where('tenants.uuid', $this->tenantId)
-            ->take(1)
-            ->firstOrFail();
-
-        $this->tenant  = $record;
-
-        return $this->tenant;
-
-    }
-
     protected function getTableQuery()
     {
         if ($this->survey) {
@@ -105,7 +81,7 @@ class ListResource extends Component implements HasForms, HasTable {
             return $this->survey->collectors()->withCount('responses')->getQuery();
         } else if ($this->surveyId) {
         } else if ($this->tenantId) {
-            $tenant = $this->getTenant();
+            $tenant = $this->tenant;
 //            dd(Collector::all()->random()->toArray());
             return Collector::whereRaw('1=1')
                 ->whereIn('survey_id',
@@ -177,7 +153,16 @@ class ListResource extends Component implements HasForms, HasTable {
             CreateAction::make('create')
                 ->label('Create New')
                 ->url(function() : string {
-                    return $this->survey ? route('surveys.collectors.create', $this->survey) : route('collectors.create');
+
+                    if ($this->survey) {
+                        return route('surveys.collectors.create', $this->survey);
+                    } else if ($this->client) {
+                        return route('clients.collectors.create', $this->client);
+                    } else if ($this->tenant) {
+                        return route('tenants.collectors.create', $this->tenant);
+                    }
+
+                    return route('collectors.create');
                 })
                 ->button()
                 ->color('custom') // Use custom color
