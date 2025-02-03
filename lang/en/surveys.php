@@ -9,4 +9,5 @@ return [
     'singular_edit' => 'Edit Survey',
     'singular_update' => 'Update',
     'create' => 'Create a Survey',
+    'created' => 'Survey created'
 ];

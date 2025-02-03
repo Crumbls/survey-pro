@@ -66,7 +66,8 @@ class User extends Authenticatable implements FilamentUser, HasMedia
     }
 
     public function canAccessPanel(Panel $panel): bool {
-        return str_ends_with($this->email, '@crumbls.com');// && $this->hasVerifiedEmail();
+        return true;
+        return str_ends_with($this->email, ['@crumbls.com', '@o2group.com', '@thebizxgroup.com']);// && $this->hasVerifiedEmail();
     }
 
 

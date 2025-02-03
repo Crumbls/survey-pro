@@ -17,6 +17,10 @@ class ClientPolicy extends AbstractPolicy {
         //
     }
 
+    public function viewAny(User $user): bool {
+        return true;
+    }
+
     /**
      * Determine whether the user can create models.
      */

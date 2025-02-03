@@ -23,8 +23,8 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        return;
         Gate::before(function ($user, $ability) {
+            return true;
             $panel = Filament::getCurrentPanel();
             $path = $panel?->getPath();
             if (!$path) {
