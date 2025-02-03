@@ -3,8 +3,10 @@
 namespace App\Livewire\User;
 
 use App\Livewire\Contracts\HasTenant;
+use App\Models\Client;
 use App\Models\Report;
 use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Components\TextInput;
@@ -15,6 +17,7 @@ use Filament\Forms\Set;
 use Filament\Forms\Form;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
@@ -25,37 +28,39 @@ use Filament\Forms\Components\Actions;
 
 class CreateResource extends Component implements HasForms
 {
-    use HasTenant,
-        HasBreadcrumbs, InteractsWithForms;
+    use HasBreadcrumbs,
+        InteractsWithForms;
 
     public ?array $data = [];
     public bool $emailExists = false;
     public bool $showPassword = false;
     public bool $isFormValid = false;
 
+    public ?Client $client = null;
+    public ?Tenant $tenant = null;
+
     public function mount() {
         abort_if(!Gate::allows('create', Report::class), 403);
 
-        $tenantId = request()->tenantId;
-
-        $this->setTenant($tenantId);
-
-        $tenant = $this->getTenant();
-
         $user = request()->user();
 
-        if (!$tenant) {
+        /**
+         * List client users instead?
+         */
+
+
+        if (!$this->tenant) {
             if ($user->tenants()->count() == 1) {
                 $tenant = $user->tenants()->first();
                 if (!Gate::allows('viewAny', \App\Models\Report::class)) {
-                    return redirect()->route('tenants.reports.show', $tenant);
+                    return redirect()->route('tenants.reports.show', $this->tenant);
                 }
 
             }
         }
 
-        if ($tenant) {
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
+        if ($this->tenant) {
+            $this->addBreadcrumb('Center: '.$this->tenant->name, route('tenants.show', $this->tenant));
         } else {
             $this->addBreadcrumb('All Centers', route('tenants.index'));
         }
@@ -214,25 +219,79 @@ class CreateResource extends Component implements HasForms
             return;
         }
 
-        $tenant = $this->getTenant();
 
         $data = $this->form->getState();
 
         $record = User::where('email', $data['email'])->first();
 
+        $newRecord = !(bool)$record;
 
         if (!$record) {
             $data['password'] = Hash::make($data['password']);
             $record = User::create($data);
         }
 
-        if ($tenant) {
-            if ($record->tenants()->where('tenants.id', $tenant->getKey())->count()) {
+        $roleTenant = Role::firstOrCreate(['name' => 'tenant-member'], ['title' => 'Center Member']);
+
+        if ($this->client) {
+            dd(__LINE__);
+        } else if ($this->tenant) {
+            if ($newRecord) {
+                $this->tenant->users()->attach($record, [
+                    'role_id' => $roleTenant->getKey()
+                ]);
+
+                Notification::make()
+                    ->title('users.created')
+                    ->success()
+                    ->send();
+
+                Notification::make()
+                    ->title('users.tenant_attached')
+                    ->success()
+                    ->send();
+
+                return redirect()->route('tenants.users.index', $this->tenant);
+            } else if ($this->tenant->users()->where($record->getTable().'.'.$record->getKeyName(), $record->getKey())->take(1)->exists()) {
+                /**
+                 * Already exists.....
+                 */
+                Notification::make()
+                    ->title('users.tenant_already_attached')
+                    ->success()
+                    ->send();
+
+                return redirect()->route('tenants.users.index', $this->tenant);
+            } else {
+                /**
+                 * Attach to tenant
+                 */
+
+                $this->tenant->users()->attach($record, [
+                    'role_id' => $roleTenant->getKey()
+                ]);
+
+                Notification::make()
+                    ->title('users.tenant_attached')
+                    ->success()
+                    ->send();
+
+                return redirect()->route('tenants.users.index', $this->tenant);
+            }
+            dd(__LINE__);
+        } else {
+            dd(__LINE__);
+        }
+
+        if ($this->tenant) {
+            if ($record->tenants()->where('tenants.id', $this->tenant->getKey())->count()) {
                 /**
                  * Already a member of this tenant.
                  */
+                /**
+                 * TODO: Replace with proper notificiation.
+                 */
                 session()->flash('success', 'Already a member');
-
             } else {
 
                 /**
@@ -241,7 +300,7 @@ class CreateResource extends Component implements HasForms
                  */
                 $role = Role::firstOrCreate(['name' => 'Center Member']);
 
-                $tenant->users()->attach($record->getKey(), [
+                $this->tenant->users()->attach($record->getKey(), [
                     'role_id' => $role->id,
                 ]);
             }

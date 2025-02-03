@@ -4,10 +4,10 @@ namespace App\Livewire\User;
 
 use App\Livewire\Contracts\HasTenant;
 use App\Models\Client;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\TenantUserRole;
 use App\Models\User;
-use App\Models\User as Model;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -53,15 +53,24 @@ class ListResource extends Component implements HasForms, HasTable {
 
     protected function getTableQuery()
     {
+
         if ($this->client) {
-
+        dd(__LINE__);
         } else if ($this->tenant) {
-            return $this->tenant->users()->getQuery();
+            return $this->tenant
+                ->users()
+                ->withPivot('role_id')
+//                ->with(['pivot.role', 'tenant_user_role.role'])
+                ->getQuery();
         }
-
-        return User::query();
-
-
+        $user = request()->user();
+        return User::whereIn('users.id',
+            TenantUserRole::whereIn('tenant_id',
+                TenantUserRole::where('user_id', $user->getKey())
+                    ->select('tenant_id')
+            )
+                ->select('user_id')
+        );
     }
 
     public function table(Table $table): Table {
@@ -71,11 +80,16 @@ class ListResource extends Component implements HasForms, HasTable {
         ->query($this->getTableQuery())
         ->columns(array_filter([
             TextColumn::make('name'),
-            TextColumn::make('email')
+            TextColumn::make('email'),
+            $this->tenant ? TextColumn::make('role_id')
+                ->label(__('roles.singular'))
+                ->formatStateUsing(function (string $state): string {
+                    return $state ? static::getRole($state) : 'Unknown';
+                }) : null
 
         ]))
-        ->recordUrl(function (Model $record) {
-            return route('users.edit', $record);
+        ->recordUrl(function (User $record) {
+            return route('users.edit', $record->user_id ? $record->user_id : $record);
         })
         ->headerActions([
             // Add a custom button in the header
@@ -91,7 +105,7 @@ class ListResource extends Component implements HasForms, HasTable {
                     'class' => 'bg-primary-600 hover:bg-primary-700' // Add hover state
                 ])
                 ->visible(function() : bool {
-                    return Gate::allows('create', Model::class);
+                    return Gate::allows('create', User::class);
                 })
         ])
         ->filters([
@@ -143,10 +157,16 @@ class ListResource extends Component implements HasForms, HasTable {
     public function render(): View {
         return view('livewire.list-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
-            'title' => __('users.create'),
+            'title' => __('users.all'),
             'subtitle' => __('users.description'),
             'cancelUrl' => $this->tenant ? route('tenants.users.index', $this->tenant) : route('users.index'),
             'createText' => __('users.create')
         ]);
+    }
+
+    public static function getRole(int $roleId) : ?string {
+        return once(function() use ($roleId) {
+            return Role::find($roleId)?->title;
+        });
     }
 }

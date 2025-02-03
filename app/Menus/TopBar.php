@@ -140,10 +140,20 @@ class TopBar
             }
         }
 
+        if ($tenantCount && $user->can('viewAny', \App\Models\User::class)) {
+            if ($tenantCount == 1) {
+                $menu->add(Link::toRoute('tenants.users.index', trans('users.plural'), ['tenant' => $tenant]));
+            } else {
+                $menu->add(Link::toRoute('users.index', trans('users.plural')));
+            }
+        }
+
         // Analytics - Only for users with specific permission
         if (Auth::user()->can('view-analytics')) {
             $menu->add(Link::to('/analytics', 'Analytics'));
         }
+
+
 
     }
 }

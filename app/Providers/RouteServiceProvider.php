@@ -32,6 +32,7 @@ class RouteServiceProvider extends ServiceProvider
         Route::model('report', \App\Models\Report::class);
         Route::model('survey', \App\Models\Survey::class);
         Route::model('tenant', \App\Models\Tenant::class);
+        Route::model('user', \App\Models\User::class);
 
         $this->routes(function () {
             Route::middleware('api')
