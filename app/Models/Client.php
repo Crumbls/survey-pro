@@ -30,6 +30,8 @@ class Client extends Model implements HasMedia
 
     protected $fillable = [
         'name',
+        'uuid',
+
         'tenant_id',
         'primary_color',
         'secondary_color',

@@ -29,6 +29,7 @@ class Tenant extends Model implements HasMedia
 
     protected $fillable = [
         'name',
+        'uuid',
         'primary_color',
         'secondary_color',
         'accent_color',

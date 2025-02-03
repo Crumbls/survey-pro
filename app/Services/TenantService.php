@@ -24,7 +24,7 @@ class TenantService
         ]);
 
         // Attach user to tenant with default admin role
-        $role = Role::firstOrCreate(['name' => 'Center Owner']);
+        $role = Role::firstOrCreate(['name' => 'center-owner'], ['title' => 'Center Owner']);
 
         $user->tenants()->attach($tenant->id, [
             'role_id' => $role->id,

@@ -120,7 +120,7 @@ class CreateResource extends Component implements HasForms {
 
         $record->save();
 
-        $role = Role::firstOrCreate(['name' => 'Center Owner']);
+        $role = Role::firstOrCreate(['name' => 'center-owner'], ['title' => 'Center Owner']);
 
         $record->users()->attach($user->getKey(), [
             'role_id' => $role->id,

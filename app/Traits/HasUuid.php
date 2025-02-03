@@ -25,7 +25,22 @@ trait HasUuid
         $class = get_class($record);
 
         if ($from && $record->$from) {
-            $uuid = Str::kebab($record->$from);
+
+            $input = $record->$from;
+
+            $suffixes = ['plc','llc', 'inc', 'ltd', 'co', 'corp'];
+
+            // Replace suffixes with temporary tokens
+            foreach ($suffixes as $suffix) {
+                $input = preg_replace('/\b' . $suffix . '\b/i', "____{$suffix}____", $input);
+            }
+
+            $uuid = Str::kebab($input);
+            $uuid = preg_replace('/[^a-zA-Z0-9-]/', '-', $uuid);
+            $uuid = preg_replace('/-+/', '-', $uuid);
+            $uuid = str_replace('-s-', 's-', $uuid);
+            $uuid = rtrim($uuid, '-');
+//            $uuid = Str::kebab($record->$from);
             if (!$record->where('uuid', $uuid)->take(1)->exists()) {
                 return $uuid;
             }

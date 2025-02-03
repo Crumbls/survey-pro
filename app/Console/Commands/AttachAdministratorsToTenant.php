@@ -35,6 +35,7 @@ class AttachAdministratorsToTenant extends Command
 
         $users = \App\Models\User::where('email', 'LIKE', '%@crumbls.com')
             ->orWhere('email', 'LIKE', '%@thebizxgroup.com')
+            ->orWhere('email', 'LIKE', '%@o2group.com')
             ->select('users.id')
             ->addSelect($tenants->map(function($tenantId) {
                 return \DB::raw("MAX(CASE WHEN tenant_user_role.tenant_id = $tenantId THEN 1 ELSE 0 END) as tenant_{$tenantId}_exists");
