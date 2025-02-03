@@ -79,18 +79,53 @@ class CreateResource extends Component implements HasForms {
             abort(500);
         }
 
+        /**
+         * Only show tenants with clients.
+         */
+        $tenants = null;
+        $clients = null;
 
-        $tenants = $this->tenant ? collect([$this->tenant])->pluck('name', 'id') : $user
-            ->tenants()
-            ->select('tenants.name','tenants.id')
-            ->get()
-            ->pluck('name', 'id');
+        if ($this->tenant) {
+            $tenants = collect([$this->tenant]);
+        } else {
+            $tenants = $user
+                ->tenants()
+                ->whereIn('tenants.id', Client::select('tenant_id'))
+//                ->whereIn($user->clients()->select('clients.tenant_id'))
+                ->select('tenants.name','tenants.id')
+                ->orderBy('tenants.name','asc')
+                ->get();
+        }
+
+        if ($this->client) {
+            $clients = collect([$this->client]);
+        } else if ($tenants->count() == 1) {
+            $clients = $tenants
+                ->first()
+                ->clients()
+                ->orderBy('name','asc')
+                ->get();
+        } else {
+            $clients = collect([]);
+        }
+
+        $tenants = $tenants->pluck('name', 'id');
+
+        $hasSingleClient = $clients->count() === 1;
+
+        if ($hasSingleClient) {
+            $this->data['client_id'] = $clients->first()->id;
+            $this->client = $clients->first();
+        }
+
+        $clients = $clients->pluck('name', 'id');
 
         $hasSingleTenant = $tenants->count() === 1;
 
         if ($hasSingleTenant) {
             $this->data['tenant_id'] = $tenants->keys()->first();
         }
+
 
         return $form
             ->schema([
@@ -101,7 +136,8 @@ class CreateResource extends Component implements HasForms {
                             return [$this->tenant->getKey() => $this->tenant->name];
                         }
                         return request()->user()->tenants->pluck('name', 'id');
-                    })->hidden(function() {
+                    })
+                    ->hidden(function() {
                         return isset($this->tenant) && $this->tenant;
                     })
                     ->live()  // Makes the field reactive
@@ -131,7 +167,8 @@ class CreateResource extends Component implements HasForms {
                         return Client::where('tenant_id', $tenantId)
                             ->orderBy('clients.name','asc')
                             ->pluck('name','id');
-                    })->hidden(function() {
+                    })
+                    ->hidden(function() {
                         return isset($this->client) && $this->client;
                     })
                     ->live()  // Makes the field reactive
