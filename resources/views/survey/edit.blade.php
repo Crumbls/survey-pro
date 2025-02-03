@@ -2,7 +2,7 @@
     <div
         x-data="surveyCreatorApp({{ Js::from($record) }})"
         x-init="initSurveyCreator()"
-        class="py-8 md:pt-18"
+        class="pb-8"
     >
 
         {{-- Survey Creator Container --}}
@@ -41,12 +41,34 @@
                         };
                         this.creator = new SurveyCreator.SurveyCreator(options);
 
+                        let lastNotification = {
+                            message: '',
+                            timestamp: 0
+                        };
 
+                        const DEBOUNCE_DELAY = 1000; // 2 seconds
 
 // Method 3: Using events
                         this.creator.onNotify.add((sender, options) => {
-                            console.log(sender);
-                            console.log(options);
+
+                            options.cancel = true;
+
+                            const currentTime = Date.now();
+
+                            // Check if same message within debounce period
+                            if (
+                                options.message === lastNotification.message &&
+                                currentTime - lastNotification.timestamp < DEBOUNCE_DELAY
+                            ) {
+                                return;
+                            }
+
+                            // Update last notification
+                            lastNotification = {
+                                message: options.message,
+                                timestamp: currentTime
+                            };
+
                             // Prevent default notification
                             options.cancel = true;
 
@@ -69,15 +91,6 @@
                                 .icon('heroicon-o-document-text')
                                 .iconColor(type)
                                 .send()
-                            return;
-
-                            // Your custom notification logic here
-                            // Example: using a custom notification library
-                            customNotify(message, {
-                                type: type,
-                                duration: 3000,
-                                position: 'top-right'
-                            });
                         });
 
 
