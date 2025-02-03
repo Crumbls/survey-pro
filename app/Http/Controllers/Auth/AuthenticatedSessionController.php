@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Providers\RouteServiceProvider;
+use App\Services\TenantService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,17 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        $user = $request->user();
+
+        if ($user->tenants->isEmpty()) {
+            $tenant = app(TenantService::class)->getOrCreateDefault($user);
+
+            $client = $tenant->clients()->create([
+                'user_id' => $user->id,
+                'name' => $user->name.'\'s Client'
+            ]);
+        }
 
         return redirect()->intended(RouteServiceProvider::HOME);
     }

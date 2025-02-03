@@ -113,9 +113,10 @@ class TopBar
         }
 
         if ($user->can('viewAny', \App\Models\Client::class)) {
-            if ($tenantCount == 1) {
+            if ($tenantCount) {
                 $menu->add(Link::toRoute('tenants.clients.index', trans('clients.plural'), ['tenant' => $tenant]));
-            } else {
+            } else if ($tenant) {
+
                 $menu->add(Link::toRoute('clients.index', trans('clients.plural')));
             }
         }
