@@ -6,11 +6,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Silber\Bouncer\Database\Role;
 
-/**
- * @deprecated
- */
-
-class TenantUserRole extends Pivot
+class TenantUser extends Pivot
 {
     protected $table = 'tenant_user';
 
@@ -24,12 +20,4 @@ class TenantUserRole extends Pivot
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * @deprecated
-     * @return BelongsTo
-     */
-    public function role() : BelongsTo
-    {
-        return $this->belongsTo(Role::class);
-    }
 }

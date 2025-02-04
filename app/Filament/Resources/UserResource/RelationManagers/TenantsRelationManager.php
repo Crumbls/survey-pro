@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\UserResource\RelationManagers;
 
 use App\Models\Role;
+use App\Models\Tenant;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -40,6 +41,8 @@ class TenantsRelationManager extends RelationManager
                 Forms\Components\Select::make('role_id')
                     ->label('Role')
                     ->options(function () {
+//                        dd($this->record);
+///                        \Silber\Bouncer\Database\Role::withoutGlobalScope
                         $roles = Role::query();
 
                         if (Auth::user()->email !== 'chase@crumbls.com') {
@@ -59,14 +62,16 @@ class TenantsRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\SelectColumn::make('role_id')
-                    ->options(function () {
-                        $roles = Role::query();
-
-                        if (Auth::user()->email !== 'chase@crumbls.com') {
-                            $roles->where('name', '!=', 'Administrator');
-                        }
-
-                        return $roles->pluck('name', 'id');
+                    ->options(function (Tenant $record) {
+                        return once(function() use ($record){
+                            dd($record->getRoles());
+                            dd($record->getKey(), $record);
+                           return \Silber\Bouncer\Database\Role::withoutGlobalSCopes()
+                               ->where('scope', $record->getKey())
+                               ->orderBy('title','asc')
+                               ->get()
+                               ->pluck('title', 'id');
+                        });
                     })
                     ->afterStateUpdated(function ($record, $state) {
                         $this->ownerRecord->tenants()->updateExistingPivot(

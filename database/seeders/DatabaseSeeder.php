@@ -14,12 +14,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // \App\Models\User::factory(10)->create();
-        $tenant = Tenant::factory()->create();
-        return;
+  //      $tenant = Tenant::factory(1)->create();
+    //    return;
 
         $this->call([
             RolePermissionSeeder::class,
-            SubscriptionSeeder::class
+//            SubscriptionSeeder::class
 
         ]);
         // \App\Models\User::factory()->create([

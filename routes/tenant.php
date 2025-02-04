@@ -23,6 +23,9 @@ Route::get('collectors', \App\Livewire\Collector\ListResource::class)
 Route::get('collectors/create', \App\Livewire\Collector\CreateResource::class)
     ->name('collectors.create');
 
+Route::get('reports', \App\Livewire\Report\ListResource::class)
+    ->name('reports.index');
+
 Route::get('reports/create', \App\Livewire\Report\CreateResource::class)
     ->name('reports.create');
 

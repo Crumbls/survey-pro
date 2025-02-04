@@ -69,6 +69,7 @@ Route::group([
     'middleware' => [
         'web',
         'auth',
+        \App\Http\Middleware\ScopeBouncer::class,
         \App\Http\Middleware\TenantMember::class
     ]
 ], function () {
@@ -82,7 +83,7 @@ Route::group([
     'middleware' => [
         'web',
         'auth',
-\App\Http\Middleware\ClientMember::class,
+        \App\Http\Middleware\ClientMember::class,
 //        \App\Http\Middleware\TenantMember::class
     ]
 ], function () {
@@ -109,8 +110,8 @@ Route::group([
     'middleware' => [
         'web',
         'auth',
-//        \App\Http\Middleware\ClientMember::class,
-//        \App\Http\Middleware\TenantMember::class
+        \App\Http\Middleware\ScopeBouncer::class,
+        \App\Http\Middleware\TenantMember::class
     ]
 ], function () {
     require_once(__DIR__.'/report.php');

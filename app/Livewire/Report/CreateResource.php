@@ -159,6 +159,8 @@ use HasBreadcrumbs,
             /**
              * This needs to clean up and only show them by survey, right?
              */
+            dd(__LINE__);
+
             $collectors = Collector::whereIn('survey_id', $this->tenant->surveys()
                 ->whereIn('tenant_id', TenantUserRole::where('user_id', auth()->id())->select('tenant_id'))
                 ->select('id'))->get()->pluck('name', 'id');

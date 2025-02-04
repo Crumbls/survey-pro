@@ -4,7 +4,8 @@ namespace App\Models;
 
 use App\Services\AuthorizationCache;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model as bak;
+use Silber\Bouncer\Database\Role as Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 use Illuminate\Support\Facades\Cache;
@@ -13,17 +14,18 @@ class Role extends Model
 {
     protected $fillable = ['name', 'title', 'level'];
 
-    public function abilities()
+    public function dis_abilitieas() : \Illuminate\Database\Eloquent\Relations\MorphToMany
     {
+        return $this->morphToMany();
         return $this->belongsToMany(Ability::class, 'role_abilities');
     }
 
-    public function permissions()
+    public function dis_permissions()
     {
         return $this->hasMany(Permission::class);
     }
 
-    protected static function boot()
+    protected static function dis_boot()
     {
         parent::boot();
 
@@ -50,9 +52,11 @@ class Role extends Model
     }
 
 
-    public function users() : BelongsToMany
+    public function dis_users() : BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'tenant_user_role')
+        dd(__LINE__);
+
+        return $this->belongsToMany(User::class, 'tenant_user')
             ->withPivot('role_id')
             ->using(TenantUserRole::class);
     }

@@ -12,7 +12,7 @@ trait HasUuid
     protected static function bootHasUuid(): void
     {
         static::creating(function (Model $model) {
-            if (! $model->uuid) {
+            if (!$model->uuid) {
                 $model->uuid = static::generateUniqueUuid($model);
             }
         });
@@ -41,19 +41,14 @@ trait HasUuid
             $uuid = str_replace('-s-', 's-', $uuid);
             $uuid = rtrim($uuid, '-');
 //            $uuid = Str::kebab($record->$from);
+
             if (!$record->where('uuid', $uuid)->take(1)->exists()) {
                 return $uuid;
             }
         }
 
         do {
-            if ($from && $record->{$from}) {
-                // Generate a v5 UUID using a namespace UUID and the property value
-                $namespaceUuid = Uuid::NAMESPACE_DNS;  // Or any other namespace UUID
-                $uuid = Uuid::uuid5($namespaceUuid, $record->{$from})->toString();
-            } else {
-                $uuid = Uuid::uuid4()->toString();
-            }
+            $uuid = Uuid::uuid4()->toString();
         } while ($record->where('uuid', $uuid)->take(1)->exists());
 
         return $uuid;

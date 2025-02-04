@@ -10,6 +10,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 
 class UsersRelationManager extends RelationManager
@@ -38,13 +39,7 @@ class UsersRelationManager extends RelationManager
                 Forms\Components\Select::make('role_id')
                     ->label('Role')
                     ->options(function () {
-                        $roles = Role::query();
-
-                        if (Auth::user()->email !== 'chase@crumbls.com') {
-                            $roles->where('name', '!=', 'Administrator');
-                        }
-
-                        return $roles->pluck('name', 'id');
+                        return $this->getRoles()->pluck('title', 'id');
                     })
                     ->required(),
             ]);
@@ -57,14 +52,9 @@ class UsersRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\SelectColumn::make('role_id')
+                    ->label('roles.singular')
                     ->options(function () {
-                        $roles = Role::query();
-
-                        if (Auth::user()->email !== 'chase@crumbls.com') {
-                            $roles->where('name', '!=', 'Administrator');
-                        }
-
-                        return $roles->pluck('name', 'id');
+                        return $this->getRoles()->pluck('title', 'id');
                     })
                     ->afterStateUpdated(function ($record, $state) {
                         $this->ownerRecord->users()->updateExistingPivot(
@@ -104,13 +94,7 @@ class UsersRelationManager extends RelationManager
                         Forms\Components\Select::make('role_id')
                             ->label('Role')
                             ->options(function () {
-                                $roles = Role::query();
-
-                                if (Auth::user()->email !== 'chase@crumbls.com') {
-                                    $roles->where('name', '!=', 'Administrator');
-                                }
-
-                                return $roles->pluck('name', 'id');
+                                $this->getRoles()->pluck('title','id');
                             })
                             ->required(),
                     ]),
@@ -123,5 +107,14 @@ class UsersRelationManager extends RelationManager
                     Tables\Actions\DetachBulkAction::make(),
                 ]),
             ]);
+    }
+
+    protected function getRoles()
+    {
+        return once(function() {
+            return \Silber\Bouncer\Database\Role::withoutGlobalScopes()->where('scope', $this->getOwnerRecord()->getKey())
+                ->orderBy('title','asc')
+                ->get();
+        });
     }
 }

@@ -25,10 +25,9 @@ use Livewire\Component;
 use Filament\Tables\Actions\CreateAction;
 
 
-class EditResource extends Component implements HasForms {
+class EditResource extends Component {
 
-    use HasBreadcrumbs,
-        InteractsWithForms;
+    use HasBreadcrumbs;
 
     public ?User $user = null;
     public ?Client $client = null;
@@ -38,6 +37,10 @@ class EditResource extends Component implements HasForms {
         abort_if(!$this->user || !$this->user->getKey(), 404);
 
         abort_if(!Gate::allows('update', $this->user), 403);
+
+        if ($this->user && $this->user->getKey() == auth()->id()) {
+            return redirect()->route('profile');
+        }
 
         if ($this->client) {
             $this->tenant = $this->client->tenant;
@@ -53,11 +56,6 @@ class EditResource extends Component implements HasForms {
     }
 
     public function render(): View {
-
-        if ($this->user->getKey() == auth()->id()) {
-            dd($this->user, auth()->id());
-            dd('Sorry, you can not edit your own profile here yet.');
-        }
 
         return view('livewire.user.edit-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),

@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Tenant;
 use Closure;
 use Illuminate\Http\Request;
+use Silber\Bouncer\BouncerFacade;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,6 +34,9 @@ class ClientMember
              */
             abort(403);
         }
+
+        BouncerFacade::scope()->to($tenant->getKey())->onlyRelations(false)->dontScopeRoleAbilities();
+
 
         // Add tenant to the request for easy access in your controllers/components
         $request->attributes->add([

@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Filament\Tables\Actions\CreateAction;
+use Silber\Bouncer\BouncerFacade;
 
 
 class ListResource extends Component implements HasForms, HasTable {
@@ -63,38 +64,6 @@ class ListResource extends Component implements HasForms, HasTable {
             $this->addBreadcrumb(__('reports.all'));//, route('surveys.index'));
         }
 
-        return;
-        dd($this->collector, $this->survey, $this->client, $this->tenant);
-        $user = request()->user();
-
-        if ($this->surveyId) {
-            $survey = Survey::where('uuid', $this->surveyId)
-                ->whereIn('tenant_id', $user->tenants()->pluck('tenants.id'))
-                ->firstOrFail();
-            $this->survey = $survey;
-            $this->setTenant($survey->tenant);
-        } else if ($this->tenantId) {
-            $this->setTenant($this->tenantId);
-        }
-
-        $tenant = $this->getTenant();
-
-        if (!$tenant) {
-            if ($user->tenants()->count() == 1) {
-                $tenant = $user->tenants()->first();
-                return redirect()->route('tenants.reports.index', $tenant);
-            }
-        }
-
-        if ($tenant) {
-            $this->addBreadcrumb('Center: '.$tenant->name, route('tenants.show', $tenant));
-        } else {
-            $this->addBreadcrumb('All Centers', route('surveys.index'));
-        }
-
-        if (isset($this->survey) && $this->survey) {
-            $this->addBreadcrumb('Survey: '.$this->survey->title, route('surveys.show', $this->survey));
-        }
     }
     protected function getTableQuery()
     {

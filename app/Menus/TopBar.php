@@ -2,9 +2,13 @@
 
 namespace App\Menus;
 
+use App\Models\Client;
 use App\Models\Role;
+use App\Models\Survey;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Gate;
+use Silber\Bouncer\BouncerFacade;
+use Silber\Bouncer\BouncerFacade as Bouncer;
 use Spatie\Menu\Laravel\Menu;
 use Spatie\Menu\Laravel\Link;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +19,7 @@ class TopBar
         'dashboard' => ['dashboard*'],
         'clients' => ['clients*'],
         'surveys' => ['surveys*', 'responses*'],
+        'collectors' => ['collectors*'],
         'reports' => ['reports*', 'export*', 'downloads*'],
         'analytics' => ['analytics*', 'metrics*', 'insights*']
     ];
@@ -112,7 +117,15 @@ class TopBar
             $menu->add(Link::toRoute('tenants.index', trans('tenants.plural')));
         }
 
-        if ($user->can('viewAny', \App\Models\Client::class)) {
+        if ($tenantCount && Bouncer::can('viewAny', Client::class)) {
+            if ($tenantCount == 1) {
+                $menu->add(Link::toRoute('tenants.clients.index', trans('clients.plural'), ['tenant' => $tenant]));
+            } else if ($tenant) {
+                $menu->add(Link::toRoute('clients.index', trans('clients.plural')));
+            }
+        }
+
+        if (false && $user->can('viewAny', \App\Models\Client::class)) {
             if ($tenantCount) {
                 $menu->add(Link::toRoute('tenants.clients.index', trans('clients.plural'), ['tenant' => $tenant]));
             } else if ($tenant) {
@@ -121,8 +134,7 @@ class TopBar
             }
         }
 
-
-        if ($tenantCount && $user->can('viewAny', \App\Models\Survey::class)) {
+        if (Bouncer::can('viewAny', Survey::class)) {
             if ($tenantCount == 1) {
                 $menu->add(Link::toRoute('tenants.surveys.index', trans('surveys.plural'), ['tenant' => $tenant]));
             } else {
@@ -130,9 +142,17 @@ class TopBar
             }
         }
 
+        if ($tenantCount && $user->can('viewAny', \App\Models\Collector::class)) {
+            if ($tenantCount == 1) {
+                $menu->add(Link::toRoute('tenants.collectors.index', trans('collectors.plural'), ['tenant' => $tenant]));
+            } else {
+                $menu->add(Link::toRoute('collectors.index', trans('collectors.plural')));
+            }
+        }
+
+
         // Reports - Check policy and role
-        if (!$tenantCount) {
-        } elseif ($user->can('viewAny', \App\Models\Report::class)) {
+        if ($tenantCount && $user->can('viewAny', \App\Models\Report::class)) {
             if ($tenantCount == 1) {
                 $menu->add(Link::toRoute('tenants.reports.index', trans('reports.plural'), ['tenant' => $tenant]));
             } else {

@@ -6,6 +6,7 @@ use App\Components\ButtonComponent;
 use App\Services\ComponentRegistry;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Validator;
+use Silber\Bouncer\BouncerFacade as Bouncer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,6 +15,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+
+
 
         $this->app->singleton(ComponentRegistry::class);
         //
@@ -24,6 +27,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(ComponentRegistry $componentRegistry): void
     {
+
+        // Configure Bouncer tables to include tenant_id
+        Bouncer::tables([
+            'abilities' => 'abilities',
+            'permissions' => 'permissions',
+            'roles' => 'roles',
+//            'assigned_roles' => 'tenant_user_role', // Use your custom table
+        ]);
 
         $button = new ButtonComponent();
         $componentRegistry->register('custom-button', $button->toArray());

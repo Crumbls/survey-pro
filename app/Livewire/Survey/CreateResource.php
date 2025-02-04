@@ -36,6 +36,7 @@ use Livewire\Component;
 use Filament\Tables\Actions\CreateAction;
 use Filament\Forms\Form;
 use Livewire\WithUrlParams;
+use Silber\Bouncer\BouncerFacade;
 
 class CreateResource extends Component implements HasForms {
 
@@ -48,10 +49,12 @@ class CreateResource extends Component implements HasForms {
     public ?Tenant $tenant = null;
 
     public function mount() {
-
+        if ($this->client) {
+            $this->tenant = $this->client->tenant;
+        }
+//        dd($this->client);
+   //     dd($this->tenant);
         abort_if(!Gate::allows('create', Survey::class), 403);
-
-
         $user = request()->user();
 
         if ($this->client) {

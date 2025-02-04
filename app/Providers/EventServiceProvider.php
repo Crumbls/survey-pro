@@ -5,6 +5,9 @@ namespace App\Providers;
 use App\Events\PageBuilderInitialized;
 use App\Listeners\PageBuilderRegisterWidgets;
 use App\Models\Report;
+use App\Models\Tenant;
+use App\Models\User;
+use App\Observers\TenantObserver;
 use App\Services\BizXReportService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -35,6 +38,9 @@ class EventServiceProvider extends ServiceProvider
         Report::creating(function ($record) {
             BizXReportService::createDefault($record);
         });
+
+
+        Tenant::observe(TenantObserver::class);
     }
 
     /**

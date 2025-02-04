@@ -31,6 +31,7 @@ class AttachAdministratorsToTenant extends Command
      */
     public function handle()
     {
+        return;
         $tenants = \App\Models\Tenant::pluck('id');
 
         $users = \App\Models\User::where('email', 'LIKE', '%@crumbls.com')
@@ -64,6 +65,8 @@ class AttachAdministratorsToTenant extends Command
                     return !$exists;
                 }));
             foreach($parse as $k) {
+                dd(__LINE__);
+
                 \App\Models\TenantUserRole::create([
                     'user_id' => $user['id'],
                     'tenant_id' => substr($k, 7, -7),

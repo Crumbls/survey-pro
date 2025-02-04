@@ -3,7 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\User;
+use App\Services\TenantService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Crumbls\Infrastructure\Models\Node;
@@ -39,6 +41,8 @@ class RolePermissionSeeder extends Seeder
             'title' => 'Administrator',
         ]);
 
+        Bouncer::allow($admin)->to('access-filament');
+
 //        Bouncer::allow($admin)->to('viewAny', Role::class);
 
         $user = User::firstOrCreate([
@@ -52,7 +56,87 @@ class RolePermissionSeeder extends Seeder
 
         Bouncer::allow($admin)->everything();
 
+        $temp = \Silber\Bouncer\Database\Role::withoutGlobalScopes()
+            ->where('name','tenant-owner')
+            ->get();
+
+        foreach($temp as $role) {
+            Bouncer::allow($role)->everything();
+            Bouncer::forbid($role)->to('access-filament');
+            Bouncer::forbid($role)->to('view-analytics');
+        }
+
+        $temp = \Silber\Bouncer\Database\Role::withoutGlobalScopes()
+            ->where('name','tenant-member')
+            ->get();
+
+        foreach($temp as $role) {
+            Bouncer::allow($role)->everything();
+            Bouncer::forbid($role)->to('access-filament');
+            Bouncer::forbid($role)->to('view-analytics');
+        }
+
+
+        exit;
+
+        dd($temp);
+
+        /**
+         * Sorry about this!
+         */
+        Tenant::where('uuid', 'jayme-sitzmans-organization')->get()->each(function(Tenant $tenant) {
+            $service = app(TenantService::class);
+            $service->createDefaultRolesPermissions($tenant);
+        });
+
+return;
+        $methods = preg_grep('#^role[A-Z]#', get_class_methods(get_called_class()));
+        foreach($methods as $method) {
+            $this->$method();
+        }
+
+
+        dd(Role::all()->pluck('name'));
+
     }
+
+    protected function roleTenantOwner() : void {
+        $role = Role::firstOrCreate(['name' => 'tenant-owner'], [
+            'title' => 'Center Owner'
+        ]);
+    }
+
+    protected function roleTenantAdministrator() : void {
+        $role = Role::firstOrCreate(['name' => 'tenant-administrator'], [
+            'title' => 'Center Administrator'
+        ]);
+    }
+
+    protected function roleTenantFacilitator() : void {
+        $role = Role::firstOrCreate(['name' => 'tenant-facilitator'], [
+            'title' => 'Center Facilitator'
+        ]);
+    }
+
+
+    protected function roleClientFacilitator() : void {
+        $role = Role::firstOrCreate(['name' => 'client-facilitator'], [
+            'title' => 'Client Facilitator'
+        ]);
+    }
+
+    protected function roleClientAdministrator() : void {
+        $role = Role::firstOrCreate(['name' => 'client-administrator'], [
+            'title' => 'Client Administrator'
+        ]);
+    }
+
+    protected function roleClientOwner() : void {
+        $role = Role::firstOrCreate(['name' => 'client-owner'], [
+            'title' => 'Client Owner'
+        ]);
+    }
+
     public function getModels() : array {
         $files = glob(app_path('Models/*.php'));
 
@@ -112,7 +196,6 @@ class RolePermissionSeeder extends Seeder
         // Convert to kebab case for consistent naming
         $modelNameKebab = Str::kebab($modelName);
         $modelNameKebab = $modelClass;
-        $modelNameKebab = $modelClass;
 
         foreach ($this->standardPermissions as $permission) {
             // Check if permission already exists
@@ -129,32 +212,6 @@ class RolePermissionSeeder extends Seeder
                         'entity_type' => $modelClass,
                     ]);
 
-                \Log::info("Created {$permission} permission for {$modelName}");
-            }
-        }
-    }
-
-    /**
-     * Add custom permission to all models
-     */
-    public function addCustomPermission(string $permissionName): void
-    {
-        $models = $this->getModels();
-
-        foreach ($models as $modelClass) {
-            $exists = Ability::where('name', $permissionName)
-                ->where('entity_type', $modelClass)
-                ->exists();
-
-            if (!$exists) {
-                Bouncer::ability()
-                    ->create([
-                        'name' => $permissionName,
-                        'title' => ucfirst($permissionName) . ' ' . class_basename($modelClass),
-                        'entity_type' => $modelClass,
-                    ]);
-
-                \Log::info("Created {$permissionName} permission for {$modelClass}");
             }
         }
     }

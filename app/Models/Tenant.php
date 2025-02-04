@@ -35,11 +35,32 @@ class Tenant extends Model implements HasMedia
         'accent_color',
     ];
 
+    public function roles()
+    {
+        return $this->hasMany(\Silber\Bouncer\Database\Role::class, 'scope')
+            ->where('scope', $this->getKey());
+        return \Silber\Bouncer\Database\Role::query()
+            ->where('scope', $this->id);
+    }
+
+    // If you want it as a relationship
+    public function bouncerRoles()
+    {
+        return $this->hasMany(\Silber\Bouncer\Database\Role::class, 'scope', 'id');
+    }
+
+    public function getRoles() {
+        dd(\Silber\Bouncer\Database\Role::withoutGlobalScopes()
+            ->where('scope', $this->getKey())
+            ->get());
+        dd(__LINE__);
+    }
+
     public function users() : BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'tenant_user_role')
-            ->withPivot('role_id')
-            ->using(TenantUserRole::class);
+        return $this->belongsToMany(User::class, 'tenant_user')
+            //->withPivot('role_id')
+            ->using(TenantUser::class);
     }
 
     public function clients() : HasMany {

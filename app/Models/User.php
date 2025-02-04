@@ -18,6 +18,8 @@ use Filament\Panel;
 
 use Laravolt\Avatar\Avatar;
 
+use Silber\Bouncer\BouncerFacade;
+use Silber\Bouncer\Database\Concerns\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Silber\Bouncer\Database\HasRolesAndAbilities;
@@ -25,7 +27,8 @@ class User extends Authenticatable implements FilamentUser, HasMedia
 {
     use HasApiTokens,
         HasFactory,
-        HasRolesAndAbilities,
+//        HasRolesAndAbilities,
+        HasRoles,
         InteractsWithMedia,
         Notifiable;
 
@@ -66,6 +69,8 @@ class User extends Authenticatable implements FilamentUser, HasMedia
     }
 
     public function canAccessPanel(Panel $panel): bool {
+        return $this->can('access-filament');
+        dd($this->roles);
         return true;
         return str_ends_with($this->email, ['@crumbls.com', '@o2group.com', '@thebizxgroup.com']);// && $this->hasVerifiedEmail();
     }
@@ -73,9 +78,9 @@ class User extends Authenticatable implements FilamentUser, HasMedia
 
     public function tenants() : BelongsToMany
     {
-        return $this->belongsToMany(Tenant::class, 'tenant_user_role')
-            ->withPivot('role_id')
-            ->using(TenantUserRole::class);
+        return $this->belongsToMany(Tenant::class, 'tenant_user')
+//            ->withPivot('role_id')
+            ->using(TenantUser::class);
     }
 
 /*
@@ -173,5 +178,14 @@ class User extends Authenticatable implements FilamentUser, HasMedia
         dd(__LINE__);
         $tenantId = tenant()->id; // Adjust based on your tenant resolution
         return $this->tenantRoles()->wherePivot('tenant_id', $tenantId)->get();
+    }
+
+
+    public function currentTenantRole()
+    {
+        dd(BouncerFacade::scope()->get());
+        return $this->tenantRoles()
+            ->where('tenant_id', session('current_tenant_id'))
+            ->first();
     }
 }

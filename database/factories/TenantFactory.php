@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\TenantService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -32,13 +33,18 @@ class TenantFactory extends Factory
             if (!$tenant->users()->count()) {
                 $user = User::factory()->create();
 
+                $service = app(TenantService::class);
+                $service->createDefaultRolesPermissions($tenant);
+
+//                dd(\Silber\Bouncer\Database\Role::where('scope', $tenant->getKey())->get());
+
+return;
                 // Attach user to tenant with default admin role
                 $role = Role::firstOrCreate(['name' => 'center-owner'], ['title' => 'Center Owner']);
 
                 $tenant->users()->attach($user->id, [
                     'role_id' => $role->id,
                 ]);
-                print_r($tenant);
             }
         });
     }

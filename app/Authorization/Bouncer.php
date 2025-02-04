@@ -20,7 +20,7 @@ class Bouncer
     public function assign(string $role, Model $user = null)
     {
         $user = $user ?: $this->user;
-
+dd(__LINE__);
         return TenantUserRole::create([
             'tenant_id' => $this->tenantId,
             'user_id' => $user->id,
@@ -31,6 +31,7 @@ class Bouncer
     public function retract(string $role, Model $user = null)
     {
         $user = $user ?: $this->user;
+        dd(__LINE__);
 
         return TenantUserRole::where([
             'tenant_id' => $this->tenantId,
@@ -42,6 +43,7 @@ class Bouncer
     public function getRoles(Model $user = null)
     {
         $user = $user ?: $this->user;
+        dd(__LINE__);
 
         return TenantUserRole::where([
             'tenant_id' => $this->tenantId,
@@ -52,6 +54,7 @@ class Bouncer
     public function hasRole($role, Model $user = null)
     {
         $user = $user ?: $this->user;
+        dd(__LINE__);
 
         return TenantUserRole::where([
             'tenant_id' => $this->tenantId,

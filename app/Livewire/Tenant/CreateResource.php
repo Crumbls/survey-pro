@@ -122,10 +122,8 @@ class CreateResource extends Component implements HasForms {
 
         $role = Role::firstOrCreate(['name' => 'center-owner'], ['title' => 'Center Owner']);
 
-        $record->users()->attach($user->getKey(), [
-            'role_id' => $role->id,
-        ]);
-
+        dd(__LINE__);
+        $record->users()->attach($user->getKey());
         session()->flash('success', 'Center has been created.');
 
         $this->redirectRoute('tenants.show', $record);

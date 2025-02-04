@@ -30,6 +30,7 @@ class RoleGenerator extends Command
      */
     public function handle()
     {
+        return;
         $role = Role::firstOrCreate(
             ['name' => 'administrator'],
             ['title' => 'Administrator', 'level' => 100]

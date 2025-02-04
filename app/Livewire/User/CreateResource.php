@@ -25,6 +25,7 @@ use Livewire\Component;
 use Illuminate\Support\Str;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\Actions;
+use Silber\Bouncer\BouncerFacade;
 
 class CreateResource extends Component implements HasForms
 {
@@ -219,7 +220,6 @@ class CreateResource extends Component implements HasForms
             return;
         }
 
-
         $data = $this->form->getState();
 
         $record = User::where('email', $data['email'])->first();
@@ -229,16 +229,98 @@ class CreateResource extends Component implements HasForms
         if (!$record) {
             $data['password'] = Hash::make($data['password']);
             $record = User::create($data);
+
+            Notification::make()
+                ->title('users.created')
+                ->success()
+                ->send();
+
+
         }
 
-        $roleTenant = Role::firstOrCreate(['name' => 'tenant-member'], ['title' => 'Center Member']);
+        $roleTenant = null;
 
+        if ($this->tenant) {
+            $roleTenant = \Silber\Bouncer\Database\Role::withoutGlobalScopes()
+                ->where('scope', $this->tenant->getKey())
+                ->where('name','tenant-member')
+                ->take(1)
+                ->first();
+
+            if (!$roleTenant) {
+                $roleTenant = new \Silber\Bouncer\Database\Role();
+                $roleTenant->scope = $this->tenant->getKey();
+                $roleTenant->name = 'tenant-member';
+                $roleTenant->title = 'Center Member';
+                $roleTenant->save();
+            }
+        } else {
+            $roleTenant = \Silber\Bouncer\Database\Role::withoutGlobalScopes()
+                ->whereNull('scope')
+                ->where('name','tenant-member')
+                ->take(1)
+                ->first();
+
+            if (!$roleTenant) {
+                $roleTenant = new \Silber\Bouncer\Database\Role();
+                $roleTenant->scope = null;
+                $roleTenant->name = 'tenant-member';
+                $roleTenant->title = 'Center Member';
+                $roleTenant->save();
+            }
+        }
+
+        if ($this->client) {
+            dd(__LINE__);
+        } else if ($this->tenant) {
+            if (!$this->tenant->users()->where('users.id', $record->getKey())->exists()) {
+                $this->tenant->users()->attach($record);
+            }
+            /**
+             * Check for existing roles.
+             */
+            $existing = \DB::table('assigned_roles')
+                ->where('entity_type', get_class($record))
+                ->where('entity_id', $record->getKey())
+                ->where('scope', $this->tenant->getKey())
+                ->get();
+
+            if ($existing->isEmpty()) {
+                \DB::table('assigned_roles')
+                    ->insert([
+                        'entity_type' => get_class($record),
+                        'entity_id' => $record->getKey(),
+                        'scope' => $this->tenant->getKey(),
+                        'role_id' => $roleTenant->getKey()
+                    ]);
+            } else if ($existing->count() == 1) {
+                $existing = $existing->first();
+                if ($existing->role_id != $roleTenant->getKey()) {
+                    \DB::table('assigned_roles')
+                        ->where('id', $existing->id)
+                        ->update(['role_id' => $roleTenant->getKey()]);
+                }
+            } else {
+                dd($existing);
+            }
+
+            Notification::make()
+                ->title('users.tenant_attached')
+                ->success()
+                ->send();
+
+            return redirect()->route('tenants.users.index', $this->tenant);
+
+        } else {
+            dd(__LINE__);
+        }
+return;
         if ($this->client) {
             dd(__LINE__);
         } else if ($this->tenant) {
             if ($newRecord) {
                 $this->tenant->users()->attach($record, [
-                    'role_id' => $roleTenant->getKey()
+//                    'role_id' => $roleTenant->getKey()
                 ]);
 
                 Notification::make()
@@ -268,7 +350,7 @@ class CreateResource extends Component implements HasForms
                  */
 
                 $this->tenant->users()->attach($record, [
-                    'role_id' => $roleTenant->getKey()
+//                    'role_id' => $roleTenant->getKey()
                 ]);
 
                 Notification::make()

@@ -2,11 +2,47 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web', 'auth'])->group(function () {
-    Route::get('grapesjs/editor', [\App\Http\Controllers\GrapesJsController::class, 'editor'])
-        ->name('grapesjs.editor');
-    Route::post('grapesjs/upload', [\App\Http\Controllers\GrapesJsController::class, 'upload'])
-        ->name('grapesjs.upload');
+Route::group([
+    'middleware' => [
+        'web'
+//        'auth'
+    ]
+], function() {
+   Route::get('debug', function() {
+       $user = request()->user();
+
+       if (!$user) {
+           $user = \App\Models\User::inRandomOrder()->take(1)->first();
+           \Auth::login($user);
+       }
+
+       $service = app(\App\Services\TenantService::class);
+
+       if ($user->tenants->isEmpty()) {
+           $service->getOrCreateDefault($user);
+           $user->load('tenants');
+       }
+
+       $tenant = $user->tenants->first();
+
+       $service->createDefaultRolesPermissions($tenant);
+
+       $role = \Silber\Bouncer\Database\Role::withoutGlobalScopes()->firstOrCreate([
+           'name' => 'tenant-owner',
+           'scope' => $tenant->getKey()
+       ], [
+           'title' => 'Center Owner',
+       ]);
+
+       \Silber\Bouncer\BouncerFacade::scope()->to($tenant->getKey());
+
+       if (!$user->roles()->where('roles.id',$role->getKey())->exists()) {
+           $role->assignTo($user);
+       }
+
+
+       print_r($user->roles()->get()->toArray());
+   });
 });
 
 Route::group([
@@ -61,9 +97,6 @@ Route::group([
 
     Route::get('reports/create', \App\Livewire\Report\CreateResource::class)
         ->name('reports.create');
-
-    Route::get('tenants/{tenant}/reports', \App\Livewire\Report\ListResource::class)
-        ->name('tenants.reports.index');
 
 
     Route::get('analytics', function() {

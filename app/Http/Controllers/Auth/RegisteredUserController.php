@@ -47,14 +47,27 @@ class RegisteredUserController extends Controller
 
         $tenant = app(TenantService::class)->getOrCreateDefault($user);
 
-        $client = $tenant->clients()->create([
-            'user_id' => $user->id,
-            'name' => $user->name.'\'s Client'
-        ]);
-
         event(new Registered($user));
 
         Auth::login($user);
+
+        $service = app(\App\Services\TenantService::class);
+
+        $service->createDefaultRolesPermissions($tenant);
+
+        $role = \Silber\Bouncer\Database\Role::withoutGlobalScopes()->firstOrCreate([
+            'name' => 'tenant-owner',
+            'scope' => $tenant->getKey()
+        ], [
+            'title' => 'Center Owner',
+        ]);
+
+        \Silber\Bouncer\BouncerFacade::scope()->to($tenant->getKey());
+
+        if (!$user->roles()->where('roles.id',$role->getKey())->exists()) {
+            $role->assignTo($user);
+        }
+
 
         return redirect(RouteServiceProvider::HOME);
     }

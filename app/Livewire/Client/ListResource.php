@@ -3,6 +3,7 @@
 namespace App\Livewire\Client;
 
 use App\Livewire\Contracts\HasTenant;
+use App\Models\Client;
 use App\Models\Client as Model;
 use App\Models\Tenant;
 use App\Traits\HasBreadcrumbs;
@@ -18,6 +19,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Filament\Tables\Actions\CreateAction;
+use Silber\Bouncer\BouncerFacade;
+use Silber\Bouncer\Database\Ability;
+use Silber\Bouncer\Database\Role;
 
 
 class ListResource extends Component implements HasForms, HasTable {
@@ -30,7 +34,45 @@ class ListResource extends Component implements HasForms, HasTable {
 
     protected function getTableQuery()
     {
-        abort_if(!Gate::allows('viewAny', Model::class), 403);
+        $user = request()->user();
+
+        abort_if(!$user->can('viewAny', Client::class), 403);
+
+        /**
+         * Temp patch to add in permission.
+         */
+        if (false) {
+            if (!BouncerFacade::can('viewAny', Client::class)) {
+                $ability = Ability::withoutGlobalScopes()->firstOrCreate([
+                    'name' => 'viewAny',
+                    'entity_id' => null,
+                    'entity_type' => Client::class,
+                    'scope' => $this->tenant->getKey()
+                ]);
+                $role = Role::find(33);
+                BouncerFacade::allow($role)->to($ability);
+                BouncerFacade::assign($role)->to($user);
+
+                dd($role->abilities);
+                dd($user->roles);
+                dd(BouncerFacade::role()->all()->filter(function ($role) {
+                    return $role->scope == $this->tenant->getKey();
+                })->toArray());
+//            dd($this->tenant);
+                dd($user->roles, $user);
+                dd($ability);
+            }
+            dd(__LINE__);
+            \DB::enableQueryLog();
+
+            dd(BouncerFacade::scope());
+            $roles = $user->roles;
+            dd($roles, \DB::getQueryLog());
+            dd(request()->user()->roles);
+
+//        dd(BouncerFacade::can('viewAny', Client::class));
+            abort_if(!Gate::allows('viewAny', Model::class), 403);
+        }
 
         if ($this->tenant) {
             $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
