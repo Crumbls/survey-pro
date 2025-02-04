@@ -15,6 +15,19 @@ use Silber\Bouncer\Database\Ability;
 
 class TenantService
 {
+    /**
+     * Standard permissions to create for each model
+     */
+    private array $standardPermissions = [
+        'viewAny',
+        'view',
+        'create',
+        'update',
+        'delete',
+        'restore',
+        'forceDelete',
+    ];
+
     public function getOrCreateDefault(User $user): Tenant
     {
         // Check if user already has a tenant
@@ -52,13 +65,16 @@ class TenantService
 
         $chunkA = [];
         foreach($this->getModels() as $model) {
+            foreach($this->standardPermissions as $permission) {
+
            $chunkA[] = Ability::firstOrCreate([
-               'name' => 'viewAny',
-               'title' => 'View any '.class_basename($model),
+               'name' => $permission,
+               'title' => $permission.' '.class_basename($model),
                'entity_id' => null,
                'entity_type' => $model,
                'scope' => null
            ]);
+            }
         }
 
         BouncerFacade::scope()->to($tenant->getKey());//->onlyRelations()->dontScopeRoleAbilities();

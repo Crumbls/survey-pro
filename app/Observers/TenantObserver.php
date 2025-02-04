@@ -7,6 +7,20 @@ use App\Models\Tenant;
 class TenantObserver
 {
     /**
+     * Standard permissions to create for each model
+     */
+    private array $standardPermissions = [
+        'viewAny',
+        'view',
+        'create',
+        'update',
+        'delete',
+        'restore',
+        'forceDelete',
+    ];
+
+
+    /**
      * Handle the Tenant "created" event.
      */
     public function created(Tenant $record): void

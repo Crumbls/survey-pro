@@ -15,18 +15,7 @@ use Illuminate\Support\Str;
 
 class RolePermissionSeeder extends Seeder
 {
-    /**
-     * Standard permissions to create for each model
-     */
-    private array $standardPermissions = [
-        'viewAny',
-        'view',
-        'create',
-        'update',
-        'delete',
-        'restore',
-        'forceDelete',
-    ];
+
 
     public function run()
     {
