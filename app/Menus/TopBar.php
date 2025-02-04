@@ -113,7 +113,7 @@ class TopBar
         }
 
         // Surveys - Check policy
-        if ($tenantCount && Bouncer::can('viewAny', Tenant::class)) {
+        if ($tenantCount > 1 && Bouncer::can('viewAny', Tenant::class)) {
             $menu->add(Link::toRoute('tenants.index', trans('tenants.plural')));
         }
 
