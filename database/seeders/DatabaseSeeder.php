@@ -17,14 +17,17 @@ class DatabaseSeeder extends Seeder
         //      $tenant = Tenant::factory(1)->create();
         //    return;
 
-        $this->call([
-            RolePermissionSeeder::class,
-//            SubscriptionSeeder::class
-
-        ]);
         // \App\Models\User::factory()->create([
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+
+
+        $this->call([
+            RolePermissionSeeder::class,
+            UserSeeder::class
+//            SubscriptionSeeder::class
+
+        ]);
     }
 }
