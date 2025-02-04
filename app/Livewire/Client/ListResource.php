@@ -6,6 +6,7 @@ use App\Livewire\Contracts\HasTenant;
 use App\Models\Client;
 use App\Models\Client as Model;
 use App\Models\Tenant;
+use App\Models\User;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -33,6 +34,47 @@ class ListResource extends Component implements HasForms, HasTable {
     public ?Tenant $tenant;
 
     public function mount() {
+
+        $user = request()->user();
+
+        if (!$user->can('viewAny', Client::class) && !isset($this->tenant)) {
+            /**
+             * If they have a single one, transfer them over.
+             */
+            $tenantId =
+                \DB::table('assigned_roles')
+                    ->whereIn('assigned_roles.role_id',
+                        \DB::table('permissions')
+                            ->whereIn('ability_id',
+                                \DB::table('abilities')
+                                    ->where('name', 'viewAny')
+                                    ->where('entity_type', Client::class)
+                                    ->whereNull('scope')
+                                    ->select('id')
+                            )
+                            ->where('entity_type', 'roles')
+                            ->select('entity_id')
+                    )
+                    ->where('entity_type', User::class)
+                    ->where('entity_id', $user->id)
+                    ->select('scope')
+                    ->get()
+                    ->pluck('scope')
+                    ->unique();
+
+            abort_if($tenantId->count() !== 1, 403);
+
+            $this->tenant = Tenant::find($tenantId->first());
+
+            return redirect()->route('tenants.clients.index', $this->tenant);
+            dd($this->tenant);
+
+            BouncerFacade::scope()->to($this->tenant);
+        } else {
+            abort_if(!$user->can('viewAny', Client::class), 403);
+
+        }
+
         if (isset($this->tenant) && $this->tenant) {
             $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
             $this->addBreadcrumb(__('clients.all'));
@@ -42,16 +84,17 @@ class ListResource extends Component implements HasForms, HasTable {
     }
     protected function getTableQuery()
     {
-        $user = request()->user();
 
-        abort_if(!$user->can('viewAny', Client::class), 403);
+
 
         /**
          * Temp patch to add in permission.
          */
 
+//        dd($this->tenant);
+
         if (isset($this->tenant)) {
-            return $this->tenant->clients();
+            return $this->tenant->clients()->getQuery();
         }
 
         $user = request()->user();
