@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Tenant;
+use App\Models\User;
 use App\Services\TenantService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
@@ -26,9 +27,49 @@ class PatchOwner extends Command
                 \DB::table('assigned_roles')
                     ->select('role_id')
             )
-            ->whereIn('id', \DB::table('tenant_user')->select('tenant_id'))
-            ->get();
+            ->whereIn('scope', \DB::table('tenant_user')->select('tenant_id'))
+            ->get()
+            ->each(function ($role) {
+                /**
+                 * Move first user to center owner
+                 */
+                $user = \DB::table('tenant_user')
+                    ->where('tenant_id', $role->scope)
+                    ->whereNotIn('tenant_user.user_id',
+                        \DB::table('assigned_roles')
+                            ->where('assigned_roles.entity_type', User::class)
+                            ->whereIn('assigned_roles.role_id',
+                                \DB::table('roles')
+                                    ->where('roles.scope', $role->scope)
+                                    ->select('id')
+                            )
+                            ->select('assigned_roles.entity_id')
+                    )
+                    ->select('id')
+                    ->take(1)
+                    ->first();
 
-        dd($temp);
+                if ($user) {
+                    \DB::table('assigned_roles')
+                        ->insert([
+                            'role_id' => $role->id,
+                            'entity_id' => $user->id,
+                            'entity_type' => User::class
+                        ]);
+                    $this->info('patched.');
+                    return;
+                }
+
+                if (!$user) {
+                    dd($user);
+                }
+
+                if (!$user) {
+                    return;
+                }
+
+                dd($role, $user);
+
+            });
     }
 }
