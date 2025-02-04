@@ -19,6 +19,7 @@ class PatchRoles extends Command
         if (true) {
             $service = app(TenantService::class);
             $tenant = Tenant::orderBy('id','desc')->take(1)->first();
+            dd($tenant->toArray());
             $service->createDefaultRolesPermissions($tenant);
             dd($tenant->toArray());
         } else {

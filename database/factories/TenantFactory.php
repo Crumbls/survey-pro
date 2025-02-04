@@ -36,15 +36,6 @@ class TenantFactory extends Factory
                 $service = app(TenantService::class);
                 $service->createDefaultRolesPermissions($tenant);
 
-//                dd(\Silber\Bouncer\Database\Role::where('scope', $tenant->getKey())->get());
-
-return;
-                // Attach user to tenant with default admin role
-                $role = Role::firstOrCreate(['name' => 'center-owner'], ['title' => 'Center Owner']);
-
-                $tenant->users()->attach($user->id, [
-                    'role_id' => $role->id,
-                ]);
             }
         });
     }

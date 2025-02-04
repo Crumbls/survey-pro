@@ -74,7 +74,6 @@ class TenantService
                     ]);
             });
 
-
         foreach($requiredRoles as $role) {
             $requiredPermissions = once(function() use ($role){
                 return \DB::table('permissions')
