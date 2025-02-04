@@ -76,6 +76,12 @@ Route::group([
     Route::get('collectors/create', \App\Livewire\Collector\CreateResource::class)
         ->name('collectors.create');
 
+    Route::get('products', \App\Livewire\Product\ListResource::class)
+        ->name('products.index');
+
+    Route::get('products/create', \App\Livewire\Product\CreateResource::class)
+        ->name('products.create');
+
     Route::get('surveys', \App\Livewire\Survey\ListResource::class)
         ->name('surveys.index');
     /*

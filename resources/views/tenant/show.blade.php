@@ -29,6 +29,7 @@
             <x-tenant.collector-count :record="$record" />
             <x-tenant.report-count :record="$record" />
             <x-tenant.user-count :record="$record" />
+            <x-tenant.product-count :record="$record" />
 
         </div>
     </div>

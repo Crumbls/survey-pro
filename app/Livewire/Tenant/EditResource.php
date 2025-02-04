@@ -46,32 +46,6 @@ class EditResource extends Component implements HasForms
 
         // Get current data including media
         $this->data = $model->toArray();
-//        $this->data['primary_color'] = $this->data['primary_color'] ?? '#f0f0f0';
-
-        // Get current logo if exists
-        if (false && $model->hasMedia('logo')) {
-            $media = $model->getFirstMedia('logo');
-            // Get the relative path that FileUpload component expects
-/*
-            dd([
-                'media' => $media,
-                'path' => $media ? $media->getPath() : null,
-                'url' => $media ? $media->getUrl() : null,
-                'relative_path' => $media ? $media->getPathRelativeToRoot() : null,
-            ]);
-*/
-  //          $this->data['logo'] = $media ? $media->getPathRelativeToRoot() : null;
-//            $this->data['logo'] = $media ? $media->getPath() : null;
-
-            $this->data['logo'] = $media ? str_replace('public/', '', $media->getPathRelativeToRoot()) : null;
-// For FileUpload, we just need the relative path
-            $this->data['logo'] = $media ? $media->getPathRelativeToRoot() : null;
-
-            $this->data['logo'] = $media->getUrl();
-            $this->data['logo'] = $media->uuid;
-        }
-
-//        dd($this->data);
 
         $this->form->fill($this->data);
     }

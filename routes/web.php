@@ -94,6 +94,20 @@ Route::group([
 });
 
 Route::group([
+    'prefix' => 'products/{product}',
+    'as' => 'products.',
+    'middleware' => [
+        'web',
+        'auth',
+//        \App\Http\Middleware\ClientMember::class,
+//        \App\Http\Middleware\TenantMember::class
+    ]
+], function () {
+    require_once(__DIR__.'/product.php');
+});
+
+
+Route::group([
     'prefix' => 'surveys/{survey}',
     'as' => 'surveys.',
     'middleware' => [
