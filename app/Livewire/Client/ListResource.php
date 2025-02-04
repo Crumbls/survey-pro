@@ -32,6 +32,14 @@ class ListResource extends Component implements HasForms, HasTable {
 
     public ?Tenant $tenant;
 
+    public function mount() {
+        if (isset($this->tenant) && $this->tenant) {
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.all'));
+        } else {
+            $this->addBreadcrumb(__('tenants.all'), route('surveys.index'));
+        }
+    }
     protected function getTableQuery()
     {
         $user = request()->user();
@@ -41,55 +49,14 @@ class ListResource extends Component implements HasForms, HasTable {
         /**
          * Temp patch to add in permission.
          */
-        if (false) {
-            if (!BouncerFacade::can('viewAny', Client::class)) {
-                $ability = Ability::withoutGlobalScopes()->firstOrCreate([
-                    'name' => 'viewAny',
-                    'entity_id' => null,
-                    'entity_type' => Client::class,
-                    'scope' => $this->tenant->getKey()
-                ]);
-                $role = Role::find(33);
-                BouncerFacade::allow($role)->to($ability);
-                BouncerFacade::assign($role)->to($user);
 
-                dd($role->abilities);
-                dd($user->roles);
-                dd(BouncerFacade::role()->all()->filter(function ($role) {
-                    return $role->scope == $this->tenant->getKey();
-                })->toArray());
-//            dd($this->tenant);
-                dd($user->roles, $user);
-                dd($ability);
-            }
-            dd(__LINE__);
-            \DB::enableQueryLog();
-
-            dd(BouncerFacade::scope());
-            $roles = $user->roles;
-            dd($roles, \DB::getQueryLog());
-            dd(request()->user()->roles);
-
-//        dd(BouncerFacade::can('viewAny', Client::class));
-            abort_if(!Gate::allows('viewAny', Model::class), 403);
-        }
-
-        if ($this->tenant) {
-            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
-            $this->addBreadcrumb(__('clients.all'));
-        } else {
-            $this->addBreadcrumb(__('tenants.all'), route('surveys.index'));
+        if (isset($this->tenant)) {
+            return $this->tenant->clients();
         }
 
         $user = request()->user();
 
-        return Model::whereRaw('1=1')
-            ->when($this->tenant, function ($query) {
-                $query->where('tenant_id', $this->tenant->getKey());
-            })
-            ->when(!$this->tenant, function ($query) use ($user) {
-                $query->whereIn('tenant_id', $user->tenants()->select('tenants.id'));
-            });
+        return Client::whereIn('tenant_id', $user->tenants()->select('tenants.id'));
     }
 
     public function table(Table $table): Table {
@@ -111,14 +78,17 @@ class ListResource extends Component implements HasForms, HasTable {
             CreateAction::make('create')
                 ->label('Create New')
                 ->url(function() {
-                    return $this->tenant ? route('tenants.clients.create', $this->tenant) : route('clients.create');
+//                    return '#';
+                    return isset($this->tenant) && $this->tenant ? route('tenants.clients.create', $this->tenant) : route('clients.create');
                 })
                 ->button()
                 ->color('custom') // Use custom color
                 ->extraAttributes([
                     'class' => 'bg-primary-600 hover:bg-primary-700' // Add hover state
                 ])
-                ->visible(fn (): bool => true)
+                ->visible(function() {
+                    return Gate::allows('create', Client::class);
+                })
         ])
         ->filters([
             // ...

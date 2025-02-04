@@ -63,6 +63,9 @@ Route::get('privacy-policy', function() {
     return view('privacy-policy');
 })->name('privacy-policy');
 
+require __DIR__.'/user.php';
+
+
 Route::group([
     'prefix' => 'tenants/{tenant}',
     'as' => 'tenants.',
@@ -117,7 +120,6 @@ Route::group([
     require_once(__DIR__.'/report.php');
 });
 
-require __DIR__.'/user.php';
 require __DIR__.'/auth.php';
 
 

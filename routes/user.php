@@ -64,6 +64,17 @@ Route::group([
 Route::group([
     'middleware' => ['auth', 'verified']
 ], function() {
+    Route::get('clients', \App\Livewire\Client\ListResource::class)
+        ->name('clients.index');
+
+    Route::get('clients/create', \App\Livewire\Client\CreateResource::class)
+        ->name('clients.create');
+
+    Route::get('collectors', \App\Livewire\Collector\ListResource::class)
+        ->name('collectors.index');
+
+    Route::get('collectors/create', \App\Livewire\Collector\CreateResource::class)
+        ->name('collectors.create');
 
     Route::get('surveys', \App\Livewire\Survey\ListResource::class)
         ->name('surveys.index');
@@ -72,12 +83,10 @@ Route::group([
         ->name('surveys.collectors.create');
 */
 
+    Route::get('surveys/create', \App\Livewire\Survey\CreateResource::class)
+        ->name('surveys.create');
 
-    Route::get('collectors/create', \App\Livewire\Collector\CreateResource::class)
-        ->name('collectors.create');
 
-    Route::get('collectors', \App\Livewire\Collector\ListResource::class)
-        ->name('collectors.index');
     /**
      * TODO: What?
      */
@@ -129,5 +138,6 @@ Route::group([
 
     Route::get('users/{user}/edit', \App\Livewire\User\EditResource::class)
         ->name('users.edit');
+
 
 });

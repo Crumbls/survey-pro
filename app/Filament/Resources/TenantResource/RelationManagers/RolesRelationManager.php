@@ -43,9 +43,9 @@ class RolesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('name')
+            ->recordTitleAttribute('title')
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('title'),
             ])
             ->filters([
 
@@ -60,7 +60,12 @@ class RolesRelationManager extends RelationManager
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DetachBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->query(function (Builder $query) {
+                $parent = $this->getOwnerRecord();
+                return \Silber\Bouncer\Database\Role::withoutGlobalScopes()
+                    ->where('scope', $parent->getKey());
+            });
     }
 
     protected function getRoles()

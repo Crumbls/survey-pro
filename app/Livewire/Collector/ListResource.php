@@ -73,9 +73,11 @@ class ListResource extends Component implements HasForms, HasTable {
                     'client.tenant'
                 ]);
         } else {
-            dd($this->client, $this->tenant, $this->survey);
-            dd(__LINE__);
-            $this->addBreadcrumb(__('collectors.all'));//, route('surveys.index'));
+            return Collector::whereIn('client_id', Client::whereIn('tenant_id', request()->user()->tenants()->select('tenants.id'))->select('clients.id'))
+                ->with([
+                    'client',
+                    'client.tenant'
+                ]);
         }
         if (isset($this->survey)) {
             return $this->survey->collectors()->withCount('responses')->getQuery();

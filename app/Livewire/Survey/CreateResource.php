@@ -52,8 +52,7 @@ class CreateResource extends Component implements HasForms {
         if ($this->client) {
             $this->tenant = $this->client->tenant;
         }
-//        dd($this->client);
-   //     dd($this->tenant);
+
         abort_if(!Gate::allows('create', Survey::class), 403);
         $user = request()->user();
 

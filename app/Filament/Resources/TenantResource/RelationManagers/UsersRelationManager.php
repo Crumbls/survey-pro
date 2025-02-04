@@ -94,7 +94,7 @@ class UsersRelationManager extends RelationManager
                         Forms\Components\Select::make('role_id')
                             ->label('Role')
                             ->options(function () {
-                                $this->getRoles()->pluck('title','id');
+                                return $this->getRoles()->pluck('title','id');
                             })
                             ->required(),
                     ]),
@@ -112,7 +112,8 @@ class UsersRelationManager extends RelationManager
     protected function getRoles()
     {
         return once(function() {
-            return \Silber\Bouncer\Database\Role::withoutGlobalScopes()->where('scope', $this->getOwnerRecord()->getKey())
+            return \Silber\Bouncer\Database\Role::withoutGlobalScopes()
+                ->where('scope', $this->getOwnerRecord()->getKey())
                 ->orderBy('title','asc')
                 ->get();
         });

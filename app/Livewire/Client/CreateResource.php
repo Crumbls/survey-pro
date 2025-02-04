@@ -89,8 +89,6 @@ class CreateResource extends Component implements HasForms {
             $tenant = $user->tenants()->inRandomOrder()->first();
             abort_if(!$tenant, 403);
             $data['tenant_id'] = $tenant->getKey();
-        } else {
-            dd($data);
         }
 
         $record = new Model($data);

@@ -33,8 +33,6 @@ Route::get('reports', \App\Livewire\Report\ListResource::class)
 Route::get('reports/create', \App\Livewire\Report\CreateResource::class)
     ->name('reports.create');
 
-Route::get('/create', \App\Livewire\Survey\CreateResource::class)
-    ->name('create');
 
 /*
 Route::resource('surveys', \App\Http\Controllers\SurveyController::class)

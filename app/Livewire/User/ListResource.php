@@ -74,14 +74,14 @@ class ListResource extends Component implements HasForms, HasTable {
 
         }
         $user = request()->user();
-        dd(__LINE__);
 
+        /**
+         * Show all users associated with any of our tenants.
+         */
         return User::whereIn('users.id',
-            TenantUserRole::whereIn('tenant_id',
-                TenantUserRole::where('user_id', $user->getKey())
-                    ->select('tenant_id')
-            )
-                ->select('user_id')
+            \DB::table('tenant_user')
+                ->whereIn('tenant_user.tenant_id', $user->tenants()->select('tenants.id'))
+                ->select('tenant_user.user_id')
         );
     }
 
@@ -100,7 +100,7 @@ class ListResource extends Component implements HasForms, HasTable {
         ->columns(array_filter([
             TextColumn::make('name'),
             TextColumn::make('email'),
-            TextColumn::make('role_id'),
+//            TextColumn::make('role_id'),
             $this->tenant ? SelectColumn::make('role_id')
                 ->label(__('roles.singular'))
                 ->getStateUsing(function ( $record) {

@@ -28,6 +28,3 @@ Route::get('reports', \App\Livewire\Report\ListResource::class)
 
 Route::get('reports/create', \App\Livewire\Report\CreateResource::class)
     ->name('reports.create');
-
-Route::get('create', \App\Livewire\Client\CreateResource::class)
-    ->name('create');

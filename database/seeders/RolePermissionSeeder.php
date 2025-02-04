@@ -2,14 +2,31 @@
 
 namespace Database\Seeders;
 
+use App\Filament\Resources\PlanFeatureResource;
+use App\Filament\Resources\PlanSubscriptionUsageResource;
+use App\Models\Ability;
+use App\Models\Client;
+use App\Models\Collector;
+use App\Models\Permission;
+use App\Models\Plan;
+use App\Models\PlanFeature;
+use App\Models\PlanSubscription;
+use App\Models\PlanSubscriptionFeature;
+use App\Models\PlanSubscriptionUsage;
+use App\Models\Report;
+use App\Models\Response;
 use App\Models\Role;
+use App\Models\Survey;
 use App\Models\Tenant;
+use App\Models\TenantUser;
+use App\Models\TenantUserRole;
 use App\Models\User;
 use App\Services\TenantService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Crumbls\Infrastructure\Models\Node;
 use Bouncer;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -36,14 +53,11 @@ class RolePermissionSeeder extends Seeder
             $this->createModelPermissions($modelClass);
         }
 
-        $admin = Bouncer::role()->firstOrCreate([
-            'name' => 'administrator',
-            'title' => 'Administrator',
-        ]);
+        $methods = preg_grep('#^role[A-Z]#', get_class_methods(get_called_class()));
 
-        Bouncer::allow($admin)->to('access-filament');
-
-//        Bouncer::allow($admin)->to('viewAny', Role::class);
+        foreach($methods as $method) {
+            $this->$method();
+        }
 
         $user = User::firstOrCreate([
             'email' => 'chase@crumbls.com'
@@ -53,6 +67,11 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         Bouncer::assign('administrator')->to($user);
+
+
+        return;
+
+//        Bouncer::allow($admin)->to('viewAny', Role::class);
 
         Bouncer::allow($admin)->everything();
 
@@ -90,52 +109,273 @@ class RolePermissionSeeder extends Seeder
         });
 
 return;
-        $methods = preg_grep('#^role[A-Z]#', get_class_methods(get_called_class()));
-        foreach($methods as $method) {
-            $this->$method();
-        }
 
 
         dd(Role::all()->pluck('name'));
 
     }
 
+    protected function roleAdministrator() : void {
+        $role = Bouncer::role()->firstOrCreate([
+            'name' => 'administrator',
+            'title' => 'Administrator',
+        ]);
+
+        Bouncer::allow($role)->to('access-filament');
+        Bouncer::allow($role)->everything();
+
+    }
+
+    protected function getAllAbilities() : Collection {
+        return once(function() {
+           return \DB::table('abilities')
+                ->whereNull('scope')
+                ->whereNull('entity_id')
+               ->select('id')
+                ->get()
+               ->pluck('id');
+        });
+        dd(__LINE__);
+    }
+
+    public function getTenantOwnerAbilitiesExcluded() : Collection {
+        return once(function() {
+            return \DB::table('abilities')
+                ->where(function($sub) {
+                    $sub->where(function($inner) {
+                        $inner->where('name','create');
+                        $inner->whereIn('entity_type', [
+                            Tenant::class,
+                            TenantUser::class,
+                        ]);
+                    });
+                })
+                ->select('id')
+                ->get()
+                ->pluck('id')
+                ->merge(\DB::table('abilities')
+                    ->whereIn('entity_type', [
+                        Ability::class,
+                        Permission::class,
+                        Plan::class,
+                        PlanFeature::class,
+                        PlanSubscription::class,
+                        PlanSubscriptionUsage::class,
+                        PlanSubscriptionFeature::class,
+                        Role::class,
+//                        Tenant::class,
+                        TenantUser::class,
+                        TenantUserRole::class,
+                    ])
+                    ->orWhere('name','access-filament')
+                    ->orWhere('name','*')
+                    ->orWhere('name','restore')
+                    ->orWhere('name','forceDelete')
+                    ->select('id')
+                    ->get()
+                    ->pluck('id')
+                )
+                ->merge(\DB::table('abilities')
+                    ->whereIn('entity_type', [
+                        User::class,
+                        Tenant::class,
+                    ])
+                    ->where('name','delete')
+                    ->select('id')
+                    ->get()
+                    ->pluck('id')
+                )->unique();
+        });
+    }
     protected function roleTenantOwner() : void {
         $role = Role::firstOrCreate(['name' => 'tenant-owner'], [
             'title' => 'Center Owner'
         ]);
+
+        // Get all ability IDs
+        $all = $this->getAllAbilities();
+
+        $excluded = $this->getTenantOwnerAbilitiesExcluded();
+
+
+        $current = \DB::table('abilities')
+                ->whereNull('scope')
+                ->whereNull('entity_id')
+                ->whereIn('abilities.id',
+                    \DB::table('permissions')
+                        ->where('permissions.entity_type', 'roles')
+                        ->where('permissions.entity_id', $role->getKey())
+                        ->select('permissions.ability_id')
+                )
+                ->select('id')
+                ->get()
+                ->pluck('id');
+
+        /**
+         * Delete excluded that already exist.
+         */
+        $current->intersect($excluded)->each(function($id) use ($role) {
+            \DB::table('permissions')
+                ->where('ability_id', $id)
+                ->where('entity_type', 'roles')
+                ->where('entity_id', $role->getKey())
+                ->delete();
+        });
+
+
+        /**
+         * Remove what shouldn't be there.
+         */
+        $all->diff($excluded)->diff($current)->each(function($id) use ($role) {
+            \DB::table('permissions')
+                ->insert([
+                    'entity_type' => 'roles',
+                    'entity_id' => $role->getKey(),
+                    'ability_id' => $id
+                ]);
+        });
+    }
+
+    public function getTenantAdministratorAbilitiesExcluded() : Collection {
+        return $this->getTenantOwnerAbilitiesExcluded();
     }
 
     protected function roleTenantAdministrator() : void {
         $role = Role::firstOrCreate(['name' => 'tenant-administrator'], [
             'title' => 'Center Administrator'
         ]);
+
+        // Get all ability IDs
+        $all = $this->getAllAbilities();
+
+        $excluded = $this->getTenantAdministratorAbilitiesExcluded();
+
+        $current = \DB::table('abilities')
+            ->whereNull('scope')
+            ->whereNull('entity_id')
+            ->whereIn('abilities.id',
+                \DB::table('permissions')
+                    ->where('permissions.entity_type', 'roles')
+                    ->where('permissions.entity_id', $role->getKey())
+                    ->select('permissions.ability_id')
+            )
+            ->select('id')
+            ->get()
+            ->pluck('id');
+
+        /**
+         * Delete excluded that already exist.
+         */
+        $current->intersect($excluded)->each(function($id) use ($role) {
+            \DB::table('permissions')
+                ->where('ability_id', $id)
+                ->where('entity_type', 'roles')
+                ->where('entity_id', $role->getKey())
+                ->delete();
+        });
+
+
+        /**
+         * Remove what shouldn't be there.
+         */
+        $all->diff($excluded)->diff($current)->each(function($id) use ($role) {
+            \DB::table('permissions')
+                ->insert([
+                    'entity_type' => 'roles',
+                    'entity_id' => $role->getKey(),
+                    'ability_id' => $id
+                ]);
+        });
     }
 
+    public function getTenantFacilitatorAbilitiesExcluded() : Collection {
+        return once(function() {
+            return $this->getTenantAdministratorAbilitiesExcluded()
+                ->merge(\DB::table('abilities')
+                    ->whereIn('entity_type', [
+                        Plan::class,
+                        PlanFeature::class,
+                        PlanSubscription::class,
+                        PlanSubscriptionUsage::class,
+                        PlanSubscriptionFeature::class,
+                        Role::class,
+                        Tenant::class,
+                        TenantUser::class,
+                        TenantUserRole::class,
+                        User::class
+                    ])
+                    ->select('id')
+                    ->get()
+                    ->pluck('id')
+                )
+                ->merge(\DB::table('abilities')
+                    ->where('name', 'delete')
+                    ->whereIn('entity_type', [
+                        Client::class,
+                        Collector::class,
+                        Report::class,
+                        Response::class,
+                        Survey::class,
+                        Tenant::class
+                    ])->select('id')
+                    ->get()
+                    ->pluck('id')
+                )
+                ->unique();
+        });
+    }
     protected function roleTenantFacilitator() : void {
         $role = Role::firstOrCreate(['name' => 'tenant-facilitator'], [
             'title' => 'Center Facilitator'
         ]);
+
+        // Get all ability IDs
+        $all = $this->getAllAbilities();
+
+        $excluded = $this->getTenantFacilitatorAbilitiesExcluded();
+
+//dd($excluded);
+
+        $current = \DB::table('abilities')
+            ->whereNull('scope')
+            ->whereNull('entity_id')
+            ->whereIn('abilities.id',
+                \DB::table('permissions')
+                    ->where('permissions.entity_type', 'roles')
+                    ->where('permissions.entity_id', $role->getKey())
+                    ->select('permissions.ability_id')
+            )
+            ->select('id')
+            ->get()
+            ->pluck('id');
+
+        /**
+         * Delete excluded that already exist.
+         */
+        $current->intersect($excluded)->each(function($id) use ($role) {
+            \DB::table('permissions')
+                ->where('ability_id', $id)
+                ->where('entity_type', 'roles')
+                ->where('entity_id', $role->getKey())
+                ->delete();
+        });
+
+
+        /**
+         * Remove what shouldn't be there.
+         */
+        $all->diff($excluded)->diff($current)->each(function($id) use ($role) {
+            \DB::table('permissions')
+                ->insert([
+                    'entity_type' => 'roles',
+                    'entity_id' => $role->getKey(),
+                    'ability_id' => $id
+                ]);
+        });
     }
 
 
-    protected function roleClientFacilitator() : void {
-        $role = Role::firstOrCreate(['name' => 'client-facilitator'], [
-            'title' => 'Client Facilitator'
-        ]);
-    }
 
-    protected function roleClientAdministrator() : void {
-        $role = Role::firstOrCreate(['name' => 'client-administrator'], [
-            'title' => 'Client Administrator'
-        ]);
-    }
-
-    protected function roleClientOwner() : void {
-        $role = Role::firstOrCreate(['name' => 'client-owner'], [
-            'title' => 'Client Owner'
-        ]);
-    }
 
     public function getModels() : array {
         $files = glob(app_path('Models/*.php'));
@@ -183,6 +423,12 @@ return;
             }
         }
 
+        $modelClasses = array_diff($modelClasses, [
+            Ability::class,
+            Role::class,
+            Permission::class
+        ]);
+
         return $modelClasses;
     }
 
@@ -193,26 +439,38 @@ return;
     {
         // Get the model name without namespace
         $modelName = class_basename($modelClass);
-        // Convert to kebab case for consistent naming
-        $modelNameKebab = Str::kebab($modelName);
-        $modelNameKebab = $modelClass;
 
         foreach ($this->standardPermissions as $permission) {
-            // Check if permission already exists
-            $exists = Bouncer::ability()
-                ->where('name', $permission)
+            if (\DB::table('abilities')
                 ->where('entity_type', $modelClass)
-                ->exists();
-
-            if (!$exists) {
-                Bouncer::ability()
-                    ->create([
-                        'name' => $permission,
-                        'title' => ucfirst($permission) . ' ' . $modelName,
-                        'entity_type' => $modelClass,
-                    ]);
-
+                ->where('name', $permission)
+                ->whereNull('scope')
+                ->take(1)
+                ->exists()) {
+                continue;
             }
+            ;
+
+            /**
+             * TODO: Holy cow, this needs simplified.
+             */
+            $title = Str::title(implode(' ', array_filter(
+                array_merge(
+                    preg_split('/(?=[A-Z])/',$permission),
+                    preg_split('/(?=[A-Z])/',class_basename($modelClass)
+                    )
+                )
+            )));
+
+            \DB::table('abilities')
+                ->insert([
+                    'entity_type' => $modelClass,
+                    'entity_id' => null,
+                    'name' => $permission,
+                    'scope' => null,
+                    'title' => $title,
+                    'created_at' => now()
+                ]);
         }
     }
 }
