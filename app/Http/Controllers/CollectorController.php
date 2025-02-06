@@ -43,14 +43,6 @@ class CollectorController extends Controller
             ]);
         }
 
-        $temp = Survey::inRandomOrder()
-            ->where('id', '<>', $record->survey->id)
-            ->take(1)
-            ->first()
-            ->toArray();
-
-        dd($record->survey, $temp);
-
 
 //        dd($record->survey->questions);
         return view('collector.show', [

@@ -41,7 +41,7 @@ Route::get('/', function () {
     return view('home', compact('features'));
 })->name('home');
 
-Route::get('/r/{record}', [\App\Http\Controllers\CollectorController::class, 'show'])
+Route::get('/r/{collector}', [\App\Http\Controllers\CollectorController::class, 'show'])
     ->name('collector.show');
 
 Route::post('/{collector}/responses/create', [\App\Http\Controllers\ResponseController::class, 'create'])

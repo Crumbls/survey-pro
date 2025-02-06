@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "crumbls/infrastructure": "dev-main",
         "filament/filament": "^3.2.133",
         "filament/spatie-laravel-media-library-plugin": "*",
         "guzzlehttp/guzzle": "^7.9.2",
