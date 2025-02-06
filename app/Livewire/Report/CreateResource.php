@@ -30,6 +30,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -61,16 +62,7 @@ use HasBreadcrumbs,
             /**
              * Find collectors that have responses.
              */
-            $total = Collector::whereIn('survey_id',
-                        Survey::whereIn('tenant_id',
-                            $user
-                                ->tenants()
-                                ->select('tenants.id')
-                        )
-                        ->select('surveys.id')
-                    )->whereIn('id', Response::select('collector_id'))
-                ->take(2)
-                ->get();
+            $total = $this->getPossibleCollectors();
             if ($total->count() == 1) {
                 $this->collector = $total->first->getKey();
                 $this->data['collector_ids'] = [$this->collector->getKey()];
@@ -216,6 +208,9 @@ use HasBreadcrumbs,
                         if ($this->tenant) {
                             return [$this->tenant->getKey() => $this->tenant->name];
                         }
+                        /**
+                         * TODO: Modify this so it only shows tenants with results.
+                         */
                         return request()->user()->tenants->pluck('name', 'id');
                     })->hidden(function() {
                         return isset($this->tenant) && $this->tenant;
@@ -240,6 +235,9 @@ use HasBreadcrumbs,
                         if (!$tenantId) {
                             return [];
                         }
+                        /**
+                         * TODO: Modify this so it only shows clients with results.
+                         */
                         return Client::where('tenant_id', $tenantId)
                             ->orderBy('clients.name','asc')
                             ->pluck('name','id');
@@ -295,10 +293,12 @@ use HasBreadcrumbs,
                         if (!$surveyId) {
                             return [];
                         }
-                        return Collector::query()  // Assuming 'Collector' is your links model
-                            ->where('survey_id', $surveyId)
-                            ->pluck('name', 'id');
-                    })
+
+                        return $this->getPossibleCollectors()
+                            ->filter(function(Collector $collector) use ($surveyId)  {
+                                return $collector->survey_id = $surveyId;
+                            })->pluck('name', 'id');
+                })
                     ->multiple()
                     ->required()
                     ->disabled(fn (Get $get): bool => !$get('survey_id'))
@@ -340,6 +340,20 @@ use HasBreadcrumbs,
         return view('livewire.report.create-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
         ]);
+    }
+
+    protected function getPossibleCollectors(): Collection {
+        return once(function() {
+            return Collector::whereIn('survey_id',
+                Survey::whereIn('tenant_id',
+                    auth()->user()
+                        ->tenants()
+                        ->select('tenants.id')
+                )
+                    ->select('surveys.id')
+            )->whereIn('id', Response::select('collector_id'))
+                ->get();
+        });
     }
 
 }
