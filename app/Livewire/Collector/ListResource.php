@@ -5,12 +5,14 @@ namespace App\Livewire\Collector;
 use App\Models\Client;
 use App\Models\Collector;
 use App\Models\Collector as Model;
+use App\Models\Report;
 use App\Models\Survey;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Traits\HasBreadcrumbs;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
@@ -226,7 +228,18 @@ class ListResource extends Component implements HasForms, HasTable {
                         'class' => 'text-secondary-600 hover:text-secondary-700' // Add hover state
                     ])
                     ->action(function(Model $record) {
-                        dd($record);
+                        $report = new Report([
+                            'client_id' => $record->client->getKey(),
+                            'title' => 'Report for '.$record->name,
+                            'collector_ids' => [$record->getKey()],
+                            /**
+                             * @deprecated
+                             */
+                            'survey_id' => $record->survey->getKey(),
+                        ]);
+                        $report->save();
+                        Notification::make(trans('reports.created'));
+                        return redirect()->route('reports.edit', $report);
                     })
                     ->hidden(function (Model $record) {
                         return !$record->responses()->count();

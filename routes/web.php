@@ -123,8 +123,7 @@ Route::group([
     'middleware' => [
         'web',
         'auth',
-        \App\Http\Middleware\ScopeBouncer::class,
-        \App\Http\Middleware\TenantMember::class
+        \App\Http\Middleware\TenantMemberThroughReport::class
     ]
 ], function () {
     require_once(__DIR__.'/report.php');
