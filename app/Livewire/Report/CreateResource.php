@@ -324,7 +324,6 @@ use HasBreadcrumbs,
     {
         return view('livewire.report.create-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
-//            'tenant' => $this->getTenant()
         ]);
     }
 
