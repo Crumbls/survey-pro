@@ -105,8 +105,9 @@ use HasBreadcrumbs,
 
         if ($this->tenant) {
             $this->data['tenant_id'] = $this->tenant->getKey();
-        } else {
-            dd($user->tenants);
+        } else if ($user->tenants->count() == 1) {
+            $this->tenant = $user->tenants->first();
+            $this->data['tenant_id'] = $this->tenant->getKey();
         }
 
         /**
