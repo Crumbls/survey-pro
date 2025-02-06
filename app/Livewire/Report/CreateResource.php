@@ -5,7 +5,6 @@ namespace App\Livewire\Report;
 use App\Livewire\Contracts\HasTenant;
 use App\Models\Client;
 use App\Models\Collector;
-use App\Models\Collector as Model;
 use App\Models\Report;
 use App\Models\Response;
 use App\Models\Survey;
@@ -83,14 +82,25 @@ use HasBreadcrumbs,
             $this->data['survey_id'] = $this->survey->getKey();
             $this->client = $this->survey->client;
         } else {
-            dd(__LINE__);
+            $total = Survey::whereIn('tenant_id',
+                    $user
+                        ->tenants()
+                        ->select('tenants.id')
+                )
+                ->take(2)
+                ->get();
+            if ($total->count() == 1) {
+                $this->survey = $total->first();
+                $this->data['survey_id'] = $this->survey->getKey();
+                $this->client = $this->survey->client;
+            }
         }
 
         if ($this->client) {
             $this->data['client_id'] = $this->client->getKey();
             $this->tenant = $this->client->tenant;
         } else {
-            dd(__LINE__);
+//            dd(__LINE__);
         }
 
         if ($this->tenant) {
