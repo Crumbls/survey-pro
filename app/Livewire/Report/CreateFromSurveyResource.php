@@ -27,6 +27,10 @@ use Livewire\Component;
 use Filament\Tables\Actions\CreateAction;
 use Filament\Forms\Form;
 use Livewire\WithUrlParams;
+
+/**
+ * @deprecated
+ */
 class CreateFromSurveyResource extends Component implements HasForms {
 
     use InteractsWithForms;
