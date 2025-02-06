@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\Tenant;
+use Crumbls\Infrastructure\Database\Seeders\InfrastructureSeeder;
+use Crumbls\Infrastructure\Models\Node;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -23,11 +23,16 @@ class DatabaseSeeder extends Seeder
         // ]);
 
 
-        $this->call([
-            RolePermissionSeeder::class,
-            UserSeeder::class
-//            SubscriptionSeeder::class
+        if (class_exists(Node::class)) {
 
-        ]);
+            Node::orderBy('_lft')->get()->each(function (Node $node) {
+                $node->delete();
+            });
+
+            $this->call([
+                InfrastructureSeeder::class
+            ]);
+        }
+
     }
 }
