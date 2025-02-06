@@ -160,6 +160,10 @@ use HasBreadcrumbs,
         return Collector::query()
             ->whereIn('tenant_id', request()->user()->tenants()->select('tenants.id'));
     }
+
+    /**
+     * Defines the form structure with dependent dropdowns
+     */
     public function form(Form $form): Form
     {
         $user = request()->user();
