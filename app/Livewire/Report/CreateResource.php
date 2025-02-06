@@ -53,34 +53,60 @@ use HasBreadcrumbs,
     public function mount() {
         abort_if(!Gate::allows('create', Report::class), 403);
 
+        $user = auth()->user();
+
         if ($this->collector) {
-            $this->data['collector_id'] = $this->collector->getKey();
+            $this->data['collector_ids'] = [$this->collector->getKey()];
             $this->survey = $this->collector->survey;
+        } else {
+            /**
+             * Find collectors that have responses.
+             */
+            $total = Collector::whereIn('survey_id',
+                        Survey::whereIn('tenant_id',
+                            $user
+                                ->tenants()
+                                ->select('tenants.id')
+                        )
+                        ->select('surveys.id')
+                    )->whereIn('id', Response::select('collector_id'))
+                ->take(2)
+                ->get();
+            if ($total->count() == 1) {
+                $this->collector = $total->first->getKey();
+                $this->data['collector_ids'] = [$this->collector->getKey()];
+                $this->survey = $this->collector->survey;
+            }
         }
 
         if ($this->survey) {
             $this->data['survey_id'] = $this->survey->getKey();
             $this->client = $this->survey->client;
+        } else {
+            dd(__LINE__);
         }
 
         if ($this->client) {
             $this->data['client_id'] = $this->client->getKey();
             $this->tenant = $this->client->tenant;
+        } else {
+            dd(__LINE__);
         }
 
         if ($this->tenant) {
             $this->data['tenant_id'] = $this->tenant->getKey();
-
+        } else {
+            dd($user->tenants);
         }
 
         /**
          * Add breadcrumbs.
          */
 
-            $this->addBreadcrumb(trans('tenants.all'));
+        $this->addBreadcrumb(trans('tenants.all'));
 
         $this->addBreadcrumb('Create Survey');
-
+//dd($this->data);
         $this->form->fill($this->data);
     }
 
@@ -241,6 +267,9 @@ use HasBreadcrumbs,
                         // Clear the dependent field when parent changes
                         $set('collector_ids', null);
                     })
+                    ->hidden(function() {
+                        return isset($this->survey) && $this->survey;
+                    })
                     ->required(),
 
                 Select::make('collector_ids')
@@ -273,7 +302,10 @@ use HasBreadcrumbs,
 
         $data['user_id'] = $user?->getKey();
 
-        if (!isset($data['client_id'])) {
+        if (!array_key_exists('survey_id', $data) && $this->survey?->getKey()) {
+            $data['survey_id'] = $this->survey->getKey();
+            $data['client_id'] = $this->survey->client_id;
+        } else if (!isset($data['client_id'])) {
              $survey = Survey::findOrFail($data['survey_id']);
              $data['client_id'] = $survey->client_id;
         }
