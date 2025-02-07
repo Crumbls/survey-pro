@@ -62,9 +62,12 @@ use HasBreadcrumbs,
             /**
              * Find collectors that have responses.
              */
-            $total = $this->getPossibleCollectors();
-            if ($total->count() == 1) {
-                $this->collector = $total->first->getKey();
+            $possible = Collector::withResponsesForUser($user)->orderBy('name','asc')->get();
+            /**
+             * TODO: Remove the debug hook.
+             */
+            if ($possible->count() == 1) {
+                $this->collector = $possible->first->getKey();
                 $this->data['collector_ids'] = [$this->collector->getKey()];
                 $this->survey = $this->collector->survey;
             }
@@ -74,15 +77,10 @@ use HasBreadcrumbs,
             $this->data['survey_id'] = $this->survey->getKey();
             $this->client = $this->survey->client;
         } else {
-            $total = Survey::whereIn('tenant_id',
-                    $user
-                        ->tenants()
-                        ->select('tenants.id')
-                )
-                ->take(2)
-                ->get();
-            if ($total->count() == 1) {
-                $this->survey = $total->first();
+            $possible = Survey::withResponsesForUser($user)->get();
+
+            if ($possible->count() == 1) {
+                $this->survey = $possible->first();
                 $this->data['survey_id'] = $this->survey->getKey();
                 $this->client = $this->survey->client;
             }
@@ -92,7 +90,12 @@ use HasBreadcrumbs,
             $this->data['client_id'] = $this->client->getKey();
             $this->tenant = $this->client->tenant;
         } else {
-//            dd(__LINE__);
+            $possible = Client::withResponsesForUser($user)->get();
+            if ($possible->count() == 1) {
+                $this->survey = $possible->first();
+                $this->data['survey_id'] = $this->survey->getKey();
+                $this->client = $this->survey->client;
+            }
         }
 
         if ($this->tenant) {
@@ -208,10 +211,8 @@ use HasBreadcrumbs,
                         if ($this->tenant) {
                             return [$this->tenant->getKey() => $this->tenant->name];
                         }
-                        /**
-                         * TODO: Modify this so it only shows tenants with results.
-                         */
-                        return request()->user()->tenants->pluck('name', 'id');
+                        $user = auth()->user();
+                        return Tenant::withResponsesForUser($user)->get()->pluck('name','id');
                     })->hidden(function() {
                         return isset($this->tenant) && $this->tenant;
                     })
@@ -235,12 +236,7 @@ use HasBreadcrumbs,
                         if (!$tenantId) {
                             return [];
                         }
-                        /**
-                         * TODO: Modify this so it only shows clients with results.
-                         */
-                        return Client::where('tenant_id', $tenantId)
-                            ->orderBy('clients.name','asc')
-                            ->pluck('name','id');
+                        return Client::withResponsesForTenant($tenantId)->orderBy('name','asc')->get()->pluck('name','id');
                     })->hidden(function() {
                         return isset($this->client) && $this->client;
                     })
@@ -259,16 +255,15 @@ use HasBreadcrumbs,
                         if (!$clientId) {
                             return [];
                         }
-
+                        /**
+                         * TODO: Move to scope.
+                         */
                         return Survey::query()
                             ->where('client_id', $clientId)
                             ->whereIn('surveys.id',
                                 Collector::whereRaw('1=1')
                                     ->whereIn('collectors.id',
                                         Response::select('collector_id')
-                                        /**
-                                         * TODO: Revise this query to make it simpler to speed up down the road.
-                                         */
                                     )
                                     ->select('survey_id')
                             )
@@ -294,11 +289,11 @@ use HasBreadcrumbs,
                             return [];
                         }
 
-                        return $this->getPossibleCollectors()
-                            ->filter(function(Collector $collector) use ($surveyId)  {
-                                return $collector->survey_id = $surveyId;
-                            })->pluck('name', 'id');
-                })
+                        return Collector::withResponsesForUser(auth()->user(), $surveyId)
+                            ->orderBy('name','asc')
+                            ->get()
+                            ->pluck('name','id');
+                    })
                     ->multiple()
                     ->required()
                     ->disabled(fn (Get $get): bool => !$get('survey_id'))
@@ -342,18 +337,5 @@ use HasBreadcrumbs,
         ]);
     }
 
-    protected function getPossibleCollectors(): Collection {
-        return once(function() {
-            return Collector::whereIn('survey_id',
-                Survey::whereIn('tenant_id',
-                    auth()->user()
-                        ->tenants()
-                        ->select('tenants.id')
-                )
-                    ->select('surveys.id')
-            )->whereIn('id', Response::select('collector_id'))
-                ->get();
-        });
-    }
 
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -55,12 +56,12 @@ class Collector extends Model
         return '';
     }
 
-    public function survey()
+    public function survey() : BelongsTo
     {
         return $this->belongsTo(Survey::class);
     }
 
-    public function responses()
+    public function responses() : HasMany
     {
         return $this->hasMany(Response::class);
     }
@@ -100,6 +101,39 @@ class Collector extends Model
 
     public function client() : BelongsTo {
         return $this->belongsTo(Client::class);
+    }
+
+    /**
+     * Get collectors with responses, filtered by:
+     * 1. User's authorized tenants
+     * 2. Optional specific survey (ID or Model)
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \App\Models\Survey|int|null $survey
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWithResponsesForUser($query, User $user, int|Survey $survey = null)
+    {
+        $query->whereIn('survey_id', function ($query) use ($user) {
+            $query->select('id')
+                ->from('surveys')
+                ->whereIn('tenant_id', function ($subQuery) use ($user) {
+                    $subQuery->select('tenants.id')
+                        ->from('tenants')
+                        ->join('tenant_user', 'tenants.id', '=', 'tenant_user.tenant_id')
+                        ->where('tenant_user.user_id', $user->getKey());
+                });
+        })
+            ->whereHas('responses');
+
+        if ($survey) {
+            $surveyId = $survey instanceof Survey ? $survey->getKey() : $survey;
+            $query->where('survey_id', $surveyId);
+        }
+
+        return $query;
+
+
     }
 }
 

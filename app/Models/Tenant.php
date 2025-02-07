@@ -88,4 +88,21 @@ class Tenant extends Model implements HasMedia
             });
     }
 
+    /**
+     * Scope to get tenants that:
+     * 1. Have responses in their client hierarchy
+     * 2. Are accessible to the given user
+     * 3. Are sorted alphabetically by name
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \App\Models\User $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWithResponsesForUser($query, User $user)
+    {
+        return $query->whereHas('clients.surveys.collectors.responses')
+            ->whereIn('tenants.id', $user->tenants()->select('tenants.id'))
+            ->orderBy('tenants.name');
+    }
+
 }

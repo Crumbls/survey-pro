@@ -45,7 +45,7 @@ class Survey extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function collectors()
+    public function collectors() : HasMany
     {
         return $this->hasMany(Collector::class);
     }
@@ -100,4 +100,25 @@ class Survey extends Model
 
     }
 
+    /**
+     * Scope to get surveys that:
+     * 1. Have at least one response in their collectors
+     * 2. Belong to clients within user's authorized tenants
+     * 3. Are sorted alphabetically by title
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param \App\Models\User $user
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWithResponsesForUser($query, User $user)
+    {
+        return $query
+            ->whereHas('collectors.responses')
+            ->whereIn('client_id', function ($query) use ($user) {
+                $query->select('id')
+                    ->from('clients')
+                    ->whereIn('tenant_id', $user->tenants()->select('tenants.id'));
+            })
+            ->orderBy('title');
+    }
 }
