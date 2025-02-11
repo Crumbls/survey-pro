@@ -150,6 +150,7 @@ class ListResource extends Component implements HasForms, HasTable {
         ->filters([
             // ...
         ])
+
         ->actions([
             ActionGroup::make([
                 Action::make('view')

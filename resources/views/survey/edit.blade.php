@@ -13,7 +13,10 @@
     </div>
 
     @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    @if(false)
+        @else
+            @vite(['resources/js/survey-builder.js'])
+            <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
         <!-- ... -->
         <!-- SurveyJS Form Library resources -->
         <link  href="https://unpkg.com/survey-core/defaultV2.min.css" type="text/css" rel="stylesheet">
@@ -26,7 +29,10 @@
         <!-- Survey Creator resources -->
         <link  href="https://unpkg.com/survey-creator-core/survey-creator-core.min.css" type="text/css" rel="stylesheet">
         <script src="https://unpkg.com/survey-creator-core/survey-creator-core.min.js"></script>
-        <script src="https://unpkg.com/survey-creator-js/survey-creator-js.min.js"></script>        <script>
+        <script src="https://unpkg.com/survey-creator-js/survey-creator-js.min.js"></script>
+            @endif
+
+            <script>
             function surveyCreatorApp(initialSurvey) {
                 return {
                     creator: null,

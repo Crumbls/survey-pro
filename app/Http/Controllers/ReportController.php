@@ -74,47 +74,5 @@ class ReportController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     * @deprecated
-     */
-    public function edit(string $record)
-    {
-        $user = request()->user();
 
-        dd(__METHOD__, $record);
-        $record = Report::where('id', $record)
-            ->whereIn('survey_id',
-                Survey::whereRaw('1=1')
-                    ->whereIn('tenant_id',
-                        $user->tenants()->select('tenants.id')
-                    )
-                    ->select('surveys.id')
-            )
-            ->firstOrFail();
-
-        /**
-         * TODO: Add in authorization.
-         */
-
-        return view('report.edit', [
-            'record' => $record
-        ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }
