@@ -6,19 +6,12 @@
     <title>{{ config('app.name') }} - Manufacturing Survey Software</title>
     <meta name="description" content="{{ config('app.name') }} - Manufacturing Survey Software">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <x-analytics />
     <style>
         [x-cloak] {
             display: none !important;
         }
     </style>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KQ4W49HMZF"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-KQ4W49HMZF');
-    </script>
     @filamentStyles
     @vite('resources/css/app.css')
 </head>
