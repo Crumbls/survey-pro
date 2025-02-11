@@ -25,7 +25,7 @@ class SubscriptionSeeder extends Seeder
                 'trial_period' => 14,
                 'trial_interval' => 'day'
             ]);
-
+dd($plan);
         if (!$plan->features->count()) {
             $plan->features()->create([
                 'name' => 'clients',

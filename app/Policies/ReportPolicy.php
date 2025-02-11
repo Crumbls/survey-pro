@@ -67,6 +67,7 @@ return true;
      */
     public function delete(User $user, Report $report): bool
     {
+        return false;
         //
     }
 

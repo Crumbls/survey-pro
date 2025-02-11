@@ -23,16 +23,10 @@ class DatabaseSeeder extends Seeder
         // ]);
 
 
-        if (class_exists(Node::class)) {
-
-            Node::orderBy('_lft')->get()->each(function (Node $node) {
-                $node->delete();
-            });
-
             $this->call([
-                InfrastructureSeeder::class
+//                InfrastructureSeeder::class
+                SubscriptionSeeder::class
             ]);
-        }
 
     }
 }
