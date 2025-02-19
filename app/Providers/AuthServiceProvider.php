@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 // use Illuminate\Support\Facades\Gate;
+use App\Models\User;
 use App\Policies\IssuePolicy;
 use Crumbls\Issue\Models\Issue;
 use Filament\Facades\Filament;
@@ -25,7 +26,21 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::before(function ($user, $ability) {
+
+
+        Gate::define('view-analytics', function() {
+            return false;
+        });
+        /**
+         * TODO: Start moving to proper procedures.
+         */
+        Gate::before(function (?User $user, string $ability, array $atts = []) {
+            if ($ability == 'view-analytics') {
+                return false;
+            }
+            if ($atts) {
+                return true;
+            }
             return true;
             $panel = Filament::getCurrentPanel();
             $path = $panel?->getPath();

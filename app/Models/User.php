@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -82,7 +83,7 @@ class User extends Authenticatable implements FilamentUser, HasMedia
      * @return bool
      */
     public function canAccessPanel(Panel $panel): bool {
-        return str_ends_with($this->email, ['@crumbls.com', '@o2group.com']);// && $this->hasVerifiedEmail();
+        return Str::endsWith($this->email, ['@crumbls.com', '@o2group.com']);
     }
 
 
