@@ -16,6 +16,7 @@ use App\Models\PlanSubscriptionUsage;
 use App\Models\Report;
 use App\Models\Response;
 use App\Models\Role;
+use App\Models\RoleTemplate;
 use App\Models\Survey;
 use App\Models\Tenant;
 use App\Models\TenantUser;
@@ -38,31 +39,52 @@ class RoleTemplateSeeder extends Seeder
             'display_name' => 'Administrator',
             'description' => 'Full system access with all permissions',
             'is_global' => true,
-            'default_permissions' => '*', // Special flag for all permissions
+            'default_abilities' => [
+                '*' // Special flag for all permissions
+            ],
         ],
         [
             'name' => 'tenant-owner',
-            'display_name' => 'Tenant Owner',
+            'display_name' => 'Center Owner',
             'description' => 'Owner of the tenant instance',
             'is_global' => false,
-            'default_permissions' => [
+            'default_abilities' => [
+                'App\\Models\\Client,*',
+                'App\\Models\\Collector,*',
+                'App\\Models\\Product,*',
+                'App\\Models\\Report,*',
+                'App\\Models\\Response,*',
+                'App\\Models\\Survey,*',
+                'App\\Models\\User,create',
+                'App\\Models\\User,update',
+                'App\\Models\\User,delete',
             ],
         ],
         [
-            'name' => 'center-member',
+            'name' => 'tenant-member',
             'display_name' => 'Center Member',
             'description' => 'Standard member of the tenant',
             'is_global' => false,
-            'default_permissions' => [
+            'default_abilities' => [
+                'App\\Models\\Client,*',
+                'App\\Models\\Collector,*',
+                'App\\Models\\Product,*',
+                'App\\Models\\Report,*',
+                'App\\Models\\Response,*',
+                'App\\Models\\Survey,*'
             ],
-        ],
+        ]
     ];
 
     public function run()
     {
-        dd(__LINE__);
         foreach ($this->roleTemplates as $template) {
-            RoleTemplate::create($template);
+            $record = RoleTemplate::withTrashed()
+                ->firstOrCreate([
+                    'is_global' => $template['is_global'],
+                    'name' => $template['name'],
+                ], $template);
         }
+
     }
 }

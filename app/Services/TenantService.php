@@ -6,13 +6,14 @@ namespace App\Services;
 use App\Models\Client;
 use App\Models\Collector;
 use App\Models\Role;
+use App\Models\RoleTemplate;
 use App\Models\Survey;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Silber\Bouncer\BouncerFacade;
-use Silber\Bouncer\Database\Ability;
+use App\Models\Ability;
 
 class TenantService
 {
@@ -47,103 +48,78 @@ class TenantService
 
 
     public function createDefaultRolesPermissions(Tenant $tenant) {
+
         $requiredRoles = $this->getRequiredRoles();
 
-        dd($requiredRoles->diff($tenant->roles->pluck('title')));
+        $requiredRoles->keyBy('display_name')
+            ->diff($tenant->roles->keyBy('title'))
+            ->each(function($template) use ($tenant) {
 
-        /**
-         * Add in new roles as necessary.
-         */
-        $requiredRoles->pluck('name')
-            ->diff(
-                \DB::table('roles')
-                    ->where('scope', $tenant->getKey())
-                    ->whereIn('name', $requiredRoles->pluck('name'))
-                    ->select('name')
-                    ->get()
-                    ->pluck('name')
-            )
-            ->each(function($roleName) use ($requiredRoles, $tenant) {
-                $role = $requiredRoles->get($roleName);
-                \DB::table('roles')
-                    ->insert([
-                        'scope' => $tenant->getKey(),
-                        'name' => $role->name,
-                        'title' => $role->title,
-                        'created_at' => now()
-                    ]);
-            });
+                $role = Role::create([
+                    'title' => $template->display_name,
+                    'tenant_id' => $tenant->getKey(),
+                    'description' => $template->description
+                ]);
 
+                if ($template->default_abilities) {
+                    $abilityPatterns = $template->default_abilities;
+                    // Build query for exact matches and wildcards
+                    $query = Ability::where(function($q) use ($abilityPatterns) {
+                        foreach ($abilityPatterns as $pattern) {
+                            if ($pattern == '*') {
+                                print_r($pattern);
+                                dd(__LINE__);
+                            }
+                            $pattern = explode(',', $pattern);
+                            $x = count($pattern);
+                            if (!$x) {
+                                continue;
+                            } else if ($x == 1) {
+                                dd(__LINE__);
+                            } else if ($x == 2) {
+                                if ($pattern[1] == '*') {
+                                    /**
+                                     * Wildcard.
+                                     */
+                                    $q->orWhere('entity_type', $pattern[0]);
+                                } else {
+                                    $q->orWhere(function(Builder $sub) use ($pattern){
+                                        $sub->where('entity_type', $pattern[0]);
+                                        $sub->where('name', $pattern[1]);
+                                    });
+                                }
+                            } else {
+                                abort(500);
+                            }
 
-        foreach($requiredRoles as $role) {
-            $requiredPermissions = once(function() use ($role){
-                return \DB::table('permissions')
-                    ->where('entity_type', 'roles')
-                    ->where('entity_id', $role->id)
-                    ->whereNull('scope')
-                    ->select('ability_id')
-                    ->get()
-                    ->pluck('ability_id');
-            });
+                        }
+                    });
 
-            $childRole = \DB::table('roles')
-                ->where('scope', $tenant->getKey())
-                ->where('name', $role->name)
-                ->take(1)
-                ->first();
+                    // Single query to get all matching abilities
+                    $abilities = $query
+                        ->whereNotIn('id',
+                            \DB::table('permissions')
+                                ->where('role_id', $role->getKey())
+                                ->select('ability_id')
+                        )
+                        ->get()
+                        ->each(function(Ability $ability) use ($role) {
+                            \DB::table('permissions')
+                                ->insert([
+                                    'role_id' => $role->getKey(),
+                                    'ability_id' => $ability->getKey()
+                                ]);
+                        });
 
-            if (!$childRole) {
-                continue;
-            }
+                    /**
+                     * TODO: Clear authorization cache.
+                     */
 
-            /**
-             * Clean up bad permissions.
-             */
-            if (true) {
-                $temp = \DB::table('roles')
-                    ->where('entity_type', 'roles')
-                    ->where('entity_id', $childRole->id)
-                    ->whereNotIn('ability_id',
-                        \DB::table('permissions')
-                            ->where('entity_type', 'roles')
-                            ->where('entity_id', $role->id)
-                            ->whereNull('scope')
-                            ->select('ability_id')
-                    )
-                    ->get();
-
-                if ($temp->count()) {
-                    dd($temp);
+                    /**
+                     * TODO: Rebuild authorization cache.
+                     */
                 }
-
-            }
-
-            /**
-             * Get missing.
-             */
-            \DB::table('permissions')
-                ->where('entity_type', 'roles')
-                ->where('entity_id', $role->id)
-                ->whereNull('scope')
-                ->select('ability_id')
-                ->whereNotIn('ability_id',
-                    \DB::table('permissions')
-                        ->where('entity_type', 'roles')
-                        ->where('entity_id', $childRole->id)
-                        ->select('ability_id')
-                )
-                ->get()
-                ->pluck('ability_id')
-                ->each(function($ability) use ($childRole){
-                    \DB::table('permissions')
-                        ->insert([
-                            'ability_id' => $ability,
-                            'entity_type' => 'roles',
-                            'entity_id' => $childRole->id,
-                            'scope' => null
-                        ]);
-                });
-        }
+            });
     }
 
     private function generateDefaultTenantName(User $user): string
@@ -158,11 +134,7 @@ class TenantService
      */
     public function getRequiredRoles() : Collection {
         return once(function() {
-            return collect([
-                'Center Owner',
-                'Center Administrator',
-                'Center Facilitator'
-            ]);
+            return RoleTemplate::tenantSpecific()->get();
         });
     }
 }

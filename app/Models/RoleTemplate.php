@@ -25,12 +25,12 @@ class RoleTemplate extends Model
         'display_name',
         'description',
         'is_global',
-        'default_permissions',
+        'default_abilities',
         'is_active'
     ];
 
     protected $casts = [
-        'default_permissions' => 'array',
+        'default_abilities' => 'array',
         'is_global' => 'boolean',
         'is_active' => 'boolean'
     ];

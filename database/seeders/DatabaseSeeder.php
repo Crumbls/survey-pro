@@ -15,22 +15,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Issue::factory()->create();
-
-        exit;
-        // \App\Models\User::factory(10)->create();
-        //      $tenant = Tenant::factory(1)->create();
-        //    return;
-
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
-
+//        Issue::factory()->create();
 
             $this->call([
+                RoleTemplateSeeder::class
 //                InfrastructureSeeder::class
-                SubscriptionSeeder::class
+//                SubscriptionSeeder::class
             ]);
 
     }

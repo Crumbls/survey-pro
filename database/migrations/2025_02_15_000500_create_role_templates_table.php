@@ -22,7 +22,7 @@ return new class extends Migration
                 $table->string('display_name');
                 $table->text('description')->nullable();
                 $table->boolean('is_global')->default(false);
-                $table->json('default_permissions');
+                $table->json('default_abilities');
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();
                 $table->softDeletes();

@@ -16,7 +16,12 @@ class Role extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'title'];
+    protected $fillable = [
+
+        'name',
+        'title',
+        'tenant_id'
+    ];
 
     /**
      * The attributes that should be cast to native types.

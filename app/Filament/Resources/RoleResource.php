@@ -67,14 +67,17 @@ class RoleResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('title')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('tenant')
                     ->label(trans('tenants.singular'))
                     ->formatStateUsing(function (Tenant $state) : string {
                         return $state ? $state->name : '-';
-                    }),
+                    })
+                ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
