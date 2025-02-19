@@ -86,7 +86,7 @@ class CreateResource extends Component implements HasForms {
                                 Client::select('tenant_id')
                                     ->whereIn('clients.id', Survey::select('client_id'))
                             )
-                            ->pluck('name', 'id');
+                            ->pluck('name', 'tenants.id');
                     })->hidden(function() {
                         return isset($this->tenant) && $this->tenant;
                     })
