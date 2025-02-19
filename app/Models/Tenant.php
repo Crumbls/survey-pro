@@ -46,12 +46,6 @@ class Tenant extends Model implements HasMedia
         return $this->hasMany(Role::class, 'scope', 'id');
     }
 
-    public function getRoles() {
-        return Role::withoutGlobalScopes()
-            ->orderBy('title','asc')
-            ->get();
-    }
-
     public function users() : BelongsToMany
     {
         return $this->belongsToMany(User::class, 'tenant_user')

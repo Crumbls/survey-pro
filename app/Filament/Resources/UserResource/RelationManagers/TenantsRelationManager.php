@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\Tenant;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -19,6 +20,7 @@ class TenantsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    protected $attachTenantId;
 
     public static function getTitle(Model $ownerRecord, string $pageClass): string
     {
@@ -39,11 +41,11 @@ class TenantsRelationManager extends RelationManager
                     ->preload()
                     ->required(),
                 Forms\Components\Select::make('role_id')
-                    ->label('Role')
+                    ->label('Rolea')
                     ->options(function () {
-//                        dd($this->record);
-///                        \Silber\Bouncer\Database\Role::withoutGlobalScope
+
                         $roles = Role::query();
+                        dd($this->getTableRecord());
 
                         if (Auth::user()->email !== 'chase@crumbls.com') {
                             $roles->where('name', '!=', 'administrator');
@@ -64,7 +66,8 @@ class TenantsRelationManager extends RelationManager
                 Tables\Columns\SelectColumn::make('role_id')
                     ->options(function (Tenant $record) {
                         return once(function() use ($record){
-                            return $record->getRoles()
+                            return $record
+                                ->roles
                                 ->pluck('title','id');
                         });
                     })
@@ -72,7 +75,6 @@ class TenantsRelationManager extends RelationManager
                         /**
                          * Not being called.
                          */
-                        dd($record, $state);
                         $this->ownerRecord->tenants()->updateExistingPivot(
                             $record->id,
                             ['role_id' => $state]
@@ -106,17 +108,22 @@ class TenantsRelationManager extends RelationManager
                         });
                     })
                     ->form(fn (Tables\Actions\AttachAction $action): array => [
-                        $action->getRecordSelect(),
+                        $action->getRecordSelect()
+                            ->live()
+                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                $this->attachTenantId = $state;
+                                $set('role_id', null);
+                            }),
                         Forms\Components\Select::make('role_id')
                             ->label('Role')
-                            ->options(function () {
-                                $roles = Role::query();
-
-                                if (Auth::user()->email !== 'chase@crumbls.com') {
-                                    $roles->where('name', '!=', 'Administrator');
+//                            ->live()
+                            ->options(function (Forms\Get $get) {
+                                if (!$this->attachTenantId) {
+                                    return [];
                                 }
+                                $tenant = Tenant::withoutGlobalScopes()->where('id', $this->attachTenantId)->firstOrFail();
 
-                                return $roles->pluck('name', 'id');
+                                return $tenant->roles->pluck('title', 'id');
                             })
                             ->required(),
                     ]),
