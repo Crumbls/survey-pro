@@ -43,8 +43,6 @@ class AbilityResource extends Resource
                     ->required(),
                 Forms\Components\Textarea::make('options')
                     ->columnSpanFull(),
-                Forms\Components\TextInput::make('scope')
-                    ->numeric(),
             ]);
     }
 
@@ -63,9 +61,6 @@ class AbilityResource extends Resource
                     ->searchable(),
                 Tables\Columns\IconColumn::make('only_owned')
                     ->boolean(),
-                Tables\Columns\TextColumn::make('scope')
-                    ->numeric()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
