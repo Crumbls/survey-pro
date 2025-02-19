@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Traits\HasBreadcrumbs;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Section;
@@ -19,6 +20,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
@@ -77,9 +79,26 @@ class CreateResource extends Component implements HasForms
             ->schema([
                 Section::make()
                     ->schema([
+                        Select::make('tenant_id')
+                        ->label(trans('tenants.singular'))
+                        ->options(function() {
+                            return Auth::user()->tenants()->orderBy('tenants.name','asc')->pluck('tenants.name', 'tenants.id');
+                        })
+                        ->hidden(function() {
+                            return $this->tenant;
+                        })
+                        ,
                         TextInput::make('email')
                             ->email()
                             ->required()
+                            ->rules([
+                                fn () => function (string $attribute, mixed $value, \Closure $fail) {
+                                    if ($value === auth()->user()->email) {
+                                        $fail("You cannot use your own email address.");
+                                    }
+                                }
+                            ])
+
                             ->live(onBlur: true)
                             ->helperText(fn () => $this->emailExists
                                 ? 'This user is already in the system and will be invited to join this center.'
@@ -240,6 +259,16 @@ class CreateResource extends Component implements HasForms
 
         $roleTenant = null;
 
+        if (
+            !$this->tenant
+            &&
+            array_key_exists('tenant_id', $this->data)
+            &&
+            $this->data['tenant_id']
+        ) {
+            $this->tenant = Tenant::findOrFail($this->data['tenant_id']);
+        }
+
         if ($this->tenant) {
             $roleTenant = $this->tenant
                 ->roles()
@@ -256,6 +285,7 @@ class CreateResource extends Component implements HasForms
         if ($this->client) {
             dd(__LINE__, 'This is under construction.');
         } else if ($this->tenant) {
+//            dd($this->tenant->users()->where('users.id', $record->getKey())->get(), $record->getKey());
             if (!$this->tenant->users()->where('users.id', $record->getKey())->exists()) {
                 $this->tenant->users()->attach($record, [
                     'role_id' => $roleTenant?->getKey()
@@ -266,11 +296,10 @@ class CreateResource extends Component implements HasForms
                     ->success()
                     ->send();
             }
-
-
             return redirect()->route('tenants.users.index', $this->tenant);
-
         } else {
+            dd($this->data);
+            dd(__LINE__);
             dd(__LINE__);
         }
 return;
