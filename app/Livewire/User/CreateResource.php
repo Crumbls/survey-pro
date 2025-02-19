@@ -23,6 +23,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Livewire\Component;
 use Illuminate\Support\Str;
 use Filament\Forms\Components\Actions\Action;
@@ -94,15 +95,28 @@ class CreateResource extends Component implements HasForms
                             ->rules([
                                 fn () => function (string $attribute, mixed $value, \Closure $fail) {
                                     if ($value === auth()->user()->email) {
-                                        $fail("You cannot use your own email address.");
+                                        $fail('You cannot use your own email address.');
+                                    }
+                                },
+                                fn () => function (string $attribute, mixed $value, \Closure $fail) {
+                                    if ($this->tenant) {
+                                        if ($this->tenant->users()->where('email', $value)->first()) {
+                                            $fail('This user is already part of this center');
+                                        }
                                     }
                                 }
                             ])
-
                             ->live(onBlur: true)
-                            ->helperText(fn () => $this->emailExists
-                                ? 'This user is already in the system and will be invited to join this center.'
-                                : null)
+                            ->helperText(function ($state, TextInput $component) {
+                                if ($state && $temp = $component->getValidationRules()) {
+                                    if (Validator::make(['email' => $state], $temp)->fails()) {
+                                        return null;
+                                    }
+                                }
+                                return $state && $this->emailExists
+                                    ? 'This user is already in the system and will be invited to join this center.'
+                                    : null;
+                            })
                             ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
                                 if (!$state) {
                                     $this->emailExists = false;

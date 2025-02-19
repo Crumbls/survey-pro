@@ -28,6 +28,7 @@ use Filament\Tables\Actions\CreateAction;
 
 
 class ListResource extends Component implements HasForms, HasTable {
+
     use HasBreadcrumbs,
         InteractsWithTable,
         InteractsWithForms;
@@ -42,6 +43,21 @@ class ListResource extends Component implements HasForms, HasTable {
 
         if ($this->client) {
             $this->tenant = $this->client->tenant;
+        }
+
+        if (!$this->tenant) {
+            $user = request()->user();
+
+            $x = $user->tenants->count();
+
+            abort_if(!$x, 500);
+
+            if ($user->tenants->count() == 1) {
+                $this->tenant = $user->tenants->first();
+            }
+        }
+
+        if ($this->client) {
             $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
             $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
             $this->addBreadcrumb(__('users.all'));//, route('clients.surveys.index', $this->client))   ;
@@ -51,31 +67,20 @@ class ListResource extends Component implements HasForms, HasTable {
         } else {
             $this->addBreadcrumb(__('users.all'));//, route('client.surveys.index', $this->client));
         }
+
     }
 
     protected function getTableQuery()
     {
-
-//        dd(AssignedRo)
-
         if ($this->client) {
-
-        dd(__LINE__);
+            dd(__LINE__);
         } else if ($this->tenant) {
             return $this->tenant->users()
                 ->withPivot(['role_id'])
                 ->getQuery();
         }
-        $user = request()->user();
 
-        /**
-         * Show all users associated with any of our tenants.
-         */
-        return User::whereIn('users.id',
-            \DB::table('tenant_user')
-                ->whereIn('tenant_user.tenant_id', $user->tenants()->select('tenants.id'))
-                ->select('tenant_user.user_id')
-        );
+        return User::whereRaw('1=2');
     }
 
     public function table(Table $table): Table {
@@ -208,7 +213,7 @@ class ListResource extends Component implements HasForms, HasTable {
 }
 
     public function render(): View {
-        return view('livewire.list-resource', [
+        return view('livewire.user.list-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
             'title' => __('users.all'),
             'subtitle' => __('users.description'),
