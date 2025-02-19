@@ -119,7 +119,6 @@ class ListResource extends Component implements HasForms, HasTable {
             CreateAction::make('create')
                 ->label('Create New')
                 ->url(function() : string {
-
                     if ($this->collector) {
                         return route('collectors.reports.create', $this->collector);
                     } else if ($this->survey) {
@@ -131,21 +130,15 @@ class ListResource extends Component implements HasForms, HasTable {
                     }
 
                     return route('reports.create');
-
-                    return '#';
-                    $tenant = $this->getTenant();
-
-                    return $tenant ? route('tenants.reports.create', $tenant) : route('reports.create');
-                    dd($tenant);
-
-                    return route('surveys.reports.create');
                 })
                 ->button()
                 ->color('custom') // Use custom color
                 ->extraAttributes([
                     'class' => 'bg-primary-600 hover:bg-primary-700' // Add hover state
                 ])
-                ->visible(fn (): bool => true)
+                ->visible(function() {
+                    return Gate::allows('create', Report::class);
+                })
         ])
         ->filters([
             // ...

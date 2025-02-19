@@ -21,9 +21,6 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Filament\Tables\Actions\CreateAction;
-use Silber\Bouncer\BouncerFacade;
-use Silber\Bouncer\Database\Ability;
-use Silber\Bouncer\Database\Role;
 
 class ListResource extends Component implements HasForms, HasTable {
     use HasBreadcrumbs,
@@ -67,9 +64,6 @@ class ListResource extends Component implements HasForms, HasTable {
             $this->tenant = Tenant::find($tenantId->first());
 
             return redirect()->route('tenants.clients.index', $this->tenant);
-            dd($this->tenant);
-
-            BouncerFacade::scope()->to($this->tenant);
         } else {
             abort_if(!$user->can('viewAny', Client::class), 403);
 

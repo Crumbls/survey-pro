@@ -123,7 +123,9 @@ class ListResource extends Component implements HasForms, HasTable {
                 ->extraAttributes([
                     'class' => 'bg-primary-600 hover:bg-primary-700' // Add hover state
                 ])
-                ->visible(fn (): bool => true)
+                ->visible(function() {
+                    return Gate::allows('create', Survey::class);
+                })
         ])
         ->filters([
             // ...

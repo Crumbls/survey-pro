@@ -241,33 +241,16 @@ class CreateResource extends Component implements HasForms
         $roleTenant = null;
 
         if ($this->tenant) {
-            $roleTenant = \Silber\Bouncer\Database\Role::withoutGlobalScopes()
-                ->where('scope', $this->tenant->getKey())
-                ->where('name','tenant-member')
-                ->take(1)
-                ->first();
-
-            if (!$roleTenant) {
-                $roleTenant = new \Silber\Bouncer\Database\Role();
-                $roleTenant->scope = $this->tenant->getKey();
-                $roleTenant->name = 'tenant-member';
-                $roleTenant->title = 'Center Member';
-                $roleTenant->save();
-            }
+            $roleTenant = $this->tenant()
+                ->roles()
+                ->firstOrCreate([
+                    'title' => 'Center Member'
+                ]);
         } else {
-            $roleTenant = \Silber\Bouncer\Database\Role::withoutGlobalScopes()
-                ->whereNull('scope')
-                ->where('name','tenant-member')
-                ->take(1)
-                ->first();
-
-            if (!$roleTenant) {
-                $roleTenant = new \Silber\Bouncer\Database\Role();
-                $roleTenant->scope = null;
-                $roleTenant->name = 'tenant-member';
-                $roleTenant->title = 'Center Member';
-                $roleTenant->save();
-            }
+            $roleTenant = Role::firstOrCreate([
+                'title' => 'Center Member',
+                'tenant_id' => null
+            ]);
         }
 
         if ($this->client) {
@@ -279,6 +262,7 @@ class CreateResource extends Component implements HasForms
             /**
              * Check for existing roles.
              */
+            dd(__LINE__);
             $existing = \DB::table('assigned_roles')
                 ->where('entity_type', get_class($record))
                 ->where('entity_id', $record->getKey())

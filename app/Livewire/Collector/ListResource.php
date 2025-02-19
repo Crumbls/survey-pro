@@ -22,6 +22,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Filament\Tables\Actions\CreateAction;
@@ -173,7 +174,9 @@ class ListResource extends Component implements HasForms, HasTable {
                 ->extraAttributes([
                     'class' => 'bg-primary-600 hover:bg-primary-700' // Add hover state
                 ])
-                ->visible(fn (): bool => true)
+                ->visible(function() {
+                        return Gate::allows('create', Collector::class);
+                    })
         ])
         ->filters([
             // ...

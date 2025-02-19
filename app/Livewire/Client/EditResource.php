@@ -59,23 +59,11 @@ class EditResource extends Component implements HasForms
                             TextInput::make('name')
                                 ->required()
                                 ->maxLength(255),
-
-
                             SpatieMediaLibraryFileUpload::make('logo')
-  //                              ->image()
-//                                ->imageEditor()
                                 ->collection('logo')
-                            ->visibility('public')
-                            ->disk('public')
-                            ->openable()
-/*
-                                ->afterStateUpdated(function ($state) {
-
-                                    $this->logo = $state;
-
-                                     $this->extractColorsFromLogo($state->getPath().DIRECTORY_SEPARATOR.$state->getFilename());
-                                }),*/
-
+                                ->visibility('public')
+                                ->disk('public')
+                                ->openable()
                         ]),
 
                     Section::make('Color Scheme')
@@ -154,29 +142,6 @@ class EditResource extends Component implements HasForms
 
             // Update the model attributes
             $record->update($data);
-
-            if ($logo) {
-                if ($logo instanceof TemporaryUploadedFile) {
-                    // Handle TemporaryUploadedFile
-                    $record->addMedia($logo->getRealPath())
-                        ->usingFileName($logo->getClientOriginalName())
-                        ->toMediaCollection('logo');
-                } else {
-                    $record->clearMediaCollection('logo');
-
-                    if (is_string($logo) && str_starts_with($logo, 'livewire-tmp')) {
-                        // Handle temporary uploaded file
-                        $tmpPath = storage_path('app/public/' . $logo);
-                        if (file_exists($tmpPath)) {
-                            $record->addMedia($tmpPath)
-                                ->toMediaCollection('logo');
-                        }
-                    }
-
-                }
-            }
-
-            // Log media collection status
 
             Notification::make()
                 ->title('Saved successfully')

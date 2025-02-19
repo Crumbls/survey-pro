@@ -62,16 +62,9 @@ class ListResource extends Component implements HasForms, HasTable {
 
         dd(__LINE__);
         } else if ($this->tenant) {
-            return $this->tenant
-                ->users()
-                ->leftJoin('assigned_roles','assigned_roles.entity_id','=','users.id')
-                ->where('assigned_roles.entity_type', User::class)
-                ->where('assigned_roles.scope', $this->tenant->getKey())
-                ->where('assigned_roles.entity_type', User::class)
-                ->select(['users.*',\DB::raw('assigned_roles.role_id as role_id')])
-                ->groupBy('users.id')
+            return $this->tenant->users()
+                ->withPivot(['role_id'])
                 ->getQuery();
-
         }
         $user = request()->user();
 
@@ -104,14 +97,12 @@ class ListResource extends Component implements HasForms, HasTable {
             $this->tenant ? SelectColumn::make('role_id')
                 ->label(__('roles.singular'))
                 ->getStateUsing(function ( $record) {
+//                    dd($record);
                     return $record->role_id;
-///                    return $this->getRolesTenant()->keys()->random();
-                    dd($record);
-                    dd('getStateUsing reached');  // Debug point
-                    return $record->status;
                 })
                 ->updateStateUsing(function(int $state, $record) {
                     if ($this->tenant) {
+                        dd($state, $record);
                         $existing = \DB::table('assigned_roles')
                             ->where('entity_type', User::class)
                             ->where('entity_id', $record->id)
@@ -234,18 +225,10 @@ class ListResource extends Component implements HasForms, HasTable {
 
     public function getRolesTenant() : Collection {
         return once(function() {
-            return \Silber\Bouncer\Database\Role::withoutGlobalScopes()
-                ->where(function($sub) {
-                    $sub->where('roles.scope', $this->tenant->getKey());
-//                    $sub->orWhereNull('roles.scope');
-                })
-                ->orderBy('roles.title', 'asc')
+            return $this->tenant
+                ->roles()
+                ->orderBy('title','asc')
                 ->get()
-                ->map(function($role) {
-//                    $role->title = $role->title.' '.$role->id;
-                    return $role;
-
-                })
                 ->pluck('title', 'id');
         });
     }
