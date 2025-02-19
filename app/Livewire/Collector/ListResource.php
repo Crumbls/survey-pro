@@ -185,17 +185,21 @@ class ListResource extends Component implements HasForms, HasTable {
             ActionGroup::make([
                 Action::make('view')
                     ->label('View')
-                    ->icon('heroicon-m-pencil-square')
+                    ->icon('heroicon-m-arrow-top-right-on-square')
                     ->url(function ($record) {
                         return $record->status == 'open' && $record->type == 'url' ? route('collector.show', $record->unique_code) : '';
                     })
+                    ->openUrlInNewTab()
                     ->color('custom')
                     ->extraAttributes([
                         'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
-                    ]),
+                    ])
+                    ->hidden(function (Model $record) {
+                        return $record->status != 'open';
+                    }),
                 Action::make('open')
                     ->label('Open')
-                    ->icon('heroicon-m-pencil-square')
+                    ->icon('heroicon-m-lock-open')
                     ->color('custom')
                     ->extraAttributes([
                         'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
@@ -210,7 +214,7 @@ class ListResource extends Component implements HasForms, HasTable {
                     }),
                 Action::make('close')
                     ->label('Close')
-                    ->icon('heroicon-m-pencil-square')
+                    ->icon('heroicon-m-lock-closed')
                     ->color('custom')
                     ->extraAttributes([
                         'class' => 'text-secondary-600 hover:text-secondary-700' // Add hover state
@@ -225,7 +229,7 @@ class ListResource extends Component implements HasForms, HasTable {
                     }),
                 Action::make('report-create')
                     ->label('Create Report')
-                    ->icon('heroicon-m-pencil-square')
+                    ->icon('heroicon-m-document-plus')
                     ->color('custom')
                     ->extraAttributes([
                         'class' => 'text-secondary-600 hover:text-secondary-700' // Add hover state
@@ -245,7 +249,7 @@ class ListResource extends Component implements HasForms, HasTable {
                         return redirect()->route('reports.edit', $report);
                     })
                     ->hidden(function (Model $record) {
-                        return !$record->responses()->count();
+                        return !Gate::allows('create', Report::class) || !$record->responses()->count();
                     })
 
             ])

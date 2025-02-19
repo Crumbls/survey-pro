@@ -8,7 +8,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/css/report.css',
                 'resources/js/app.js',
-                'resources/js/grapesjs/editor.js'
+                'resources/js/survey-builder.js',
             ],
             refresh: true,
         }),

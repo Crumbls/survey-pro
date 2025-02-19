@@ -18,6 +18,9 @@
     "dependencies": {
         "@tailwindcss/typography": "^0.5.15",
         "grapesjs": "^0.22.4",
-        "postcss-nesting": "^13.0.1"
+        "postcss-nesting": "^13.0.1",
+        "survey-core": "^1.12.22",
+        "survey-creator-core": "^1.12.22",
+        "survey-creator-js": "^1.12.22"
     }
 }
