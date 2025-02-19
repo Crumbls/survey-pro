@@ -41,6 +41,7 @@ class ClientResource extends Resource
                     Section::make('Basic Information')
                         ->schema([
                             Forms\Components\Select::make('tenant_id')
+                                ->label(trans('tenants.singular'))
                                 ->relationship('tenant', 'name')
                                 ->required()
                                 ->columnSpanFull(),
