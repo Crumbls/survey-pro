@@ -16,7 +16,6 @@ use Silber\Bouncer\Database\Ability;
 
 class TenantService
 {
-
     public function getOrCreateDefault(User $user): Tenant
     {
         // Check if user already has a tenant
@@ -49,6 +48,8 @@ class TenantService
 
     public function createDefaultRolesPermissions(Tenant $tenant) {
         $requiredRoles = $this->getRequiredRoles();
+
+        dd($requiredRoles->diff($tenant->roles->pluck('title')));
 
         /**
          * Add in new roles as necessary.
@@ -151,15 +152,17 @@ class TenantService
         return $user->name . "'s Organization";
     }
 
+    /**
+     * This is no longer correct.
+     * @return Collection
+     */
     public function getRequiredRoles() : Collection {
         return once(function() {
-            return \DB::table('roles')
-                ->whereNull('scope')
-                ->where('name', '<>', 'administrator')
-                ->where('name','<>', 'center-owner')
-                ->select(['name', 'title', 'id'])
-                ->get()
-                ->keyBy('name');
+            return collect([
+                'Center Owner',
+                'Center Administrator',
+                'Center Facilitator'
+            ]);
         });
     }
 }
