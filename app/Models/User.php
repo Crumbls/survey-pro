@@ -76,12 +76,13 @@ class User extends Authenticatable implements FilamentUser, HasMedia
         });
     }
 
+    /**
+     * TODO: Change this to a permission.
+     * @param Panel $panel
+     * @return bool
+     */
     public function canAccessPanel(Panel $panel): bool {
-        return true;
-        return $this->can('access-filament');
-        dd($this->roles);
-        return true;
-        return str_ends_with($this->email, ['@crumbls.com', '@o2group.com', '@thebizxgroup.com']);// && $this->hasVerifiedEmail();
+        return str_ends_with($this->email, ['@crumbls.com', '@o2group.com']);// && $this->hasVerifiedEmail();
     }
 
 
