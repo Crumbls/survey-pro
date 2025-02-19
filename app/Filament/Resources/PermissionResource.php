@@ -34,10 +34,10 @@ class PermissionResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('ability_id')
-                    ->relationship('ability', 'name')
+                    ->relationship('ability', 'title')
                     ->required(),
                 Forms\Components\Select::make('role_id')
-                    ->relationship('role', 'name')
+                    ->relationship('role', 'title')
                     ->required(),
                 Forms\Components\Toggle::make('forbidden')
                      ->required(),
