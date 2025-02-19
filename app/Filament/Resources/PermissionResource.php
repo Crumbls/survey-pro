@@ -48,19 +48,14 @@ class PermissionResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('ability_id')
+                Tables\Columns\TextColumn::make('ability.title')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('entity_id')
+                Tables\Columns\TextColumn::make('role.title')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('entity_type')
-                    ->searchable(),
                 Tables\Columns\IconColumn::make('forbidden')
                     ->boolean(),
-                Tables\Columns\TextColumn::make('scope')
-                    ->numeric()
-                    ->sortable(),
             ])
             ->filters([
                 //
