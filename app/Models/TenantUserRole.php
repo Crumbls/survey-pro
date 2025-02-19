@@ -10,6 +10,12 @@ class TenantUserRole extends Pivot
 {
     protected $table = 'tenant_user';
 
+    public $fillable = [
+        'role_id',
+        'tenant_id',
+        'user_id'
+    ];
+
     public function tenant() : BelongsTo
     {
         return $this->belongsTo(Tenant::class);

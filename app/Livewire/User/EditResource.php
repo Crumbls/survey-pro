@@ -5,7 +5,6 @@ namespace App\Livewire\User;
 use App\Livewire\Contracts\HasTenant;
 use App\Models\Client;
 use App\Models\Tenant;
-use App\Models\TenantUserRole;
 use App\Models\User;
 use App\Models\User as Model;
 use App\Traits\HasBreadcrumbs;
