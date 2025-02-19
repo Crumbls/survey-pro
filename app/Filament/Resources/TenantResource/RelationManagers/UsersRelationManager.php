@@ -112,10 +112,7 @@ class UsersRelationManager extends RelationManager
     protected function getRoles()
     {
         return once(function() {
-            return Role::withoutGlobalScopes()
-                ->where('scope', $this->getOwnerRecord()->getKey())
-                ->orderBy('title','asc')
-                ->get();
+            return $this->getOwnerRecord()->roles;
         });
     }
 }

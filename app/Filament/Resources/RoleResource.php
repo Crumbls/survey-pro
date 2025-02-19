@@ -7,6 +7,9 @@ use App\Filament\Resources\RoleResource\RelationManagers;
 use App\Models\Role;
 use App\Models\Tenant;
 use Filament\Forms;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -39,9 +42,23 @@ class RoleResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required(),
-                Forms\Components\TextInput::make('title'),
+
+                Section::make('Role Details')
+                    ->description('Basic information about the role')
+                    ->schema([
+
+                        Select::make('tenant_id')
+                            ->label(trans('tenants.singular'))
+                            ->relationship('tenant', 'name')
+                            ->hint(trans('role.tenant_helper'))
+                            ->columnSpanFull(),
+                        TextInput::make('title')
+                            ->maxLength(255)
+                            ->hint('A human-readable title for this role')
+                            ->columnSpanFull()
+                        ,
+                    ])
+                    ->columns(2),
             ]);
     }
 
@@ -56,7 +73,6 @@ class RoleResource extends Resource
                 Tables\Columns\TextColumn::make('tenant')
                     ->label(trans('tenants.singular'))
                     ->formatStateUsing(function (Tenant $state) : string {
-                        return '-';
                         return $state ? $state->name : '-';
                     }),
                 Tables\Columns\TextColumn::make('created_at')
@@ -88,6 +104,7 @@ class RoleResource extends Resource
     public static function getRelations(): array
     {
         return [
+            RelationManagers\UsersRelationManager::make()
             //
         ];
     }

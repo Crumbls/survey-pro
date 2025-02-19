@@ -51,20 +51,18 @@ class EditRole extends EditRecord
                 Section::make('Role Details')
                     ->description('Basic information about the role')
                     ->schema([
-                        TextInput::make('name')
-                            ->required()
-                            ->maxLength(255)
-                            ->rules([
-                                fn () => $this->getScopedUniqueRule()
-                            ]),
+
+                        Select::make('tenant_id')
+                            ->label(trans('tenants.singular'))
+                            ->relationship('tenant', 'name')
+                            ->hint(trans('role.tenant_helper'))
+                            ->columnSpanFull()
+                            ->disabled(true),
                         TextInput::make('title')
                             ->maxLength(255)
-                            ->hint('A human-readable title for this role'),
-                        /*
-                        TextInput::make('scope')
-                            ->numeric()
-                            ->hint('Leave empty for global roles'),
-                        */
+                            ->hint('A human-readable title for this role')
+                            ->columnSpanFull()
+                        ,
                     ])
                     ->columns(2),
 

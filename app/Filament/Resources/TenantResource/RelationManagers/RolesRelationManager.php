@@ -29,7 +29,7 @@ class RolesRelationManager extends RelationManager
 
     public static function getModelLabel(): string
     {
-        return __('users.singular');
+        return __('roles.singular');
     }
 
     public function form(Form $form): Form
@@ -51,6 +51,7 @@ class RolesRelationManager extends RelationManager
 
             ])
             ->headerActions([
+                Tables\Actions\CreateAction::make()
 
             ])
             ->actions([
@@ -63,8 +64,7 @@ class RolesRelationManager extends RelationManager
             ])
             ->query(function (Builder $query) {
                 $parent = $this->getOwnerRecord();
-                return Role::withoutGlobalScopes()
-                    ->where('scope', $parent->getKey());
+                return $parent->roles()->getQuery();
             });
     }
 
