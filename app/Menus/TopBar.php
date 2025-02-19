@@ -3,9 +3,12 @@
 namespace App\Menus;
 
 use App\Models\Client;
+use App\Models\Collector;
+use App\Models\Report;
 use App\Models\Role;
 use App\Models\Survey;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Silber\Bouncer\BouncerFacade;
 use Silber\Bouncer\BouncerFacade as Bouncer;
@@ -113,11 +116,11 @@ class TopBar
         }
 
         // Surveys - Check policy
-        if ($tenantCount > 1 && Bouncer::can('viewAny', Tenant::class)) {
+        if ($tenantCount > 1 && Gate::allows('viewAny', Tenant::class)) {
             $menu->add(Link::toRoute('tenants.index', trans('tenants.plural')));
         }
 
-        if ($tenantCount && Bouncer::can('viewAny', Client::class)) {
+        if ($tenantCount && Gate::allows('viewAny', Client::class)) {
             if ($tenantCount == 1) {
                 $menu->add(Link::toRoute('tenants.clients.index', trans('clients.plural'), ['tenant' => $tenant]));
             } else {
@@ -134,7 +137,7 @@ class TopBar
             }
         }
 
-        if (Bouncer::can('viewAny', Survey::class)) {
+        if (Gate::allows('viewAny', Survey::class)) {
             if ($tenantCount == 1) {
                 $menu->add(Link::toRoute('tenants.surveys.index', trans('surveys.plural'), ['tenant' => $tenant]));
             } else {
@@ -142,7 +145,7 @@ class TopBar
             }
         }
 
-        if ($tenantCount && $user->can('viewAny', \App\Models\Collector::class)) {
+        if ($tenantCount && Gate::allows('viewAny', Collector::class)) {
             if ($tenantCount == 1) {
                 $menu->add(Link::toRoute('tenants.collectors.index', trans('collectors.plural'), ['tenant' => $tenant]));
             } else {
@@ -152,7 +155,7 @@ class TopBar
 
 
         // Reports - Check policy and role
-        if ($tenantCount && $user->can('viewAny', \App\Models\Report::class)) {
+        if ($tenantCount && Gate::allows('viewAny', Report::class)) {
             if ($tenantCount == 1) {
                 $menu->add(Link::toRoute('tenants.reports.index', trans('reports.plural'), ['tenant' => $tenant]));
             } else {
@@ -160,7 +163,7 @@ class TopBar
             }
         }
 
-        if ($tenantCount && $user->can('viewAny', \App\Models\User::class)) {
+        if ($tenantCount && Gate::allows('viewAny', User::class)) {
             if ($tenantCount == 1) {
                 $menu->add(Link::toRoute('tenants.users.index', trans('users.plural'), ['tenant' => $tenant]));
             } else {
@@ -169,7 +172,7 @@ class TopBar
         }
 
         // Analytics - Only for users with specific permission
-        if (Auth::user()->can('view-analytics')) {
+        if (Gate::allows('view-analytics')) {
             $menu->add(Link::to('/analytics', 'Analytics'));
         }
 

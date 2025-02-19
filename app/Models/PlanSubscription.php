@@ -18,7 +18,7 @@ use App\Traits\HasUuid;
 class PlanSubscription extends Model
 {
     use HasFactory,
-        HasUuid,
+//        HasUuid,
         SoftDeletes;
 
     protected $fillable = [

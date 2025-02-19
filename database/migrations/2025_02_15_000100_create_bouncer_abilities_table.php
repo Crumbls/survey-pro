@@ -7,23 +7,29 @@ use Silber\Bouncer\Database\Models;
 
 return new class extends Migration
 {
+    public function getTable() : string {
+        return 'abilities';
+    }
+
     public function up()
     {
-        Schema::create(Models::table('abilities'), function (Blueprint $table) {
-            $table->bigIncrements('id');
+        if (Schema::hasTable($this->getTable())) {
+            return;
+        }
+        Schema::create($this->getTable(), function (Blueprint $table) {
+            $table->id();
             $table->string('name');
             $table->string('title')->nullable();
             $table->bigInteger('entity_id')->unsigned()->nullable();
             $table->string('entity_type')->nullable();
             $table->boolean('only_owned')->default(false);
             $table->json('options')->nullable();
-            $table->integer('scope')->nullable()->index();
             $table->timestamps();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists(Models::table('abilities'));
+        Schema::dropIfExists($this->getTable());
     }
 };

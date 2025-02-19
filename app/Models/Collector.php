@@ -18,6 +18,7 @@ class Collector extends Model
         'name',
         'type',
         'status',
+        'goal',
         'configuration',
         'unique_code',
         'expires_at',

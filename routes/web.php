@@ -68,7 +68,7 @@ Route::group([
     'middleware' => [
         'web',
         'auth',
-        \App\Http\Middleware\ScopeBouncer::class,
+//        \App\Http\Middleware\ScopeBouncer::class,
         \App\Http\Middleware\TenantMember::class
     ]
 ], function () {

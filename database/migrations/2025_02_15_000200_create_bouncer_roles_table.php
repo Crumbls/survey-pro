@@ -7,13 +7,21 @@ use Silber\Bouncer\Database\Models;
 
 return new class extends Migration
 {
+    public function getTable() : string {
+        return 'roles';
+    }
+
     public function up()
     {
-        Schema::create(Models::table('roles'), function (Blueprint $table) {
-            $table->bigIncrements('id');
+        if (Schema::hasTable($this->getTable())) {
+            return;
+        }
+
+        Schema::create($this->getTable(), function (Blueprint $table) {
+            $table->id();
+            $table->foreignIdFor(\App\Models\Tenant::class)->nullable();
             $table->string('name');
             $table->string('title')->nullable();
-            $table->integer('scope')->nullable()->index();
             $table->timestamps();
 
             $table->unique(
@@ -25,6 +33,6 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists(Models::table('roles'));
+        Schema::dropIfExists($this->getTable());
     }
 };

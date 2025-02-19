@@ -9,4 +9,14 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateCollector extends CreateRecord
 {
     protected static string $resource = CollectorResource::class;
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $data['type'] = 'url';
+        $data['status'] = 'open';
+        $data['configuration'] = [];
+        $data['name'] = $data['unique_code'];
+
+        return $data;
+    }
 }

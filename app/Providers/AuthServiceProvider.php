@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 // use Illuminate\Support\Facades\Gate;
+use App\Policies\IssuePolicy;
+use Crumbls\Issue\Models\Issue;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -23,7 +25,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        return;
         Gate::before(function ($user, $ability) {
             return true;
             $panel = Filament::getCurrentPanel();

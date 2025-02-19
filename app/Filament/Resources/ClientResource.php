@@ -37,14 +37,6 @@ class ClientResource extends Resource
     {
         return $form
             ->schema([
-                /*
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                ->columnSpanFull(),
-                Forms\Components\TextInput::make('primary_color'),
-                Forms\Components\TextInput::make('secondary_color'),
-                Forms\Components\TextInput::make('accent_color'),
-                */
                 Grid::make(1)->schema([
                     Section::make('Basic Information')
                         ->schema([

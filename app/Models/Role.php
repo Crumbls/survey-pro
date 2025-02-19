@@ -2,62 +2,62 @@
 
 namespace App\Models;
 
-use App\Services\AuthorizationCache;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model as bak;
-use Silber\Bouncer\Database\Role as Model;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class Role extends Model
 {
-    protected $fillable = ['name', 'title', 'level'];
+//    use Concerns\IsRole;
 
-    public function dis_abilitieas() : \Illuminate\Database\Eloquent\Relations\MorphToMany
-    {
-        return $this->morphToMany();
-        return $this->belongsToMany(Ability::class, 'role_abilities');
-    }
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = ['name', 'title'];
 
-    public function dis_permissions()
-    {
-        return $this->hasMany(Permission::class);
-    }
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'id' => 'int',
+    ];
 
-    protected static function dis_boot()
-    {
-        parent::boot();
-
-        static::saved(function ($role) {
-            $cache = app(AuthorizationCache::class);
-            $cache->clearRoleCache($role->id);
-
-            // Clear cache for all users with this role
-            $role->users->each(function ($user) use ($cache) {
-                $cache->clearUserCache($user->id);
-            });
-        });
-
-        static::deleting(function ($role) {
-            $cache = app(AuthorizationCache::class);
-
-            // Clear all related caches before deletion
-            $role->users->each(function ($user) use ($cache) {
-                $cache->clearUserCache($user->id);
-            });
-
-            $cache->clearRoleCache($role->id);
+    public static function booted() : void {
+        static::creating(function(Model $record) {
+            if (empty($record->name)) {
+                $uuid = $record->title ? Str::kebab($record->title) : (string)Str::uuid();
+                while ($record::where('name', $uuid)->count()) {
+                    $uuid = (string)Str::uuid();
+                }
+                $record->name = $uuid;
+            }
         });
     }
 
+    public function tenant() : BelongsTo {
+        return $this->belongsTo(Tenant::class);
+    }
 
-    public function dis_users() : BelongsToMany
+    /**
+     * The users relationship.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphedToMany
+     */
+    public function users(): BelongsToMany
     {
-        dd(__LINE__);
-
         return $this->belongsToMany(User::class, 'tenant_user')
-            ->withPivot('role_id')
             ->using(TenantUserRole::class);
+    }
+
+    public function abilities() : BelongsToMany {
+            return $this->belongsToMany(Ability::class, 'permissions')
+                ->withPivot('forbidden')
+                ->using(Permission::class)
+                ;
     }
 }

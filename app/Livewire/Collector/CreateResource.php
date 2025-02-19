@@ -73,16 +73,20 @@ class CreateResource extends Component implements HasForms {
     {
         return $form
             ->schema([
-
-
-
                 Select::make('tenant_id')
                     ->label(__('tenants.singular'))
                     ->options(function () {
                         if ($this->tenant) {
                             return [$this->tenant->getKey() => $this->tenant->name];
                         }
-                        return request()->user()->tenants->pluck('name', 'id');
+                        return request()
+                            ->user()
+                            ->tenants()
+                            ->whereIn('tenants.id',
+                                Client::select('tenant_id')
+                                    ->whereIn('clients.id', Survey::select('client_id'))
+                            )
+                            ->pluck('name', 'id');
                     })->hidden(function() {
                         return isset($this->tenant) && $this->tenant;
                     })
@@ -106,6 +110,7 @@ class CreateResource extends Component implements HasForms {
                             return [];
                         }
                         return Client::where('tenant_id', $tenantId)
+                            ->whereIn('clients.id', Survey::select('client_id'))
                             ->orderBy('clients.name','asc')
                             ->pluck('name','id');
                     })
@@ -150,8 +155,12 @@ class CreateResource extends Component implements HasForms {
                     ->required()
                     ->maxLength(250)
                     ->regex('/^[a-zA-Z0-9\-]+$/')
-//                    ->unique('collectors', 'unique_code')
-                    ->unique('collectors', 'unique_code', modifyRuleUsing: fn ($rule, $state) => $rule->where('unique_code', $state))
+                    ->unique(
+                        'collectors',
+                        'unique_code',
+                        ignoreRecord: true,
+                        modifyRuleUsing: fn ($rule, $state) => $rule->where('unique_code', $state)
+                    )
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, callable $set) {
                         if ($state) {

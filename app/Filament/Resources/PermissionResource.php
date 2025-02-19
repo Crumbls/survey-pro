@@ -33,16 +33,14 @@ class PermissionResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('ability_id')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('entity_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('entity_type'),
-                Forms\Components\Toggle::make('forbidden')
+                Forms\Components\Select::make('ability_id')
+                    ->relationship('ability', 'name')
                     ->required(),
-                Forms\Components\TextInput::make('scope')
-                    ->numeric(),
+                Forms\Components\Select::make('role_id')
+                    ->relationship('role', 'name')
+                    ->required(),
+                Forms\Components\Toggle::make('forbidden')
+                     ->required(),
             ]);
     }
 

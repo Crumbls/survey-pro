@@ -4,9 +4,12 @@ namespace App\Providers;
 
 use App\Components\ButtonComponent;
 use App\Services\ComponentRegistry;
+use Illuminate\Cache\ArrayStore;
+use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Validator;
 use Silber\Bouncer\BouncerFacade as Bouncer;
+use Silber\Bouncer\CachedClipboard;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +22,14 @@ class AppServiceProvider extends ServiceProvider
 
 
         $this->app->singleton(ComponentRegistry::class);
+return;
+        $this->app->singleton(\Silber\Bouncer\Bouncer::class, function ($app) {
+            return Bouncer::make()
+                ->withClipboard(new CachedClipboard(new ArrayStore))
+                ->withGate($app->make(Gate::class))
+                ->create();
+        });
+
         //
     }
 
@@ -28,19 +39,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(ComponentRegistry $componentRegistry): void
     {
 
-        // Configure Bouncer tables to include tenant_id
-        Bouncer::tables([
-            'abilities' => 'abilities',
-            'permissions' => 'permissions',
-            'roles' => 'roles',
-//            'assigned_roles' => 'tenant_user_role', // Use your custom table
-        ]);
-
         $button = new ButtonComponent();
         $componentRegistry->register('custom-button', $button->toArray());
-
-
-
 
         Validator::extend('contains_number', function ($attribute, $value, $parameters, $validator) {
             return preg_match('/[0-9]/', $value);

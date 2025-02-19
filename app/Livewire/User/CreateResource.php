@@ -241,7 +241,7 @@ class CreateResource extends Component implements HasForms
         $roleTenant = null;
 
         if ($this->tenant) {
-            $roleTenant = $this->tenant()
+            $roleTenant = $this->tenant
                 ->roles()
                 ->firstOrCreate([
                     'title' => 'Center Member'
@@ -254,44 +254,19 @@ class CreateResource extends Component implements HasForms
         }
 
         if ($this->client) {
-            dd(__LINE__);
+            dd(__LINE__, 'This is under construction.');
         } else if ($this->tenant) {
             if (!$this->tenant->users()->where('users.id', $record->getKey())->exists()) {
-                $this->tenant->users()->attach($record);
-            }
-            /**
-             * Check for existing roles.
-             */
-            dd(__LINE__);
-            $existing = \DB::table('assigned_roles')
-                ->where('entity_type', get_class($record))
-                ->where('entity_id', $record->getKey())
-                ->where('scope', $this->tenant->getKey())
-                ->get();
+                $this->tenant->users()->attach($record, [
+                    'role_id' => $roleTenant?->getKey()
+                ]);
 
-            if ($existing->isEmpty()) {
-                \DB::table('assigned_roles')
-                    ->insert([
-                        'entity_type' => get_class($record),
-                        'entity_id' => $record->getKey(),
-                        'scope' => $this->tenant->getKey(),
-                        'role_id' => $roleTenant->getKey()
-                    ]);
-            } else if ($existing->count() == 1) {
-                $existing = $existing->first();
-                if ($existing->role_id != $roleTenant->getKey()) {
-                    \DB::table('assigned_roles')
-                        ->where('id', $existing->id)
-                        ->update(['role_id' => $roleTenant->getKey()]);
-                }
-            } else {
-                dd($existing);
+                Notification::make()
+                    ->title('users.tenant_attached')
+                    ->success()
+                    ->send();
             }
 
-            Notification::make()
-                ->title('users.tenant_attached')
-                ->success()
-                ->send();
 
             return redirect()->route('tenants.users.index', $this->tenant);
 

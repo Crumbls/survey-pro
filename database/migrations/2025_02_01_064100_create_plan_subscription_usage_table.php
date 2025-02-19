@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('plan_subscription_usage')) {
+            return;
+        }
+        return;
         Schema::create('plan_subscription_usages', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('subscription_id');
@@ -34,6 +38,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('plan_subscription_usage');
     }
 };

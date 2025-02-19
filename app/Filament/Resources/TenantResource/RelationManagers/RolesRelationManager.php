@@ -20,7 +20,7 @@ class RolesRelationManager extends RelationManager
     protected static ?string $recordTitleAttribute = 'title';
 
     public function getModel() {
-        return \Silber\Bouncer\Database\Role::class;
+        return Role::class;
     }
     public static function getTitle(Model $ownerRecord, string $pageClass): string
     {
@@ -63,7 +63,7 @@ class RolesRelationManager extends RelationManager
             ])
             ->query(function (Builder $query) {
                 $parent = $this->getOwnerRecord();
-                return \Silber\Bouncer\Database\Role::withoutGlobalScopes()
+                return Role::withoutGlobalScopes()
                     ->where('scope', $parent->getKey());
             });
     }
@@ -71,7 +71,7 @@ class RolesRelationManager extends RelationManager
     protected function getRoles()
     {
         return once(function() {
-            return \Silber\Bouncer\Database\Role::withoutGlobalScopes()->where('scope', $this->getOwnerRecord()->getKey())
+            return Role::withoutGlobalScopes()->where('scope', $this->getOwnerRecord()->getKey())
                 ->orderBy('title','asc')
                 ->get();
         });

@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class SurveyResource extends AbstractResource
 {
     protected static ?string $model = Survey::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function getNavigationGroup(): ?string {
@@ -32,21 +31,19 @@ class SurveyResource extends AbstractResource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('uuid')
-                    ->label('UUID')
-                    ->required(),
-                Forms\Components\Select::make('tenant_id')
-                    ->relationship('tenant', 'name')
-                    ->label(__('tenants.singular'))
+                Forms\Components\Select::make('client_id')
+                    ->relationship('client', 'name')
+                    ->columnSpanFull()
                     ->required(),
                 Forms\Components\Select::make('user_id')
                     ->relationship('user', 'name')
+                    ->columnSpanFull()
                     ->required(),
                 Forms\Components\TextInput::make('title')
+                    ->columnSpanFull()
                     ->required(),
                 Forms\Components\Textarea::make('description')
-                    ->columnSpanFull(),
-                Forms\Components\Textarea::make('questions')
+                    ->columnSpanFull()
                     ->columnSpanFull(),
             ]);
     }

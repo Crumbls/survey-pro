@@ -64,16 +64,15 @@ class TenantsRelationManager extends RelationManager
                 Tables\Columns\SelectColumn::make('role_id')
                     ->options(function (Tenant $record) {
                         return once(function() use ($record){
-                            dd($record->getRoles());
-                            dd($record->getKey(), $record);
-                           return \Silber\Bouncer\Database\Role::withoutGlobalSCopes()
-                               ->where('scope', $record->getKey())
-                               ->orderBy('title','asc')
-                               ->get()
-                               ->pluck('title', 'id');
+                            return $record->getRoles()
+                                ->pluck('title','id');
                         });
                     })
                     ->afterStateUpdated(function ($record, $state) {
+                        /**
+                         * Not being called.
+                         */
+                        dd($record, $state);
                         $this->ownerRecord->tenants()->updateExistingPivot(
                             $record->id,
                             ['role_id' => $state]

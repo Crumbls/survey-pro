@@ -8,7 +8,7 @@ use App\Models\Permission;
 use App\Models\User;
 use App\Services\AuthorizationCache;
 use Filament\Facades\Filament;
-use Silber\Bouncer\Database\Role;
+use App\Models\Role;
 
 class ClientPolicy extends AbstractPolicy {
     /**
@@ -41,19 +41,7 @@ class ClientPolicy extends AbstractPolicy {
                 ->exists();
         });
 
-
-
-dd($temp);
-        dd($user->roles->map(function(Role $role) {
-            dd($role->abilities()
-                ->whereNull('abilities.scope')
-                ->whereNull('abilities.entity_id')
-                //->whereNull('entity_id')
-                ->get());
-        }));
-        dd(\Silber\Bouncer\Database\Ability::all());
-        dd($user->roles);
-        return true;
+dd(__LINE__);
     }
 
     /**

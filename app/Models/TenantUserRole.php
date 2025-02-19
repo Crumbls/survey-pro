@@ -4,11 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
-use Silber\Bouncer\Database\Role;
-
-/**
- * @deprecated
- */
+use App\Models\Role;
 
 class TenantUserRole extends Pivot
 {

@@ -10,7 +10,20 @@ return new class extends Migration
     {
         Schema::create('reports', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('survey_id')->constrained()->onDelete('cascade');
+            $table
+                ->foreignId('client_id')
+                ->nullable()
+                ->constrained()
+                ->onDelete('cascade');
+            $table->foreignId('survey_id')
+                ->constrained()
+                ->onDelete('cascade');
+            $table->foreignId('user_id')
+                ->nullable()
+                ->constrained()
+                ->onDelete('cascade');
+            $table->json('collector_ids');
+            $table->string('title')->required();
             $table->json('data');
             $table->timestamps();
         });

@@ -8,6 +8,7 @@ use App\Models\Collector;
 
 use App\Models\Report;
 use App\Models\Report as Model;
+use App\Models\Response;
 use App\Models\Survey;
 use App\Models\Tenant;
 use App\Models\User;
@@ -137,7 +138,31 @@ class ListResource extends Component implements HasForms, HasTable {
                     'class' => 'bg-primary-600 hover:bg-primary-700' // Add hover state
                 ])
                 ->visible(function() {
-                    return Gate::allows('create', Report::class);
+                    if (Gate::denies('create', Report::class)) {
+                        return false;
+                    }
+                    /**
+                     * Find surveys that have responses.,
+                     */
+                    if ($this->client) {
+                        return Response::whereIn('survey_id',
+                            Survey::select('id')
+                                ->where('surveys.client_id', $this->client->getKey())
+                            )
+                            ->take(1)
+                            ->exists();
+                    }
+                    if ($this->tenant) {
+                        return Response::whereIn('survey_id',
+                            Survey::select('id')
+                                ->whereIn('surveys.client_id', Client::select('clients.id')
+                                ->where('tenant_id', $this->tenant->getKey()))
+                            )
+                            ->take(1)
+                            ->exists();
+                    }
+                    return Response::take(1)
+                        ->exists();
                 })
         ])
         ->filters([

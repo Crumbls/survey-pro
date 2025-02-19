@@ -27,6 +27,8 @@ class ReportPolicy extends AbstractPolicy
     public function create(User $user): bool
     {
         return true;
+        return rand(0,1);
+        return true;
         //
     }
 

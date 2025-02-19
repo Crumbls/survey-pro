@@ -42,7 +42,7 @@ trait HasUuid
             $uuid = rtrim($uuid, '-');
 //            $uuid = Str::kebab($record->$from);
 
-            if (!$record->where('uuid', $uuid)->take(1)->exists()) {
+            if (!$record->newQueryWithoutScopes()->where('uuid', $uuid)->take(1)->exists()) {
                 return $uuid;
             }
         }

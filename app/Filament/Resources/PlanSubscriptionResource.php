@@ -18,13 +18,6 @@ class PlanSubscriptionResource extends Resource
     protected static ?string $model = PlanSubscription::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    public static function getNavigationGroup(): ?string {
-        return PlanResource::getNavigationGroup();
-    }
-    public static function getNavigationSort(): int
-    {
-        return PlanFeatureResource::getNavigationSort() +  10;
-    }
 
     public static function form(Form $form): Form
     {
@@ -38,12 +31,6 @@ class PlanSubscriptionResource extends Resource
                 Forms\Components\Select::make('plan_id')
                     ->relationship('plan', 'name')
                     ->required(),
-                Forms\Components\TextInput::make('uuid')
-                    ->label('UUID')
-                    ->required(),
-                Forms\Components\TextInput::make('name')
-                    ->required(),
-                Forms\Components\TextInput::make('description'),
                 Forms\Components\DateTimePicker::make('trial_ends_at'),
                 Forms\Components\DateTimePicker::make('starts_at'),
                 Forms\Components\DateTimePicker::make('ends_at'),
@@ -65,13 +52,6 @@ class PlanSubscriptionResource extends Resource
                 Tables\Columns\TextColumn::make('plan.name')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('uuid')
-                    ->label('UUID')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('description')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('trial_ends_at')
                     ->dateTime()
                     ->sortable(),

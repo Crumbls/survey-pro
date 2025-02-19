@@ -31,22 +31,17 @@ class TenantService
             'name' => $this->generateDefaultTenantName($user)
         ]);
 
-        BouncerFacade::scope()->to($tenant->getKey())->onlyRelations()->dontScopeRoleAbilities();
-
-        /**
-         * This won't work due to scoping issues.
-         */
-        // Attach user to tenant with default admin role
-        /*
-        $role = Role::firstOrCreate(['name' => 'center-owner'], ['title' => 'Center Owner']);
-
-        $user->tenants()->attach($tenant->id);
-
-        $user->assign($role);
-*/
         if ($tenant->wasRecentlyCreated) {
             $this->createDefaultRolesPermissions($tenant);
         }
+
+        $role = $tenant->roles()->firstOrCreate([
+            'title' => 'Center Owner'
+        ]);
+
+        $user->tenants()->attach($tenant, ['role_id' => $role->id]);
+
+        $user->save();
 
         return $tenant;
     }

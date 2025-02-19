@@ -2,7 +2,9 @@
 
 namespace App\Observers;
 
+use App\Models\Role;
 use App\Models\Tenant;
+use App\Models\TenantUserRole;
 
 class TenantObserver
 {
@@ -25,10 +27,24 @@ class TenantObserver
             'name' => $clientName
         ]);
 
-
         $service = app(\App\Services\TenantService::class);
 
         $service->createDefaultRolesPermissions($record);
+
+    }
+
+    public function deleting(Tenant $record): void {
+        TenantUserRole::where('tenant_id',  $record->getKey())
+            ->get()
+            ->each(function ($pivot) {
+                $pivot->delete();
+            });
+
+        Role::where('tenant_id', $record->getKey())
+            ->get()
+            ->each(function ($role) {
+                $role->delete();
+            });
 
     }
 

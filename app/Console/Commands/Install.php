@@ -2,173 +2,203 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Ability;
+use App\Models\Permission;
+use App\Models\Role;
+use App\Models\Tenant;
+use App\Models\TenantUserRole;
+use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Services\SchemaService;
 
-class GenerateLivewireCreate extends Command
+class Install extends Command
 {
-    protected $signature = 'generate:livewire-create {model}';
-    protected $description = 'Generate a Livewire create component from a model';
+    protected $signature = 'app:install';
+    protected $description = 'Install the application\'s defaults';
 
     public function handle(SchemaService $schemaService)
     {
-        $modelName = $this->argument('model');
-        $fullModelClass = "App\\Models\\$modelName";
+        $defaults = collect($this->createAbilities());
 
-        if (!class_exists($fullModelClass)) {
-            $this->error("Model {$modelName} not found!");
-            return 1;
+        $role = Role::firstOrCreate([
+            'title' => 'Super Admin'
+        ]);
+
+        /**
+         * Work around to make sure the super admin can do anything.
+         */
+
+        foreach($defaults->diff($role->abilities->pluck('id')) as $abilityId) {
+            Permission::create([
+                'role_id' => $role->getKey(),
+                'ability_id' => $abilityId
+            ]);
         }
 
-        $schema = $schemaService->getTableSchema($fullModelClass);
-        $formFields = $this->generateFormFields($schema);
 
-        $namespace = "App\\Livewire\\{$modelName}";
-        $code = $this->generateComponentCode($modelName, $namespace, $formFields);
+        $service = app(\App\Services\TenantService::class);
 
-        $directory = app_path("Livewire/" . $modelName);
-        if (!is_dir($directory)) {
-            mkdir($directory, 0755, true);
+        /**
+         * Clear out some data.
+         */
+        User::whereNotIn('users.id', \DB::table('users')
+            ->where('email','like','%@crumbls.com')
+//            ->orWhere('email','like','%@o2group.com')
+  //          ->orWhere('email','like','sumer%')
+            ->select('id')
+        )
+            ->get()
+            ->each(function($record) {
+                $record->delete();
+                print_r($record->toArray());
+                exit;
+                $record->delete();
+            });
+
+        Tenant::whereNotIn('tenants.id', TenantUserRole::select('tenant_id'))
+            ->where('created_at','<', now()->addMinutes(1))
+            ->get()
+            ->each(function($record) {
+                $record->delete();
+            });
+        /**
+         * Install test users.
+         */
+        foreach([
+            [
+                'email' => 'chase@crumbls.com',
+                'name' => 'Chase',
+
+            ],
+                    [
+                        'email' => 'jsitzman@o2group.com',
+                        'name' => 'Jayme',
+                    ],
+                    [
+                        'email' => 'sumersorensenbain@gmail.com',
+                        'name' => 'Sumer'
+                    ]
+                ] as $dat) {
+
+            $user = User::firstOrCreate([
+                'email' => $dat['email']
+            ], [
+                'name' => $dat['name'],
+                'password' => Hash::make('password')
+            ]);
+
+            $tenant = $service->getOrCreateDefault($user);
+
         }
-
-        $filePath = "{$directory}/CreateResource.php";
-        file_put_contents($filePath, $code);
-
-        $this->info("Generated Livewire create component at: {$filePath}");
-        return 0;
+return;
+        User::factory()->create();
     }
 
-    protected function generateFormFields(array $schema): string
-    {
-        $fields = [];
+    public function createAbilities() : array {
 
-        foreach ($schema as $columnName => $details) {
-            if (in_array($columnName, ['id', '_indexes', '_foreign_keys', 'created_at', 'updated_at', 'deleted_at'])) {
-                continue;
+        $defaults = [];
+
+        $models = $this->getModels();
+
+        foreach($models as $model) {
+            $baseName = class_basename($model);
+
+            $titleName = implode(' ',preg_split('/(?=[A-Z])/',$baseName));
+
+            $ability = Ability::firstOrCreate([
+                'name' => 'create',
+                'entity_type' => $model
+            ], [
+                'title' => 'Create '.$titleName
+            ]);
+
+            $defaults[] = $ability->getKey();
+
+            $ability = Ability::firstOrCreate([
+                'name' => 'viewAny',
+                'entity_type' => $model
+            ], [
+                'title' => 'View Any '.$titleName
+            ]);
+
+            $defaults[] = $ability->getKey();
+
+            $ability = Ability::firstOrCreate([
+                'name' => 'view',
+                'entity_type' => $model
+            ], [
+                'title' => 'View '.$titleName
+            ]);
+
+            $defaults[] = $ability->getKey();
+
+            $ability = Ability::firstOrCreate([
+                'name' => 'update',
+                'entity_type' => $model
+            ], [
+                'title' => 'Update '.$titleName
+            ]);
+
+            $defaults[] = $ability->getKey();
+
+            $ability = Ability::firstOrCreate([
+                'name' => 'delete',
+                'entity_type' => $model
+            ], [
+                'title' => 'Delete '.$titleName
+            ]);
+
+            $defaults[] = $ability->getKey();
+
+            if (in_array(SoftDeletes::class, class_uses($model))) {
+
+                $ability = Ability::firstOrCreate([
+                    'name' => 'restore',
+                    'entity_type' => $model
+                ], [
+                    'title' => 'Restore ' . $titleName
+                ]);
+
+                $defaults[] = $ability->getKey();
+            }
+        }
+
+        return $defaults;
+    }
+
+    public function getModels() : array {
+        return once(function() {
+            $modelsPath = app_path('Models');
+            $files = File::allFiles($modelsPath);
+
+            $ret = [];
+
+            foreach ($files as $file) {
+                $className = 'App\\Models\\' . pathinfo($file->getFilename(), PATHINFO_FILENAME);
+
+                if (!class_exists($className)) {
+                    continue;
+                }
+
+                $reflection = new \ReflectionClass($className);
+
+                // Skip abstract classes, interfaces, and relation classes
+                if ($reflection->isAbstract() ||
+                    $reflection->isInterface() ||
+                    $reflection->isSubclassOf(Relation::class) ||
+                    str_contains($reflection->getFileName(), 'Relations')) {
+                    continue;
+                }
+
+                $ret[] = $className;
             }
 
-            $field = $this->generateFieldByType($columnName, $details);
-            if ($field) {
-                $fields[] = $field;
-            }
-        }
-
-        return implode(",\n                ", $fields);
-    }
-
-    protected function generateFieldByType(string $columnName, array $details): ?string
-    {
-        $required = !$details['nullable'] ? '->required()' : '';
-
-        switch ($details['type']) {
-            case 'string':
-                if (str_contains($columnName, 'email')) {
-                    return "TextInput::make('{$columnName}')->email(){$required}";
-                }
-                if (str_contains($columnName, 'password')) {
-                    return "TextInput::make('{$columnName}')->password(){$required}";
-                }
-                if ($details['length'] > 255) {
-                    return "MarkdownEditor::make('{$columnName}'){$required}";
-                }
-                return "TextInput::make('{$columnName}'){$required}";
-
-            case 'text':
-                return "MarkdownEditor::make('{$columnName}'){$required}";
-
-            case 'boolean':
-                return "Toggle::make('{$columnName}'){$required}";
-
-            case 'integer':
-            case 'bigint':
-                if (str_ends_with($columnName, '_id')) {
-                    $relationName = Str::before($columnName, '_id');
-                    $modelName = Str::studly($relationName);
-                    return "Select::make('{$columnName}')
-                    ->relationship('{$relationName}', 'name')
-                    ->searchable()
-                    ->preload(){$required}";
-                }
-                return "TextInput::make('{$columnName}')->numeric(){$required}";
-
-            case 'decimal':
-            case 'float':
-            case 'double':
-                return "TextInput::make('{$columnName}')->numeric()->step('0.01'){$required}";
-
-            case 'date':
-                return "DatePicker::make('{$columnName}'){$required}";
-
-            case 'datetime':
-                return "DateTimePicker::make('{$columnName}'){$required}";
-
-            default:
-                return null;
-        }
-    }
-
-    protected function generateComponentCode(string $modelName, string $namespace, string $formFields): string
-    {
-        $modelVariableName = Str::camel($modelName);
-
-        return <<<PHP
-<?php
-
-namespace {$namespace};
-
-use App\Models\\{$modelName} as Model;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\MarkdownEditor;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Gate;
-use Livewire\Component;
-use Filament\Forms\Form;
-
-class CreateResource extends Component implements HasForms
-{
-    use InteractsWithForms;
-
-    public ?array \$data = [];
-
-    public function mount(): void
-    {
-        abort_if(!Gate::allows('create', Model::class), 403);
-        \$this->form->fill();
-    }
-
-    public function form(Form \$form): Form
-    {
-        return \$form
-            ->schema([
-                {$formFields}
-            ])
-            ->statePath('data');
-    }
-
-    public function create(): void
-    {
-        abort_if(!Gate::allows('create', Model::class), 403);
-
-        \$data = \$this->form->getState();
-        \$record = new Model(\$data);
-        \$record->save();
-
-        session()->flash('success', '{$modelName} has been created.');
-        \$this->redirectRoute('{$modelVariableName}s.show', \$record);
-    }
-
-    public function render(): View
-    {
-        return view('livewire.{$modelVariableName}.create-resource');
-    }
-}
-PHP;
+            return $ret;
+        });
     }
 }

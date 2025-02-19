@@ -13,20 +13,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 
-class UsersRelationManager extends RelationManager
+class SubscriptionsRelationManager extends RelationManager
 {
-    protected static string $relationship = 'users';
+    protected static string $relationship = 'subscriptions';
 
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function getTitle(Model $ownerRecord, string $pageClass): string
     {
-        return __('users.plural');
+        return __('subscriptions.plural');
     }
 
     public static function getModelLabel(): string
     {
-        return __('users.singular');
+        return __('subscriptions.singular');
     }
 
     public function form(Form $form): Form
@@ -84,6 +84,7 @@ class UsersRelationManager extends RelationManager
                 Tables\Actions\AttachAction::make()
                     ->preloadRecordSelect()
                     ->recordSelectOptionsQuery(function (Builder $query) {
+                        return $query;
                         // Exclude users that are already attached
                         return $query->whereDoesntHave('tenants', function (Builder $query) {
                             $query->where('tenants.id', $this->ownerRecord->id);
@@ -112,7 +113,7 @@ class UsersRelationManager extends RelationManager
     protected function getRoles()
     {
         return once(function() {
-            return \Silber\Bouncer\Database\Role::withoutGlobalScopes()
+            return Role::withoutGlobalScopes()
                 ->where('scope', $this->getOwnerRecord()->getKey())
                 ->orderBy('title','asc')
                 ->get();

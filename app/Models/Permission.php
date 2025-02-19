@@ -5,27 +5,40 @@ namespace App\Models;
 use App\Services\AuthorizationCache;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class Permission extends Model
+class Permission extends Pivot
 {
+    protected $table = 'permissions';
+    public $timestamps = false;
+
     protected $fillable = [
         'ability_id',
-        'entity_type',
-        'entity_id',
+        'role_id',
         'forbidden'
     ];
 
-    public function ability()
+    public function ability() : BelongsTo
     {
         return $this->belongsTo(Ability::class);
+    }
+
+    public function role() : BelongsTo {
+        return $this->belongsTo(Role::class);
     }
 
     protected static function boot()
     {
         parent::boot();
 
+        return;
+
         static::saved(function ($permission) {
+            /**
+             * Caching service....
+             */
             $cache = app(AuthorizationCache::class);
 
             if ($permission->entity_type === Role::class) {

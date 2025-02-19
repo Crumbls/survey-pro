@@ -38,5 +38,12 @@ abstract class AbstractPolicy {
         });
     }
 
-
+    /**
+     * Determine whether the user can view the model.
+     */
+    public function viewAny(?User $user): bool
+    {
+        return true;
+        //
+    }
 }

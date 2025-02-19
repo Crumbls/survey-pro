@@ -35,7 +35,7 @@ class ClientMember
             abort(403);
         }
 
-        BouncerFacade::scope()->to($tenant->getKey())->onlyRelations(false)->dontScopeRoleAbilities();
+//        BouncerFacade::scope()->to($tenant->getKey())->onlyRelations(false)->dontScopeRoleAbilities();
 
 
         // Add tenant to the request for easy access in your controllers/components

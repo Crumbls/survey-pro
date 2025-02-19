@@ -37,30 +37,26 @@ class Tenant extends Model implements HasMedia
 
     public function roles()
     {
-        return $this->hasMany(\Silber\Bouncer\Database\Role::class, 'scope')
-            ->where('scope', $this->getKey());
-        return \Silber\Bouncer\Database\Role::query()
-            ->where('scope', $this->id);
+        return $this->hasMany(Role::class);
     }
 
     // If you want it as a relationship
     public function bouncerRoles()
     {
-        return $this->hasMany(\Silber\Bouncer\Database\Role::class, 'scope', 'id');
+        return $this->hasMany(Role::class, 'scope', 'id');
     }
 
     public function getRoles() {
-        dd(\Silber\Bouncer\Database\Role::withoutGlobalScopes()
-            ->where('scope', $this->getKey())
-            ->get());
-        dd(__LINE__);
+        return Role::withoutGlobalScopes()
+            ->orderBy('title','asc')
+            ->get();
     }
 
     public function users() : BelongsToMany
     {
         return $this->belongsToMany(User::class, 'tenant_user')
-            //->withPivot('role_id')
-            ->using(TenantUser::class);
+            ->withPivot('role_id')
+            ->using(TenantUserRole::class);
     }
 
     public function clients() : HasMany {

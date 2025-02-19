@@ -4,9 +4,16 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CollectorResource\Pages;
 use App\Filament\Resources\CollectorResource\RelationManagers;
+use App\Models\Client;
 use App\Models\Collector;
+use App\Models\Survey;
+use App\Models\Tenant;
 use Filament\Forms;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -33,23 +40,94 @@ class CollectorResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('survey_id')
+                Select::make('tenant_id')
+                    ->label(__('tenants.singular'))
+                    ->options(function () {
+                        return Tenant::whereIn('tenants.id',
+                                Client::select('tenant_id')
+                                    ->whereIn('clients.id', Survey::select('client_id'))
+                            )
+                            ->pluck('name', 'id');
+                    })
+                    ->live()  // Makes the field reactive
+                    ->afterStateUpdated(function (Set $set) {
+                        // Clear the dependent field when parent changes
+                        $set('client_id', null);
+                        $set('survey_id', null);
+                        $set('collector_ids', null);
+                    })
+                    ->required(),
+
+                Select::make('client_id')
+                    ->label(__('clients.singular'))
+                    ->options(function (Get $get) {
+                        $tenantId = $get('tenant_id');
+                        if (!$tenantId) {
+                            return [];
+                        }
+                        return Client::where('tenant_id', $tenantId)
+                            ->whereIn('clients.id', Survey::select('client_id'))
+                            ->orderBy('clients.name','asc')
+                            ->pluck('name','id');
+                    })
+                    ->live()  // Makes the field reactive
+                    ->afterStateUpdated(function (Set $set) {
+                        // Clear the dependent field when parent changes
+                        $set('survey_id', null);
+                        $set('collector_ids', null);
+                    })
+                    ->required(),
+                Select::make('survey_id')
+                    ->label('Survey')
+                    ->options(function (Get $get) {
+                        $clientId = $get('client_id');
+                        if (!$clientId) {
+                            return [];
+                        }
+                        return Survey::query()
+                            ->where('client_id', $clientId)
+                            ->get()
+                            ->pluck('title', 'id');
+                    })
+                    ->live()  // Makes the field reactive
+                    ->afterStateUpdated(function (Set $set) {
+                        // Clear the dependent field when parent changes
+                        $set('collector_ids', null);
+                    })
+                    ->required(),
+                TextInput::make('unique_code')
+                    ->label('Reference')
+                    ->prefix('/r/')
                     ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('name')
-                    ->required(),
-                Forms\Components\TextInput::make('type')
-                    ->required(),
-                Forms\Components\TextInput::make('status')
-                    ->required(),
-                Forms\Components\Textarea::make('configuration')
+                    ->maxLength(250)
+                    ->regex('/^[a-zA-Z0-9\-]+$/')
+                    ->unique(
+                        'collectors',
+                        'unique_code',
+                        ignoreRecord: true,
+                        modifyRuleUsing: fn ($rule, $state) => $rule->where('unique_code', $state)
+                    )
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if ($state) {
+                            $processed = preg_replace('/\s+/', '-', trim($state)); // Replace spaces with hyphens
+                            $processed = preg_replace('/\-+/', '-', $processed);   // Remove duplicate hyphens
+                            $processed = preg_replace('/^-+|-+$/', '', $processed); // Remove leading/trailing hyphens
+                            $processed = preg_replace('/[^a-zA-Z0-9\-]/', '', $processed); // Remove invalid chars
+                            $set('unique_code', $processed);
+                        }
+                    }),
+
+                TextInput::make('goal')
                     ->required()
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('unique_code'),
-                Forms\Components\DateTimePicker::make('expires_at'),
-                Forms\Components\Select::make('client_id')
-                    ->relationship('client', 'name'),
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(1000000)
+                    ->integer()
+                    ->label('Target Response Count')
+
             ]);
+
     }
 
     public static function table(Table $table): Table

@@ -6,12 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
-        if (Schema::hasTable('tenants')) {
-    return;
-} Schema::create('tenants', function (Blueprint $table) {
+
+        Schema::create('tenants', function (Blueprint $table) {
             $table->id();
             $table->string('uuid')->unique();
             $table->string('name');
+            $table->string('primary_color')->nullable();
+            $table->string('secondary_color')->nullable();
+            $table->string('accent_color')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -22,6 +24,8 @@ return new class extends Migration {
      */
     public function down(): void
     {
+
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('tenants');
     }
 };

@@ -13,9 +13,12 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-//            $table->foreignId('role_id')->constrained()->onDelete('cascade');
+            $table->foreignId('role_id')
+                ->nullable()
+                ->default(null)
+                ->constrained()
+                ->onDelete('cascade');
             $table->timestamps();
-
             // Ensure a user can only have one role per tenant
             $table->unique(['tenant_id', 'user_id']);
         });
@@ -27,6 +30,5 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('tenant_user');
     }
 };

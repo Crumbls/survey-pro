@@ -19,7 +19,7 @@ use Filament\Panel;
 use Laravolt\Avatar\Avatar;
 
 use Silber\Bouncer\BouncerFacade;
-use Silber\Bouncer\Database\Concerns\HasRoles;
+use App\Models\Concerns\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Silber\Bouncer\Database\HasRolesAndAbilities;
@@ -66,9 +66,18 @@ class User extends Authenticatable implements FilamentUser, HasMedia
     public static function booted() : void {
         static::created(function(Model $record) {
         });
+
+        static::deleting(function(Model $record) {
+            TenantUserRole::where('user_id', $record->getKey())
+                ->get()
+                ->each(function(Model $record) {
+                    $record->delete();
+                });
+        });
     }
 
     public function canAccessPanel(Panel $panel): bool {
+        return true;
         return $this->can('access-filament');
         dd($this->roles);
         return true;
@@ -79,18 +88,10 @@ class User extends Authenticatable implements FilamentUser, HasMedia
     public function tenants() : BelongsToMany
     {
         return $this->belongsToMany(Tenant::class, 'tenant_user')
-//            ->withPivot('role_id')
-            ->using(TenantUser::class);
-    }
-
-/*
-    public function roles() : BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'tenant_user_role')
-            ->withPivot('tenant_id')
+            ->withPivot('role_id')
             ->using(TenantUserRole::class);
     }
-*/
+
     public function surveys() : HasMany
     {
         return $this->hasMany(Survey::class);

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RoleResource\Pages;
 
 use App\Filament\Resources\RoleResource;
+use App\Models\Permission;
 use Filament\Actions;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -10,9 +11,9 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
-use Silber\Bouncer\Database\Ability;
+use App\Models\Ability;
+use App\Models\Role;
 use Illuminate\Validation\Rule;
-use Silber\Bouncer\Database\Role;
 
 class EditRole extends EditRecord
 {
@@ -33,13 +34,14 @@ class EditRole extends EditRecord
     protected function getScopedUniqueRule()
     {
         $role = $this->getRecord();
-        $scope = $role->scope;
+
+        $scope = $role->tenant_id;
 
         return Rule::unique('roles', 'name')
             ->where(function ($query) use ($scope) {
-                return $query->where('scope', $scope);
+                return $query->where('tenant_id', $scope);
             })
-            ->ignore($role->id);
+            ->ignore($role->getKey());
     }
 
     public function form(Form $form): Form
@@ -58,38 +60,29 @@ class EditRole extends EditRecord
                         TextInput::make('title')
                             ->maxLength(255)
                             ->hint('A human-readable title for this role'),
+                        /*
                         TextInput::make('scope')
                             ->numeric()
                             ->hint('Leave empty for global roles'),
+                        */
                     ])
                     ->columns(2),
 
-                Section::make('Permissions')
-                    ->description('Select the permissions for this role')
+                Section::make('Abilities')
+                    ->description('Select the abilities for this role')
                     ->schema([
                         Select::make('abilities')
                             ->multiple()
                             ->preload()
                             ->searchable()
                             ->options(function () {
-                                return \DB::table('abilities')
-//                                    ->where('name', 'like', "%{$search}%")
-  //                                  ->orWhere('title', 'like', "%{$search}%")
-                                    ->orderBy('name')
+                                return \App\Models\Ability::orderBy('name', 'asc')
                                     ->get()
-//                                    ->pluck('title', 'name')
                                     ->map(function ($row) {
                                         $row->title = $row->title ? $row->title : $row->name;
                                         return $row;
                                     })
                                     ->pluck('title','id');
-                                return $this->getAbilitiesQuery()
-                                    ->orderBy('name')
-                                    ->get()
-                                    ->pluck('title', 'name')
-                                    ->map(function ($title, $name) {
-                                        return $title ?: $name;
-                                    });
                             })
                             ->getSearchResultsUsing(function (string $search) {
                                 return \DB::table('abilities')
@@ -103,19 +96,6 @@ class EditRole extends EditRecord
                                         return $row;
                                     })
                                 ->pluck('title','id');
-
-
-                                return $this->getAbilitiesQuery()
-                                    ->where(function ($query) use ($search) {
-                                        $query->where('name', 'like', "%{$search}%")
-                                            ->orWhere('title', 'like', "%{$search}%");
-                                    })
-                                    ->orderBy('name')
-                                    ->get()
-                                    ->pluck('title', 'name')
-                                    ->map(function ($title, $name) {
-                                        return $title ?: $name;
-                                    });
                             })
                             ->columnSpanFull(),
                     ]),
@@ -127,42 +107,16 @@ class EditRole extends EditRecord
         $role = $this->getRecord();
 
         // Get all assigned abilities for this role directly from the pivot table
-        $assignedAbilities = \DB::table('permissions')
-            ->where('permissions.entity_type','roles')
-            ->where('permissions.entity_id', $role->getKey())
-            ->whereNull('permissions.scope')
-            ->select('permissions.ability_id')
+        $assignedAbilities = $role->abilities()
+            ->select('abilities.id')
             ->get()
-        ->pluck('ability_id');
+            ->pluck('id');
 
         $data['abilities'] = $assignedAbilities->toArray();
 
         return $data;
     }
 
-
-
-    protected function amutateFormDataBeforeFill(array $data): array
-    {
-        $role = $this->getRecord();
-
-
-
-        // Get all abilities for this role, bypassing scope constraints
-        $abilities = $role->abilities()->withoutGlobalScopes()->get();
-
-//        dd($abilities);
-
-        // If role is not scoped (e.g., admin), also get globally assigned abilities
-        if (empty($role->scope)) {
-            $globalAbilities = $role->abilities;
-            $abilities = $abilities->merge($globalAbilities)->unique('id');
-        }
-
-        $data['abilities'] = $abilities->pluck('name')->toArray();
-
-        return $data;
-    }
 
     protected function afterSave(): void
     {
@@ -185,37 +139,35 @@ class EditRole extends EditRecord
             ->unique()
         ;
 
-        \DB::table('permissions')
-            ->where('entity_type', 'roles')
-            ->where('entity_id', $record->getKey())
-            ->whereNotNull('scope')
-            ->delete();
-
-        // Sync the abilities with the role, maintaining any scope-specific relationships
-        $existing = \DB::table('permissions')
-            ->where('entity_type', 'roles')
-            ->where('entity_id', $record->getKey())
+        /**
+         * Erase what isn't in here.
+         */
+        $existing = Permission::where('role_id', $record->getKey())
             ->select('ability_id')
             ->get()
             ->pluck('ability_id');
 
-        foreach($existing->diff($abilities) as $ability) {
-            \DB::table('permissions')
-                ->where('entity_type', 'roles')
-                ->where('entity_id', $record->getKey())
-                ->where('ability_id', $ability)
-                ->delete();
+        /**
+         * Remove invalid entries
+         */
+        if (true) {
+            $existing
+                ->diff($abilities)
+                ->chunk(10)
+                ->each(function ($chunk) use ($record) {
+                    Permission::where('role_id', $record->getKey())
+                        ->whereIn('ability_id', $chunk)
+                        ->delete();
+                });
         }
 
-        foreach($abilities->diff($existing) as $ability) {
-            \DB::table('permissions')
-                ->insert([
-                    'entity_type' => 'roles',
-                    'entity_id' => $record->getKey(),
+        $abilities
+            ->diff($existing)
+            ->each(function ($ability) use ($record) {
+                Permission::create([
                     'ability_id' => $ability,
-                    'forbidden' => 0
-                    ]);
-        }
-
+                    'role_id' => $record->getKey(),
+                ]);
+            });
     }
 }

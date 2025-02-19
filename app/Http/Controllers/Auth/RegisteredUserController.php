@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
@@ -55,19 +56,16 @@ class RegisteredUserController extends Controller
 
         $service->createDefaultRolesPermissions($tenant);
 
-        $role = \Silber\Bouncer\Database\Role::withoutGlobalScopes()->firstOrCreate([
+        $role = Role::withoutGlobalScopes()->firstOrCreate([
             'name' => 'tenant-owner',
             'scope' => $tenant->getKey()
         ], [
             'title' => 'Center Owner',
         ]);
 
-        \Silber\Bouncer\BouncerFacade::scope()->to($tenant->getKey());
-
         if (!$user->roles()->where('roles.id',$role->getKey())->exists()) {
             $role->assignTo($user);
         }
-
 
         return redirect(RouteServiceProvider::HOME);
     }
