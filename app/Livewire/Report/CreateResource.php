@@ -141,7 +141,7 @@ use HasBreadcrumbs,
         $this->surveyId = $record;
 
         if (!$record) {
-            dd(__LINE__);
+            abort(500);
         } else {
 
             abort_if(!Str::of($record)->isUuid(), 404);
@@ -157,10 +157,7 @@ use HasBreadcrumbs,
             return $record->reports()->getQuery();
         }
 
-        dd(__LINE__);
-
-
-        dd($record);
+        abort(500);
 
 
         return Collector::query()
@@ -195,7 +192,7 @@ use HasBreadcrumbs,
             /**
              * This needs to clean up and only show them by survey, right?
              */
-            dd(__LINE__);
+            abort(500);
 
             $collectors = Collector::whereIn('survey_id', $this->tenant->surveys()
                 ->whereIn('tenant_id', TenantUserRole::where('user_id', auth()->id())->select('tenant_id'))

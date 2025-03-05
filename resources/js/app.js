@@ -1,7 +1,5 @@
 import './bootstrap';
 
-// resources/js/app.js
-
 // Instead of importing Alpine and starting it
 // import Alpine from 'alpinejs'
 // window.Alpine = Alpine

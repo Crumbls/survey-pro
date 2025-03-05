@@ -7,7 +7,15 @@ use App\Models\User;
 
 class IssuePolicy extends AbstractPolicy
 {
-    public function create(User $user) {
+    public function viewAny(?User $user) : bool {
+        if (!static::isRequestFilament()) {
+            return false;
+        }
         return true;
+    }
+
+    public static function getModelClass(): string
+    {
+        return Issue::class;
     }
 }

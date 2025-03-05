@@ -96,7 +96,7 @@ class ListResource extends Component implements HasForms, HasTable {
                 )
                 ->withCount('responses');
         } else {
-            dd(__LINE__);
+            abort(500);
 
         }
 
@@ -136,7 +136,16 @@ class ListResource extends Component implements HasForms, HasTable {
             TextColumn::make('status'),
             TextColumn::make('responses_count')
                 ->counts('responses')
-                ->label('Responses'),
+                ->label('Responses')
+            ->url(function(Model $record) {
+                if (!$record->responses_count) {
+                    return null;
+                }
+                if (Gate::denies('view', $record)) {
+                    return null;
+                }
+                return route('collectors.responses.index', $record);
+            }),
 
             $tenantCount ? TextColumn::make('client.tenant.name')
                 ->label(trans('tenants.singular'))

@@ -15,7 +15,6 @@
     @push('scripts')
     @if(false)
         @else
-            @vite(['resources/js/survey-builder.js'])
             <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
         <!-- ... -->
         <!-- SurveyJS Form Library resources -->

@@ -4,58 +4,26 @@ namespace App\Policies;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Role as A;
+use Spatie\Permission\Models\Role as B;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
-class RolePolicy extends AbstractPolicy {
+class RolePolicy extends AbstractPolicy
+{
 
     /**
-     * Determine whether the user can view the model.
+     * Determine whether the user can view any$record models.
      */
-    public function view(User $user, Role $record): bool
+    public function viewAny(User $user): bool
     {
         return true;
-        //
+        return $user->can('view_any_role');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return true;
-        //
-    }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Role $record): bool
+    public static function getModelClass(): string
     {
-        return true;
-        //
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Role $record): bool
-    {
-        return true;
-        //
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Role $record): bool
-    {
-        //
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Role $record): bool
-    {
-        //
+        return Role::class;
+        // TODO: Implement getModelClass() method.
     }
 }

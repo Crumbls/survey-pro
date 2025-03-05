@@ -69,7 +69,7 @@ class ListResource extends Component implements HasForms, HasTable {
     protected function getTableQuery()
     {
         if ($this->collector) {
-            dd(__LINE__);
+            abort(500);
         } else if ($this->survey) {
             return $this->survey->reports()->getQuery();
         } else if ($this->client) {

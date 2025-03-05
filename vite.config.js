@@ -7,8 +7,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/report.css',
-                'resources/js/app.js',
-                'resources/js/survey-builder.js',
+                'resources/js/app.js'
             ],
             refresh: true,
         }),

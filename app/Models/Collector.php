@@ -121,8 +121,8 @@ class Collector extends Model
                 ->whereIn('tenant_id', function ($subQuery) use ($user) {
                     $subQuery->select('tenants.id')
                         ->from('tenants')
-                        ->join('tenant_user', 'tenants.id', '=', 'tenant_user.tenant_id')
-                        ->where('tenant_user.user_id', $user->getKey());
+                        ->join('tenant_user_role', 'tenants.id', '=', 'tenant_user_role.tenant_id')
+                        ->where('tenant_user_role.user_id', $user->getKey());
                 });
         })
             ->whereHas('responses');

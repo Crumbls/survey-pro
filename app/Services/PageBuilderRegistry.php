@@ -15,7 +15,6 @@ class PageBuilderRegistry
     public static function register(string $type, string $componentClass, string $label = null, string $icon = null): void
     {
         if (!is_subclass_of($componentClass, PageBuilderComponent::class)) {
-            dd($componentClass);
             throw new InvalidArgumentException("Component class must extend PageBuilderComponent");
         }
 
@@ -35,7 +34,6 @@ class PageBuilderRegistry
                 PageBuilderInitialized::dispatch();
             }
             if (!isset(static::$components[$type])) {
-                dd(static::$components);
                 throw new ComponentNotFoundException("Component type '{$type}' is not registered");
             }
         }

@@ -40,7 +40,6 @@ class Install extends Command
             ]);
         }
 
-
         $service = app(\App\Services\TenantService::class);
 
         /**
@@ -53,11 +52,8 @@ class Install extends Command
             ->select('id')
         )
             ->get()
-            ->each(function($record) {
-                $record->delete();
-                print_r($record->toArray());
-                exit;
-                $record->delete();
+            ->each(function(User $record) {
+//                $record->delete();
             });
 
         Tenant::whereNotIn('tenants.id', TenantUserRole::select('tenant_id'))
@@ -94,6 +90,14 @@ class Install extends Command
 
             $tenant = $service->getOrCreateDefault($user);
 
+
+            if ($user->email == 'chase@crumbls.com') {
+                TenantUserRole::firstOrCreate([
+                    'user_id' => $user->getKey(),
+                    'role_id' => $role->getKey()
+                ]);
+            }
+
         }
 return;
         User::factory()->create();
@@ -114,7 +118,7 @@ return;
                 'name' => 'create',
                 'entity_type' => $model
             ], [
-                'title' => 'Create '.$titleName
+                'title' => 'Create '.trim($titleName)
             ]);
 
             $defaults[] = $ability->getKey();
@@ -123,7 +127,7 @@ return;
                 'name' => 'viewAny',
                 'entity_type' => $model
             ], [
-                'title' => 'View Any '.$titleName
+                'title' => 'View Any '.trim($titleName)
             ]);
 
             $defaults[] = $ability->getKey();
@@ -132,7 +136,7 @@ return;
                 'name' => 'view',
                 'entity_type' => $model
             ], [
-                'title' => 'View '.$titleName
+                'title' => 'View '.trim($titleName)
             ]);
 
             $defaults[] = $ability->getKey();
@@ -141,7 +145,7 @@ return;
                 'name' => 'update',
                 'entity_type' => $model
             ], [
-                'title' => 'Update '.$titleName
+                'title' => 'Update '.trim($titleName)
             ]);
 
             $defaults[] = $ability->getKey();
@@ -150,7 +154,7 @@ return;
                 'name' => 'delete',
                 'entity_type' => $model
             ], [
-                'title' => 'Delete '.$titleName
+                    'title' => 'Delete '.trim($titleName)
             ]);
 
             $defaults[] = $ability->getKey();

@@ -87,10 +87,6 @@ Route::group([
 
     })->name('team');
 
-    Route::get('support', function() {
-
-    })->name('support');
-
     Route::get('users', \App\Livewire\User\ListResource::class)
         ->name('users.index');
 

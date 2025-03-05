@@ -45,11 +45,6 @@ class TenantsRelationManager extends RelationManager
                     ->options(function () {
 
                         $roles = Role::query();
-                        dd($this->getTableRecord());
-
-                        if (Auth::user()->email !== 'chase@crumbls.com') {
-                            $roles->where('name', '!=', 'administrator');
-                        }
 
                         return $roles->pluck('name', 'id');
                     })

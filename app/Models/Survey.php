@@ -93,7 +93,6 @@ class Survey extends Model
             }, $temp['pages']);
             return array_sum($x);
         } catch (\Throwable $e) {
-            dd($e);
             return 0;
         }
         });

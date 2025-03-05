@@ -83,13 +83,9 @@ class TopBar
                  */
                 if (preg_match('#^(surveys|reports|analytics)\/#', $activeUrl, $temp)) {
                     return strpos($url, $temp[1]) !== false;
-                    //if (preg_match('#'.$temp[1].'#'))
-                    dd($temp);
                 }
                 if (preg_match('#^tenants\/' . $uuid . '\/(\w+s)\/?#', $activeUrl, $temp)) {//
                     return strpos($url, $temp[1]) !== false;
-                    return false;
-                    dd($temp, $url);
                 }
 
                 return false;

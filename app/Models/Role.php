@@ -55,7 +55,8 @@ class Role extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'tenant_user')
+        return $this->belongsToMany(User::class, 'tenant_user_role')
+            ->withPivot('tenant_id')
             ->using(TenantUserRole::class);
     }
 
@@ -65,4 +66,6 @@ class Role extends Model
                 ->using(Permission::class)
                 ;
     }
+
+
 }

@@ -151,10 +151,6 @@ class EditResource extends Component implements HasForms
             $this->dispatch('client-updated');
 
         } catch (\Exception $e) {
-            dd('Save failed:', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
 
             Notification::make()
                 ->title('Error saving changes')
