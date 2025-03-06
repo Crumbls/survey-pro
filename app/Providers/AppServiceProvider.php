@@ -8,6 +8,7 @@ use Illuminate\Cache\ArrayStore;
 use Illuminate\Contracts\Auth\Access\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Validator;
+use Livewire\Livewire;
 use Silber\Bouncer\BouncerFacade as Bouncer;
 use Silber\Bouncer\CachedClipboard;
 
@@ -38,6 +39,7 @@ return;
      */
     public function boot(ComponentRegistry $componentRegistry): void
     {
+
 
         $button = new ButtonComponent();
         $componentRegistry->register('custom-button', $button->toArray());

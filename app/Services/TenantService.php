@@ -67,15 +67,14 @@ class TenantService
                     $query = Ability::where(function($q) use ($abilityPatterns) {
                         foreach ($abilityPatterns as $pattern) {
                             if ($pattern == '*') {
-                                print_r($pattern);
-                                dd(__LINE__);
+                                abort(500);
                             }
                             $pattern = explode(',', $pattern);
                             $x = count($pattern);
                             if (!$x) {
                                 continue;
                             } else if ($x == 1) {
-                                dd(__LINE__);
+                                abort(500);
                             } else if ($x == 2) {
                                 if ($pattern[1] == '*') {
                                     /**

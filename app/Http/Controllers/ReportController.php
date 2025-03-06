@@ -60,17 +60,19 @@ class ReportController extends Controller
             ->take(1)
             ->exists(), 403);
 
-        $this->addBreadcrumb(trans('tenants.singular').': ' . $report->client->tenant->name, route('tenants.show', $report->client->tenant));
-        $this->addBreadcrumb(trans('clients.singular').': ' . $report->client->name, route('clients.show', $report->client));
-        $this->addBreadcrumb(trans('surveys.singular').': ' . $report->survey->title, route('surveys.show', $report->survey));
-        $this->addBreadcrumb(trans('reports.all') , route('surveys.reports.index', $report->survey));
+        if (false) {
+            $this->addBreadcrumb(trans('tenants.singular') . ': ' . $report->client->tenant->name, route('tenants.show', $report->client->tenant));
+            $this->addBreadcrumb(trans('clients.singular') . ': ' . $report->client->name, route('clients.show', $report->client));
+            $this->addBreadcrumb(trans('surveys.singular') . ': ' . $report->survey->title, route('surveys.show', $report->survey));
+            $this->addBreadcrumb(trans('reports.all'), route('surveys.reports.index', $report->survey));
+        }
 
         return view('report.show', [
             'breadcrumbs' => $this->getBreadcrumbs(),
             'record' => $report,
 
-            'title' => __('reports.singular'),
-            'subtitle' => __('reports.description'),
+//            'title' => __('reports.singular'),
+  //          'subtitle' => __('reports.description'),
         ]);
     }
 

@@ -48,7 +48,7 @@ class Tenant extends Model implements HasMedia
 
     public function users() : BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'tenant_user')
+        return $this->belongsToMany(User::class, 'tenant_user_role')
             ->withPivot('role_id')
             ->using(TenantUserRole::class);
     }

@@ -297,7 +297,7 @@ class CreateResource extends Component implements HasForms
         }
 
         if ($this->client) {
-            dd(__LINE__, 'This is under construction.');
+            abort(500);
         } else if ($this->tenant) {
 //            dd($this->tenant->users()->where('users.id', $record->getKey())->get(), $record->getKey());
             if (!$this->tenant->users()->where('users.id', $record->getKey())->exists()) {
@@ -312,105 +312,8 @@ class CreateResource extends Component implements HasForms
             }
             return redirect()->route('tenants.users.index', $this->tenant);
         } else {
-            dd($this->data);
-            dd(__LINE__);
-            dd(__LINE__);
+            abort(500);
         }
-return;
-        if ($this->client) {
-            dd(__LINE__);
-        } else if ($this->tenant) {
-            if ($newRecord) {
-                $this->tenant->users()->attach($record, [
-//                    'role_id' => $roleTenant->getKey()
-                ]);
-
-                Notification::make()
-                    ->title('users.created')
-                    ->success()
-                    ->send();
-
-                Notification::make()
-                    ->title('users.tenant_attached')
-                    ->success()
-                    ->send();
-
-                return redirect()->route('tenants.users.index', $this->tenant);
-            } else if ($this->tenant->users()->where($record->getTable().'.'.$record->getKeyName(), $record->getKey())->take(1)->exists()) {
-                /**
-                 * Already exists.....
-                 */
-                Notification::make()
-                    ->title('users.tenant_already_attached')
-                    ->success()
-                    ->send();
-
-                return redirect()->route('tenants.users.index', $this->tenant);
-            } else {
-                /**
-                 * Attach to tenant
-                 */
-
-                $this->tenant->users()->attach($record, [
-//                    'role_id' => $roleTenant->getKey()
-                ]);
-
-                Notification::make()
-                    ->title('users.tenant_attached')
-                    ->success()
-                    ->send();
-
-                return redirect()->route('tenants.users.index', $this->tenant);
-            }
-            dd(__LINE__);
-        } else {
-            dd(__LINE__);
-        }
-
-        if ($this->tenant) {
-            if ($record->tenants()->where('tenants.id', $this->tenant->getKey())->count()) {
-                /**
-                 * Already a member of this tenant.
-                 */
-                /**
-                 * TODO: Replace with proper notificiation.
-                 */
-                session()->flash('success', 'Already a member');
-            } else {
-
-                /**
-                 * TODO: Send invite to user to join center if they are not already a member.
-                 * For now, we just add them and show a notification.
-                 */
-                $role = Role::firstOrCreate(['name' => 'Center Member']);
-
-                $this->tenant->users()->attach($record->getKey(), [
-                    'role_id' => $role->id,
-                ]);
-            }
-        } else {
-            dd(__LINE__);
-        }
-
-
-        if ($record->wasRecentlyCreated) {
-            session()->flash('success', 'Test 1');
-        } else {
-            session()->flash('success', 'Test 2');
-
-        }
-
-        return $this->redirect(route('users.index'));
-
-
-        return;
-
-dd($data);
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $this->showPassword ? bcrypt($data['password']) : null,
-        ]);
 
     }
 

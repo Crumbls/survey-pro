@@ -99,7 +99,13 @@ class ListResource extends Component implements HasForms, HasTable {
                 ->toggleable(isToggledHiddenByDefault: true)
         ]))
         ->recordUrl(function (Product $record) {
-            return route('products.show', $record);
+            if (Gate::allows('update', $record)) {
+                return route('products.edit', $record);
+            }
+            if (Gate::allows('view', $record)) {
+                return route('products.show', $record);
+            }
+            return null;
         })
         ->headerActions([
             // Add a custom button in the header
@@ -123,9 +129,17 @@ class ListResource extends Component implements HasForms, HasTable {
         ->actions([
             ActionGroup::make([
                 Action::make('edit')
-                    ->label(__('clients.edit'))
+                    ->label(__('products.edit'))
                     ->icon('heroicon-m-pencil-square')
-                    ->url(fn ($record) => route('clients.edit', $record))
+                    ->url(function($record) {
+                        if (Gate::allows('update', $record)) {
+                            return route('products.edit', $record);
+                        }
+                        if (Gate::allows('view', $record)) {
+                            return route('products.show', $record);
+                        }
+                        return null;
+                    })
                     ->color('custom')
                     ->extraAttributes([
                         'class' => 'text-primary-600 hover:text-primary-700' // Add hover state

@@ -8,7 +8,17 @@ use App\Models\Role;
 
 class TenantUserRole extends Pivot
 {
-    protected $table = 'tenant_user';
+    // Tell Laravel this model doesn't use an auto-incrementing ID
+    public $incrementing = false;
+
+    // Specify the primary key is composite
+    protected $primaryKey = null;
+
+    // No timestamps needed for pivot
+    public $timestamps = false;
+
+
+    protected $table = 'tenant_user_role';
 
     public $fillable = [
         'role_id',
@@ -33,5 +43,14 @@ class TenantUserRole extends Pivot
     public function role() : BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+
+    /**
+     * Check if this is a global role (not tenant-specific).
+     */
+    public function isGlobal(): bool
+    {
+        return is_null($this->tenant_id);
     }
 }

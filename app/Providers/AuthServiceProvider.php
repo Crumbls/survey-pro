@@ -34,6 +34,7 @@ class AuthServiceProvider extends ServiceProvider
         /**
          * TODO: Start moving to proper procedures.
          */
+        return;
         Gate::before(function (?User $user, string $ability, array $atts = []) {
             if ($ability == 'view-analytics') {
                 return false;

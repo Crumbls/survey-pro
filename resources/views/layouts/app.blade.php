@@ -99,6 +99,7 @@ mobileMenuOpen: false,
 @livewire('notifications')
 @filamentScripts
 @vite('resources/js/app.js')
+@if(false)
 <!--Start of Tawk.to Script-->
 <script type="text/javascript">
     var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
@@ -112,5 +113,7 @@ mobileMenuOpen: false,
     })();
 </script>
 <!--End of Tawk.to Script-->
+@else
+@endif
 </body>
 </html>

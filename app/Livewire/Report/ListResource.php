@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Report;
 
+use App\Filament\Actions\DownloadReportAction;
 use App\Livewire\Contracts\HasTenant;
 use App\Models\Client;
 use App\Models\Collector;
@@ -26,6 +27,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Filament\Tables\Actions\CreateAction;
@@ -69,7 +71,7 @@ class ListResource extends Component implements HasForms, HasTable {
     protected function getTableQuery()
     {
         if ($this->collector) {
-            dd(__LINE__);
+            abort(500);
         } else if ($this->survey) {
             return $this->survey->reports()->getQuery();
         } else if ($this->client) {
@@ -177,10 +179,17 @@ class ListResource extends Component implements HasForms, HasTable {
                     ->url(function (Model $record) {
                         return route('reports.show', $record);
                     })
+                    ->openUrlInNewTab()
                     ->color('custom')
                     ->extraAttributes([
                         'class' => 'text-primary-600 hover:text-primary-700' // Add hover state
                     ]),
+                /*
+                DownloadReportAction::make('download')
+                    ->extraAttributes([
+//                        'data-record-id' => fn (Model $record): string => $record->id,
+                    ]),
+                */
                 Action::make('edit')
                     ->label('Edit')
                     ->icon('heroicon-m-pencil-square')

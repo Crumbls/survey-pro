@@ -68,8 +68,12 @@ class CreateResource extends Component implements HasForms {
 
         $this->surveyId = $record;
 
+        abort_if(!$record, 500);
+
         if (!$record) {
-            dd(__LINE__);
+            /**
+             * TODO: Fix this.
+             */
         } else {
 
             abort_if(!Str::of($record)->isUuid(), 404);
@@ -84,15 +88,6 @@ class CreateResource extends Component implements HasForms {
 
             return $record->reports()->getQuery();
         }
-
-        dd(__LINE__);
-
-
-        dd($record);
-
-
-        return Model::query()
-            ->whereIn('tenant_id', request()->user()->tenants()->select('tenants.id'));
     }
     public function form(Form $form): Form
     {

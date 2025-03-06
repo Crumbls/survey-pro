@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+Route::get('/test1', function() {
+return view('test');
+});
+Route::get('/test-reverb/{ticketId}', function ($ticketId) {
+    return view('test-reverb', ['ticketId' => $ticketId]);
+})->middleware('auth');
 
 Route::get('/', function () {
     $features = [
@@ -87,6 +93,20 @@ Route::group([
     ]
 ], function () {
     require_once(__DIR__.'/client.php');
+});
+
+
+Route::group([
+    'prefix' => 'collectors/{collector}',
+    'as' => 'collectors.',
+    'middleware' => [
+        'web',
+        'auth',
+//        \App\Http\Middleware\ClientMember::class,
+//        \App\Http\Middleware\TenantMember::class
+    ]
+], function () {
+    require_once(__DIR__.'/collectors.php');
 });
 
 Route::group([

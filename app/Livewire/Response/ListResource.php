@@ -57,28 +57,7 @@ class ListResource extends Component implements HasForms, HasTable
          */
         abort_if(!request()->user()->tenants()->where('tenants.id', $this->tenant->getKey())->exists(), 403);
 
-        if ($this->collector) {
-            dd(__LINE__);
-            $this->tenant = $this->client->tenant;
-            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
-            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
-            $this->addBreadcrumb(__('surveys.all'));//, route('clients.surveys.index', $this->client))   ;
-        } else if ($this->survey) {
-            $this->addBreadcrumb(__('tenants.singular') . ': ' . $this->tenant->name, route('tenants.show', $this->tenant));
-            $this->addBreadcrumb(__('clients.singular') . ': ' . $this->client->name, route('clients.show', $this->client));
-            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
-        } else if ($this->client) {
-            $this->addBreadcrumb(__('tenants.singular') . ': ' . $this->tenant->name, route('tenants.show', $this->tenant));
-            $this->addBreadcrumb(__('clients.singular') . ': ' . $this->client->name, route('clients.show', $this->client));
-            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
-        } else if ($this->tenant) {
-            dd(__LINE__);
-            $this->addBreadcrumb(__('tenants.singular') . ': ' . $this->tenant->name, route('tenants.show', $this->tenant));
-            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
 
-        } else {
-            $this->addBreadcrumb(__('surveys.all'));//, route('client.surveys.index', $this->client));
-        }
     }
 
     protected function getTableQuery()
@@ -101,7 +80,6 @@ class ListResource extends Component implements HasForms, HasTable
             );
         }
 
-        dd(__LINE__);
         return Collector::query();
     }
 
@@ -177,6 +155,26 @@ class ListResource extends Component implements HasForms, HasTable
 
     public function render(): View
     {
+        if ($this->collector) {
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('surveys.all'));//, route('clients.surveys.index', $this->client))   ;
+        } else if ($this->survey) {
+            $this->addBreadcrumb(__('tenants.singular') . ': ' . $this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular') . ': ' . $this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
+        } else if ($this->client) {
+            $this->addBreadcrumb(__('tenants.singular') . ': ' . $this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular') . ': ' . $this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
+        } else if ($this->tenant) {
+            $this->addBreadcrumb(__('tenants.singular') . ': ' . $this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
+
+        } else {
+            $this->addBreadcrumb(__('surveys.all'));//, route('client.surveys.index', $this->client));
+        }
         return view('livewire.response.list-resource', [
             'breadcrumbs' => $this->getBreadcrumbs(),
             'title' => __('responses.plural'),

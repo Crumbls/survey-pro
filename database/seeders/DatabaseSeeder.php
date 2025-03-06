@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
 //        Issue::factory()->create();
 
             $this->call([
-                RoleTemplateSeeder::class
+//                RoleTemplateSeeder::class,
+UserSeeder::class,
 //                InfrastructureSeeder::class
 //                SubscriptionSeeder::class
             ]);

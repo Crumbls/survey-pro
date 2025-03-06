@@ -6,13 +6,18 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void {
-        if (Schema::hasTable('tenant_user')) {
+        if (Schema::hasTable('tenant_user_role')) {
             return;
         }
-        Schema::create('tenant_user', function (Blueprint $table) {
+        Schema::create('tenant_user_role', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('tenant_id')
+                ->constrained()
+                     ->onDelete('cascade')
+                ->nullable()
+                ->default(null);
+            $table->foreignId('user_id')
+                ->constrained()->onDelete('cascade');
             $table->foreignId('role_id')
                 ->nullable()
                 ->default(null)

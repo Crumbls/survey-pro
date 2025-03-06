@@ -166,10 +166,6 @@ class BizXReportService
             'font_weight' => 'font-semibold',
         ],
     ],
-    [
-        'type' => 'cylinders',
-        'data' => [],
-    ],
 ];
     }
 }

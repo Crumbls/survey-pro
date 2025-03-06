@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Filament\Models\Contracts\FilamentUser;
@@ -19,17 +22,13 @@ use Filament\Panel;
 
 use Laravolt\Avatar\Avatar;
 
-use Silber\Bouncer\BouncerFacade;
-use App\Models\Concerns\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Silber\Bouncer\Database\HasRolesAndAbilities;
+
 class User extends Authenticatable implements FilamentUser, HasMedia
 {
     use HasApiTokens,
         HasFactory,
-//        HasRolesAndAbilities,
-        HasRoles,
         InteractsWithMedia,
         Notifiable;
 
@@ -89,10 +88,27 @@ class User extends Authenticatable implements FilamentUser, HasMedia
 
     public function tenants() : BelongsToMany
     {
-        return $this->belongsToMany(Tenant::class, 'tenant_user')
+        return $this->belongsToMany(Tenant::class, 'tenant_user_role')
             ->withPivot('role_id')
             ->using(TenantUserRole::class);
     }
+
+    // a
+
+    /**
+     * Get all roles for this user across all tenants.
+     */
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'tenant_user_role', 'user_id', 'role_id')
+            ->withPivot('tenant_id');
+//            ->using(UserRole::class);
+        return $this->belongsToMany(Role::class, 'tenant_user_role', 'user_id', 'role_id')
+            ->withPivot('tenant_id')
+            ->using(TenantUserRole::class);
+    }
+
+    // b
 
     public function surveys() : HasMany
     {
@@ -175,20 +191,167 @@ class User extends Authenticatable implements FilamentUser, HasMedia
     {
         return $query->with('media');
     }
-    // Override Bouncer's default role checking to be tenant-aware
-    public function getRoles()
-    {
-        dd(__LINE__);
-        $tenantId = tenant()->id; // Adjust based on your tenant resolution
-        return $this->tenantRoles()->wherePivot('tenant_id', $tenantId)->get();
-    }
 
 
+    /**
+     * @deprecated
+     * @return mixed
+     */
     public function currentTenantRole()
     {
-        dd(BouncerFacade::scope()->get());
         return $this->tenantRoles()
             ->where('tenant_id', session('current_tenant_id'))
             ->first();
+    }
+
+
+    /**
+     * Get only the global roles for this user (where tenant_id is null).
+     */
+    public function globalRoles()
+    {
+        return $this->roles()
+            ->wherePivot('tenant_id', null);
+    }
+
+    /**
+     * Get the role for a specific tenant.
+     */
+    public function getRoleForTenant(int $tenantId)
+    {
+        return $this->roles()
+            ->wherePivot('tenant_id', $tenantId)
+            ->first();
+    }
+
+    /**
+     * Get all abilities for this user, cached for performance.
+     *
+     * @param int|null $tenantId If provided, get only abilities for this tenant
+     * @return Collection
+     */
+    public function getAbilities(?int $tenantId = null): Collection
+    {
+        return once(function () use ($tenantId) {
+            // Get relevant roles based on tenant_id
+            $roles = $tenantId
+                ? $this->roles()->wherePivot('tenant_id', $tenantId)->get()
+                : $this->roles()->wherePivot('tenant_id', null)->get();
+
+            if ($roles->isEmpty()) {
+                return collect();
+            }
+
+            // Get role IDs
+            $roleIds = $roles->pluck('id')->toArray();
+
+            // Get abilities through permissions table, filtering out forbidden ones
+            return DB::table('abilities')
+                ->join('permissions', 'abilities.id', '=', 'permissions.ability_id')
+                ->whereIn('permissions.role_id', $roleIds)
+                ->where('permissions.forbidden', false)
+                ->select('abilities.*')
+                ->get();
+        });
+
+    }
+
+    /**
+     * Get global abilities (not associated with any tenant).
+     *
+     * @return Collection
+     */
+    public function getGlobalAbilities(): Collection
+    {
+        return $this->getAbilities();
+    }
+
+    /**
+     * Get all abilities across all tenants and global roles.
+     *
+     * @return Collection
+     */
+    public function getAllAbilities(): Collection
+    {
+        $cacheKey = "user_{$this->id}_all_abilities";
+
+        Cache::forget($cacheKey);
+
+        return Cache::remember($cacheKey, now()->addHours(24), function () {
+            // Get all roles for this user
+            $roles = $this->roles()->get();
+
+            if ($roles->isEmpty()) {
+                return collect();
+            }
+
+            // Get role IDs
+            $roleIds = $roles->pluck('id')->toArray();
+
+            // Get abilities through permissions table, filtering out forbidden ones
+            return DB::table('abilities')
+                ->join('permissions', 'abilities.id', '=', 'permissions.ability_id')
+                ->whereIn('permissions.role_id', $roleIds)
+                ->where('permissions.forbidden', false)
+                ->select('abilities.*')
+                ->get();
+        });
+    }
+
+    /**
+     * Clear the abilities cache for this user.
+     *
+     * @return void
+     */
+    public function clearAbilitiesCache(): void
+    {
+        // Clear global abilities cache
+        Cache::forget("user_{$this->id}_abilities_global");
+
+        // Clear all abilities cache
+        Cache::forget("user_{$this->id}_all_abilities");
+
+        // Clear tenant-specific abilities cache
+        $tenantIds = $this->tenants()->pluck('tenants.id');
+        foreach ($tenantIds as $tenantId) {
+            Cache::forget("user_{$this->id}_abilities_tenant_{$tenantId}");
+        }
+    }
+
+    /**
+     * Check if the user has a specific ability.
+     *
+     * @param string $ability The ability name to check
+     * @param string $entityType The entity type to check against
+     * @param int|null $entityId The specific entity ID (optional)
+     * @param int|null $tenantId The tenant context (optional)
+     * @return bool
+     */
+    public function hasAbility(string $ability, string $entityType, ?int $entityId = null, ?int $tenantId = null): bool
+    {
+
+        $abilities = $tenantId && false
+            ? $this->getAbilities($tenantId)
+            : $this->getAllAbilities();
+
+//        dd($abilities->where('name',$ability), $ability);
+
+        $query = $abilities->where('name', $ability)
+            ->where('entity_type', $entityType);
+//dd($query);
+        if ($entityId) {
+//            dd($query, $collection);
+            // Match specific entity ID or null (applies to all)
+            return $query->where(function (\stdClass $ability) use ($entityId) {
+                if ($ability->entity_id === null) {
+                    return true;
+                } else if ($ability->entity_id == $entityId) {
+                    return true;
+                }
+                return false;
+            })->isNotEmpty();
+        }
+
+        return $query->isNotEmpty();
     }
 }

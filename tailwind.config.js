@@ -5,9 +5,11 @@ module.exports = {
     presets: [preset],
     content: [
         "./resources/**/*.blade.php",
-        "./resources/**/*.js",
+        "./resources/js/**/!(node_modules)/**/*.js", // Exclude node_modules
         './app/Filament/**/*.php',
         './vendor/filament/**/*.blade.php',
+        './vendor/padmission/**/*.blade.php',
+        './packages/issues/resources/views/**/*.blade.php'
 
     ],
     theme: {
