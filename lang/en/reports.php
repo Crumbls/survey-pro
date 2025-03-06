@@ -7,7 +7,7 @@ return [
     'singular_update' => 'Update',
     'plural' => 'Reports',
     'create' => 'Create a Report',
-    'description' => 'Build custom reports that drive decisions.'
+    'description' => 'Build custom reports that drive decisions.',
 
     'created' => 'Report created',
 ];
