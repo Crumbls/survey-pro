@@ -10,7 +10,7 @@
         "filament/filament": "^3.2.133",
         "filament/spatie-laravel-media-library-plugin": "*",
         "guzzlehttp/guzzle": "^7.9.2",
-        "laravel/framework": "^11.0",
+        "laravel/framework": "^11.44.1",
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.0",
