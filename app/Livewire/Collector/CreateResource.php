@@ -84,7 +84,7 @@ class CreateResource extends Component implements HasForms {
                             ->tenants()
                             ->whereIn('tenants.id',
                                 Client::select('tenant_id')
-                                    ->whereIn('clients.id', Survey::select('client_id'))
+                                    ->whereIn('clients.id', Survey::select('client_id')->whereNotNull('questions'))
                             )
                             ->pluck('name', 'tenants.id');
                     })->hidden(function() {
@@ -110,7 +110,7 @@ class CreateResource extends Component implements HasForms {
                             return [];
                         }
                         return Client::where('tenant_id', $tenantId)
-                            ->whereIn('clients.id', Survey::select('client_id'))
+                            ->whereIn('clients.id', Survey::select('client_id')->whereNotNull('questions'))
                             ->orderBy('clients.name','asc')
                             ->pluck('name','id');
                     })
@@ -137,6 +137,7 @@ class CreateResource extends Component implements HasForms {
                             return [];
                         }
                         return Survey::query()
+                            ->whereNotNull('questions')
                             ->where('client_id', $clientId)
                             ->get()
                             ->pluck('title', 'id');

@@ -38,24 +38,6 @@ class ListResource extends Component implements HasForms, HasTable {
     public ?Survey $survey = null;
 
     public function mount() {
-        if ($this->survey) {
-            $this->client = $this->survey->client;
-            $this->tenant = $this->client->tenant;
-            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
-            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
-            $this->addBreadcrumb(__('surveys.singular').': '.$this->survey->title, route('surveys.show', $this->survey));
-            $this->addBreadcrumb(__('collectors.all'));
-        } else if ($this->client) {
-            $this->tenant = $this->client->tenant;
-            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
-            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
-            $this->addBreadcrumb(__('collectors.all'));
-        } elseif ($this->tenant) {
-            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
-            $this->addBreadcrumb(__('collectors.all'));
-        } else {
-            $this->addBreadcrumb(__('collectors.all'));//, route('surveys.index'));
-        }
 
     }
 
@@ -146,6 +128,17 @@ class ListResource extends Component implements HasForms, HasTable {
                 }
                 return route('collectors.responses.index', $record);
             }),
+            TextColumn::make('completion_percentage')
+                ->label(trans('Completion Percentage'))
+                ->counts('responses')
+
+                ->getStateUsing(function(Model $record) {
+                    if (!$record->goal) {
+                        return '-';
+                    }
+                    // $record->responses_count
+                    return number_format($record->responses_count / $record->goal * 100,0).'% with '.$record->responses_count.'/'.$record->goal;
+                }),
 
             $tenantCount ? TextColumn::make('client.tenant.name')
                 ->label(trans('tenants.singular'))
@@ -276,6 +269,25 @@ class ListResource extends Component implements HasForms, HasTable {
 }
 
     public function render(): View {
+        if ($this->survey) {
+            $this->client = $this->survey->client;
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('surveys.singular').': '.$this->survey->title, route('surveys.show', $this->survey));
+            $this->addBreadcrumb(__('collectors.all'));
+        } else if ($this->client) {
+            $this->tenant = $this->client->tenant;
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(__('collectors.all'));
+        } elseif ($this->tenant) {
+            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(__('collectors.all'));
+        } else {
+            $this->addBreadcrumb(__('collectors.all'));//, route('surveys.index'));
+        }
+
         return view('livewire.collector.list-resource', [
             'breadcrumbs' => $this->getBreadcrumbs()
         ]);

@@ -39,14 +39,14 @@ class ListResource extends Component implements HasForms, HasTable {
 
         if ($this->client) {
             $this->tenant = $this->client->tenant;
-            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
-            $this->addBreadcrumb(__('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
-            $this->addBreadcrumb(__('surveys.all'));//, route('clients.surveys.index', $this->client))   ;
+            $this->addBreadcrumb(trans('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(trans('clients.singular').': '.$this->client->name, route('clients.show', $this->client));
+            $this->addBreadcrumb(trans('surveys.all'));//, route('clients.surveys.index', $this->client))   ;
         } else if ($this->tenant) {
-            $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
-            $this->addBreadcrumb(__('surveys.all'), route('tenants.surveys.index', $this->tenant));
+            $this->addBreadcrumb(trans('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
+            $this->addBreadcrumb(trans('surveys.all'), route('tenants.surveys.index', $this->tenant));
         } else {
-            $this->addBreadcrumb(__('surveys.all'));//, route('client.surveys.index', $this->client));
+            $this->addBreadcrumb(trans('surveys.all'));//, route('client.surveys.index', $this->client));
         }
     }
 
@@ -94,12 +94,12 @@ class ListResource extends Component implements HasForms, HasTable {
                     return number_format($record->getQuestionCount());
                 }),
             $tenantCount ? TextColumn::make('client.tenant.name')
-                ->label(__('tenants.singular'))
+                ->label(trans('tenants.singular'))
                 ->sortable()
                 ->toggleable(isToggledHiddenByDefault: true)
                 : null,
             TextColumn::make('client.name')
-                ->label('clients.singular')
+                ->label(trans('clients.singular'))
                 ->sortable()
                 ->toggleable(isToggledHiddenByDefault: true),
         ]))
