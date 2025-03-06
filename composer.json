@@ -7,8 +7,6 @@
     "require": {
         "php": "^8.2",
         "bezhansalleh/filament-shield": "^3.3",
-        "calebporzio/sushi": "^2.5",
-        "crumbls/infrastructure": "dev-main",
         "filament/filament": "^3.2.133",
         "filament/spatie-laravel-media-library-plugin": "*",
         "guzzlehttp/guzzle": "^7.9.2",
