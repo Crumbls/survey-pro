@@ -45,7 +45,6 @@ class ListResource extends Component implements HasForms, HasTable {
 
 
         if (!$this->tenant) {
-            dd(__LINE__);
             $user = request()->user();
 
             $x = $user->tenants->count();
@@ -59,7 +58,7 @@ class ListResource extends Component implements HasForms, HasTable {
         }
 
         if (!$this->tenant && request()->tenant) {
-            dd(request()->tenant);
+            $this->tenant = request()->tenant;
         }
 
     }
@@ -70,22 +69,17 @@ class ListResource extends Component implements HasForms, HasTable {
     public function getTableRecordKey(Model $record): string
     {
         return $record->user_id;
-        dd($record);
-        return 'id';
     }
 
     protected function getTableQuery()
     {
         if ($this->client) {
-            dd(__LINE__);
+            /**
+             * TODO: WHen we implement client only users, this will be enabled.
+             */
+            return $this->client->tenant->users()->getQuery();
         } else if ($this->tenant) {
             return $this->tenant->users()->getQuery();
-            return TenantUserRole::query()
-                ->where('tenant_id', $this->tenant->getKey())
-                ->with([
-                    'role',
-                    'user'
-                ]);
         }
         return User::whereRaw('1=2');
     }
@@ -182,7 +176,7 @@ class ListResource extends Component implements HasForms, HasTable {
                                 // This is important - refresh the table without full remount
                                 $this->refreshTable();
                             } else {
-                                dd(__LINE__);
+                                abort(500);
                             }
                         }) : null
                 ]))
@@ -208,7 +202,6 @@ class ListResource extends Component implements HasForms, HasTable {
             $this->addBreadcrumb(__('tenants.singular').': '.$this->tenant->name, route('tenants.show', $this->tenant));
             $this->addBreadcrumb(__('users.all'), route('tenants.users.index', $this->tenant));
         } else {
-            dd(__LINE__);
             $this->addBreadcrumb(__('users.all'));
         }
 

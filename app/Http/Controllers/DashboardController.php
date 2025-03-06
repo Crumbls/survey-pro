@@ -18,10 +18,16 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->tenants->count() == 1) {
+        $ct = $user->tenants->count();
+
+        abort_if(!$ct, 500);
+
+        if ($ct == 1) {
             $tenant = $user->tenants->first();
             return redirect()->route('tenants.show', $tenant);
         }
+
+        return redirect()->route('tenants.index');
 
         return view('dashboard', [
             'breadcrumbs' => $this->getBreadcrumbs()

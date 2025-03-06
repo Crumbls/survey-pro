@@ -112,7 +112,7 @@ class TopBar
         }
 
         // Surveys - Check policy
-        if ($tenantCount > 1 && Gate::allows('viewAny', Tenant::class)) {
+        if ($tenantCount > 1) {//} && Gate::allows('viewAny', Tenant::class)) {
             $menu->add(Link::toRoute('tenants.index', trans('tenants.plural')));
         }
 
