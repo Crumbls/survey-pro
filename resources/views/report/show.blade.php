@@ -4,10 +4,11 @@
                 @vite('resources/css/report.css')
 
                 <section class="report flex flex-col gap-y-4" id="report-{{ $record->getKey() }}">
-                @if(Auth::id())
+                @if(true)
                     @php((array)$record->data)
                     @foreach($record->data as $idx => $chunk)
                         @php($componentName = 'report.'.$chunk['type'])
+                        {{ $componentName }}
 
                         @if(in_array($chunk['type'], ['cylinders']))
                             @continue
