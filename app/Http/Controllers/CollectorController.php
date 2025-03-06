@@ -34,8 +34,6 @@ class CollectorController extends Controller
             ]);
         }
 
-
-//        dd($record->survey->questions);
         return view('collector.show', [
             'record' => $record,
             'surveyJson' => $record->survey->questions
