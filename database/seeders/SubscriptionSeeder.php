@@ -11,7 +11,7 @@ class SubscriptionSeeder extends Seeder
     public function run()
     {
         Plan::withTrashed()->get()->each(function (Plan $plan) {
-            $plan->forceDelete();
+//            $plan->forceDelete();
         });
 
             $plan = Plan::firstOrCreate([
