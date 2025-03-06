@@ -8,7 +8,6 @@
                     @php((array)$record->data)
                     @foreach($record->data as $idx => $chunk)
                         @php($componentName = 'report.'.$chunk['type'])
-                        {{ $componentName }}
 
                         @if(in_array($chunk['type'], ['cylinders']))
                             @continue
