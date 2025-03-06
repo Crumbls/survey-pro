@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Traits\HasBreadcrumbs;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
@@ -80,7 +81,13 @@ class CreateResource extends Component implements HasForms {
                 TextInput::make('name')
                     ->required(),
                 Textarea::make('description')
-                    ->required()
+                    ->required(),
+                FileUpload::make('logo')
+                    ->visibility('public')
+                    ->disk('public')
+                    ->openable()
+                    ->image()
+                    ->imageEditor()
             ])
             ->statePath('data');
     }
@@ -103,10 +110,23 @@ class CreateResource extends Component implements HasForms {
 
         $record->save();
 
+        if (array_key_exists('logo', $data)) {
+            $path = storage_path('app/public/'.$data['logo']);
+            if (file_exists($path)) {
+                $record
+                    ->addMedia($path)
+                    ->toMediaCollection('logo');
+            }
+        }
+
         Notification::make()
             ->title(__('products.created'))
             ->success()
             ->send();
+
+        if (Gate::allows('update', $record)) {
+            $this->redirectRoute('products.edit', $record);
+        }
 
         $this->redirectRoute('products.show', $record);
     }

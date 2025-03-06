@@ -1,7 +1,5 @@
-        <x-layout>
+        <x-layout-min>
             <div class="container mx-auto px-4 py-8">
-                <x-breadcrumbs :breadcrumbs="$breadcrumbs" />
-                <x-leadin :title="$title" :subtitle="$subtitle" />
 
                 @vite('resources/css/report.css')
 
@@ -10,6 +8,11 @@
                     @php((array)$record->data)
                     @foreach($record->data as $idx => $chunk)
                         @php($componentName = 'report.'.$chunk['type'])
+
+                        @if(in_array($chunk['type'], ['cylinders']))
+                            @continue
+                        @endif
+
                     @if(View::exists('components.'.$componentName))
 
                     <x-dynamic-component
@@ -99,5 +102,5 @@
                 </div>
                     @endif
             </div>
-        </x-layout>
+        </x-layout-min>
 

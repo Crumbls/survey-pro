@@ -10,6 +10,7 @@ use App\Filament\Forms\Blocks\HeadingBlock;
 use App\Filament\Forms\Blocks\HeatmapBlock;
 use App\Filament\Forms\Blocks\ImageBlock;
 use App\Filament\Forms\Blocks\PistonBlock;
+use App\Filament\Forms\Blocks\ProductBlock;
 use App\Models\Client;
 use App\Models\Collector;
 use App\Models\Report;
@@ -95,6 +96,7 @@ class EditResource extends Component implements HasForms
                         ChartsBlock::make('chart'),
                         HeatmapBlock::make('heatmap'),
                         CylindersBlock::make('cylinder'),
+                        ProductBlock::make('product'),
                     ])
             ])
             ->statePath('data')

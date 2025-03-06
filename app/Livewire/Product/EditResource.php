@@ -64,8 +64,8 @@ class EditResource extends Component implements HasForms
                 TextInput::make('name'),
                 Textarea::make('description'),
                 SpatieMediaLibraryFileUpload::make('logo')
-                    //                              ->image()
-//                                ->imageEditor()
+                                                  ->image()
+                                ->imageEditor()
                     ->collection('logo')
                     ->visibility('public')
                     ->disk('public')
@@ -82,7 +82,6 @@ class EditResource extends Component implements HasForms
         $data = $this->form->getState();
 
         $this->product->update($data);
-
 
         // Handle any orphaned media
         $this->cleanupOldMedia();

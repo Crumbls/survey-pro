@@ -9,4 +9,5 @@ return [
     'create' => 'Create a Report',
     'description' => 'Build custom reports that drive decisions.'
 
+    'created' => 'Report created',
 ];
