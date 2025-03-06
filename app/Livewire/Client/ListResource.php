@@ -135,7 +135,7 @@ class ListResource extends Component implements HasForms, HasTable {
         ->actions([
             ActionGroup::make([
                 Action::make('edit')
-                    ->label(__('clients.edit'))
+                    ->label(__('singular_edit'))
                     ->icon('heroicon-m-pencil-square')
                     ->url(fn ($record) => route('clients.edit', $record))
                     ->color('custom')
